@@ -1,4 +1,4 @@
-# Core website v1
+# Core website v2
 Clone this repo, then run
 to build
 ```
