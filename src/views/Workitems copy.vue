@@ -1,39 +1,85 @@
 <template>
-<v-container fluid>
-    <!-- Use a v-row to contain your elements -->
-    <v-row align="center">
-      <!-- v-col to hold each component, adjust cols as needed -->
-      <v-col cols="auto">
-        <v-btn-toggle v-model="state" mandatory dense>
-          <v-btn v-for="s in states" :key="s" :value="s">
-            {{ s }}
-          </v-btn>
-        </v-btn-toggle>
-      </v-col>
-      
-      <!-- Another v-col for displaying the number of selected items -->
-      <v-col cols="auto">
-        <div v-if="itemsSelected.length > 0">
-          {{ itemsSelected.length }} items selected
+  <div class="card">
+    <div class="row">
+      <div class="col">
+        <select v-model="wiqid">
+          <option disabled value="">Please select one</option>
+          <option v-for="item in workitemqueues" :value="item._id" :key="item._id">
+            {{ item.name }}
+          </option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <input type="text" ref="searchfield" v-shortkey.focus="['ctrl', 'f']" v-model="searchValue"
+          v-debounce:300ms="DoSearch" placeholder="Search term or json query">
+      </div>
+      <div class="col">
+        <footer class="is-right">
+          <button @click="Reload" class="button">Reload</button>
+          <button @click="ToggleNew" class="button" :class="{ primary: shownew }">New</button>
+          <button @click="ToggleSuccessful" class="button" :class="{ primary: showsuccessful }">Ok</button>
+          <button @click="ToggleFailed" class="button" :class="{ primary: showfailed }">Failed</button>
+          <button @click="ToggleProcessing" class="button" :class="{ primary: showprocessing }">Processing</button>
+          <button v-shortkey.propagte="['insert']" @shortkey="Insert" @click="Insert" class="button primary"
+            v-if="wiqid!=''">Insert</button>
+          <button @click="Delete" v-shortkey.propagte="['del']" @shortkey="Delete" class="button error">Delete</button>
+        </footer>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <button class="hidden" @click="Delete" :disabled='itemsSelected.length == 0'
+          v-shortkey.propagte="['shift', 'del']" @shortkey="HardDelete">Hard Delete</button>
+        <button class="hidden" v-shortkey.propagte="['arrowright']" @shortkey="NextPage">Next</button>
+        <button class="hidden" v-shortkey.propagte="['arrowleft']" @shortkey="PreviusPage">Previus</button>
+        <button class="hidden" v-shortkey.propagte="['arrowup']" @shortkey="PreviusCollection">Next</button>
+        <button class="hidden" v-shortkey.propagte="['arrowdown']" @shortkey="NextCollection">Previus</button>
+      </div>
+    </div>
+  </div>
+  <div v-if="errormessage" class="row">
+    <div class="col">
+      <div class="card">
+        <h1 class="text-error">{{errormessage}}</h1>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <EasyDataTable :headers="headers" :items="items" :loading="loading" :server-items-length="serverItemsLength"
+      v-model:server-options="serverOptions" :rowsItems="rowsItems" alternating must-sort
+      v-model:items-selected="itemsSelected" @click-row="RowClick">
+  
+      <template #item-_created="item">
+        {{ _timeSince(item._created) }}
+      </template>
+      <template #item-_modified="item">
+        {{ _timeSince(item._modified) }}
+      </template>
+      <template #item-timestamp="item">
+        {{ _timeSince(item.timestamp) }}
+      </template>
+      <template #item-lastseen="item">
+        {{ _timeSince(item.lastseen) }}
+      </template>
+      <template #item-lastrun="item">
+        {{ _timeSince(item.lastrun) }}
+      </template>
+      <template #item-name="item">
+        <router-link :to="{ name: 'WorkItemViewWithId', params: { id: item._id }}">{{item.name}}
+        </router-link>
+      </template>
+      <template #item-operation="item">
+        <div class="operation-wrapper">
+          <img src="./images/edit.png" class="operation-icon" @click="editItem(item)" />
         </div>
-      </v-col>
-    </v-row>
-  </v-container>  <!-- show itemsSelected.length if length is > 0 --> 
-  <v-text-field v-model="searchValue" @input="DoSearch" label="Search" placeholder="Search" clearable dense></v-text-field>  
-
-  <v-data-table-server v-model:items-per-page="serverOptions.rowsPerPage" :items-per-page-options="rowsItems"
-    :page="serverOptions.page" :headers="headers" :items="serverItems" :items-length="totalItems" :loading="loading"
-    :search="searchValue" item-value="_id" @update:options="GetData" show-select
-    v-model="itemsSelected"
-    @click:row="handleClick">
-  </v-data-table-server>
-  <button class="hidden" v-shortkey.propagte="['insert']" @shortkey="Insert">Next</button>
-  <button class="hidden" v-shortkey.propagte="['arrowright']" @shortkey="NextPage">Next</button>
-  <button class="hidden" v-shortkey.propagte="['arrowleft']" @shortkey="PreviusPage">Previus</button>
-  <button class="hidden" v-shortkey.propagte="['arrowup']" @shortkey="PreviusCollection">Next</button>
-  <button class="hidden" v-shortkey.propagte="['arrowdown']" @shortkey="NextCollection">Previus</button>
-  <button class="hidden" @click="SelectAll" v-shortkey.propagte="['ctrl', 'a']" @shortkey="SelectAll">SelectAll</button>
-  <button class="hidden" v-shortkey.propagte="['ctrl', 'f']" @shortkey="FocusSearch">Search</button>
+      </template>
+  
+    </EasyDataTable>
+    <small class="is-center">Click to select, left/right arrows to page/ up/down arror to change collection, del to
+      delete </small>
+  </div>
 </template>
 
 <script>
@@ -48,15 +94,6 @@ export default {
   },
   data() {
     return {
-      headers: [
-      ],
-      search: '',
-      serverItems: [],
-      loading: true,
-      totalItems: 0,
-      state: "all",
-      states: ["new", "successful", "failed", "processing", "all"],
-
       errormessage: "",
       loading: false,
       searchValue: "",
@@ -73,6 +110,8 @@ export default {
         sortType: 'desc',
       },
       workitemqueues: [],
+      headers: [
+      ],
       searchfields: ['name'],
       items: [
       ],
@@ -105,13 +144,6 @@ export default {
       if (val == true && oldVal != val) {
         this.GetData();
         this.LoadWorkitemQueues()
-      }
-    },
-    state: function (val, oldVal) {
-      if (oldVal != val) {
-        this.serverItemsLength = 0;
-        this.serverOptions.page = 1;
-        this.GetData();
       }
     },
     wiqid: function (val, oldVal) {
@@ -153,7 +185,7 @@ export default {
       this.$router.push({ name: 'WorkItemViewWithId', params: { id: item._id } });
     },
     Insert() {
-      this.$router.push({ name: 'WorkItem', params: { wiqid: this.wiqid } });
+      this.$router.push({ name: 'NewWorkItemViewWithwiqid', params: { wiqid: this.wiqid } });
     },
     RowClick(item) {
       // this.itemsSelected = [...this.itemsSelected, item];
@@ -201,38 +233,36 @@ export default {
     },
     NextPage() {
       if (this.serverOptions.page < this.serverItemsLength / this.serverOptions.rowsPerPage) {
-
         this.serverOptions.page++;
         this.GetData();
       }
     },
     PreviusCollection() {
-      var index = this.states.indexOf(this.state);
-      if (index > 0) {
-        index--;
-      } else {
-        index = this.states.length - 1;
+      var index = 0;
+      for (var i = 0; i < this.workitemqueues.length; i++) {
+        if (this.workitemqueues[i]._id == this.wiqid) index = i;
       }
-      this.state = this.states[index];
+      if (index > 0) {
+        this.itemsSelected = [];
+        this.serverItemsLength = 0;
+        this.serverOptions.page = 1;
+        this.wiqid = this.workitemqueues[index - 1]._id;
+      }
     },
     NextCollection() {
-      var index = this.states.indexOf(this.state);
-      if (index < this.states.length - 1) {
-        index++;
-      } else {
-        index = 0;
+      var index = 0;
+      for (var i = 0; i < this.workitemqueues.length; i++) {
+        if (this.workitemqueues[i]._id == this.wiqid) index = i;
       }
-      this.state = this.states[index];
-    },
-    SelectAll() {
-      for(let i = 0; i < this.items.length; i++) {
-        if(this.itemsSelected.indexOf(this.items[i]._id) == -1) {
-          this.itemsSelected.push(this.items[i]._id)
-        }
+      if (index < this.workitemqueues.length - 1) {
+        this.itemsSelected = [];
+        this.serverItemsLength = 0;
+        this.serverOptions.page = 1;
+        this.wiqid = this.workitemqueues[index + 1]._id;
       }
     },
     FocusSearch() {
-      // this.$refs.searchfield.focus();
+      this.$refs.searchfield.focus();
     },
     async LoadWorkitemQueues() {
       try {
@@ -246,56 +276,23 @@ export default {
         this.errormessage = error;
       }
     },
-    async loadItems() {
-      this.loading = true
-      this.serverItems = this.items
-      this.totalItems = this.serverItemsLength
-      this.loading = false
-    },
-    async handleClick(e, row) {
-      console.log("handleClick", row)
-      if(this.itemsSelected.find(x => x._id == row.item._id) == null) {
-        this.itemsSelected.push(row.item._id)
-        console.log("Selected", row.item._id)
-      } else {
-        this.itemsSelected = this.itemsSelected.filter(x => x._id != row.item._id)
-        console.log("UnSelected", row.item._id)
-      }
-    },
-    async GetData(options) {
-      if (options != null) {
-        console.log("GetData", JSON.parse(JSON.stringify(options)))
-      }
-      var orderby = {};
-
+    async GetData() {
       if (!this.Signedin) return;
-      const { page, itemsPerPage, sortBy } = options || {}
-      if (page != null) this.serverOptions.page = page;
-      if (itemsPerPage != null) this.serverOptions.rowsPerPage = itemsPerPage;
-
-      if (sortBy != null && sortBy.length > 0) {
-        for (let i = 0; i < sortBy.length; i++) {
-          orderby[sortBy[i].sortBy] = sortBy[i].sortDesc ? -1 : 1;
-        }
-      }
       this.loading = true
       this.cancelAutoUpdate();
       try {
-        // if (this.serverOptions.sortType == "asc") {
-        //   orderby[this.serverOptions.sortBy] = 1;
-        // }
-        // if (this.serverOptions.sortType == "desc") {
-        //   orderby[this.serverOptions.sortBy] = -1;
-        // }
+        var orderby = {};
+        if (this.serverOptions.sortType == "asc") {
+          orderby[this.serverOptions.sortBy] = 1;
+        }
+        if (this.serverOptions.sortType == "desc") {
+          orderby[this.serverOptions.sortBy] = -1;
+        }
         var query = { "_type": "workitem" };
         var exactquery = null;
         if (!Util.IsNullEmpty(this.wiqid)) query["wiqid"] = this.wiqid;
         if (!Util.IsNullEmpty(this.wiqid)) query["wiqid"] = this.wiqid;
 
-        if (this.state != null && this.state != "" && this.state != "all") {
-          query["state"] = this.state
-          console.log("Filter by state", this.state)
-        }
         var states = [];
         if (this.shownew) states.push("new");
         if (this.showsuccessful) states.push("successful");
@@ -353,36 +350,28 @@ export default {
           }
         }
 
-
-        // {
-        //   title: 'Name',
-        //   align: 'start', , align: 'end'
-        //   sortable: false,
-        //   key: 'name',
-        // },
-
         if (Util.IsNullEmpty(this.wiqid)) {
           this.headers = [
-            { title: "Name", key: "name", sortable: true },
-            { title: "State", key: "state", sortable: true },
-            { title: "Queue", key: "wiq", sortable: false },
-            { title: "By", key: "_createdby", sortable: false },
-            { title: "Created", key: "_created", sortable: true },
-            { title: "Due", key: "lastrun", sortable: false },
-            { title: "Operation", key: "operation" },
+            { text: "Name", value: "name" },
+            { text: "State", value: "state", sortable: true },
+            { text: "Queue", value: "wiq", sortable: false },
+            { text: "By", value: "_createdby", sortable: false },
+            { text: "Created", value: "_created", sortable: true },
+            { text: "Due", value: "lastrun", sortable: false },
+            { text: "Operation", value: "operation" },
           ]
         } else {
           this.headers = [
-            { title: "Name", key: "name", sortable: true },
-            { title: "State", key: "state", sortable: true },
-            { title: "By", key: "_createdby", sortable: false },
-            { title: "Created", key: "_created", sortable: true },
-            { title: "Due", key: "lastrun", sortable: false },
-            { title: "Operation", key: "operation" },
+            { text: "Name", value: "name" },
+            { text: "State", value: "state", sortable: true },
+            { text: "By", value: "_createdby", sortable: false },
+            { text: "Created", value: "_created", sortable: true },
+            { text: "Due", value: "lastrun", sortable: false },
+            { text: "Operation", value: "operation" },
           ]
         }
 
-        this.items = [];
+
         if (this.collectionname != "cvr" && this.collectionname != "linkedin" && this.collectionname != "dbusage") {
           if (this.serverItemsLength == 0) {
             this.serverItemsLength = ((this.serverOptions.page - 1) * this.serverOptions.rowsPerPage) + this.serverOptions.rowsPerPage + 1;
@@ -436,7 +425,6 @@ export default {
         this.addAutoUpdate();
         this.loading = false;
       }
-      this.loadItems({ page: this.serverOptions.page, itemsPerPage: this.serverOptions.rowsPerPage, sortBy: this.serverOptions.sortBy });
     },
     addAutoUpdate() {
       if (this.timer == null && this.autoUpdateInterval > 0) {
@@ -539,14 +527,6 @@ export default {
     },
   },
 }
-document.addEventListener('keydown', function (event) {
-  if (event.ctrlKey && event.key === 'a') {
-    event.preventDefault();
-  }
-  if (event.ctrlKey && event.key === 'f') {
-    event.preventDefault();
-  }
-}); 
 </script>
 
 <style scoped>

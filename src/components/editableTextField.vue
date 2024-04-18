@@ -1,6 +1,6 @@
 <template>
   <span class="editable-field">
-    <input v-if="isboolean" type="checkbox" id="checkbox" v-model="modelValue" ref="checkfield"
+    <input v-if="isboolean" type="checkbox" id="checkbox" :v-model="modelValue" ref="checkfield"
       @input="$emit('update:modelValue',  $event.target.checked)" />
     
     <span v-if="!isboolean" @click="isEditing=true" v-show="!isEditing" class="label">

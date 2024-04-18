@@ -50,7 +50,6 @@ export default {
     },
     async GetData() {
       if (!this.Signedin) return;
-      console.log("loading workflow_instances " + this.id)
       var items = await this.Client.Query({ query: { "_id": this.id }, collectionname: "workflow_instances" })
       if (items == null || items.length == 0) return;
       this.model = items[0];
@@ -158,10 +157,7 @@ export default {
             const val = me.model.payload[key];
             var comp = form.getComponent(key);
             if (comp != null) {
-              // console.log("component found: " + key + " = " + val)
               comp.setValue(val);
-            } else {
-              // console.log("component not found: " + key);
             }
           }
           const onSubmit = async function (submission) {
@@ -182,11 +178,6 @@ export default {
             form.refresh()
             this.model.payload._id = this.model._id;
 
-            // form.emit('resetForm');
-              // check this https://github.com/formio/angular/issues/241
-              // FormioUtils.eachComponent(Formio.Components.components.textfield.editForm().components, (component) => {
-              //     console.log(`${component.key} - ${component.tooltip}`);
-              // });
               var payload = await this.Client.QueueMessage({ "queuename": this.model.queue, data: this.model.payload, striptoken: false }, true);
             if (payload == null || payload.command == "timeout") {
               this.errormessage = "Failed procesing form, is the agent running? (" + this.model.queue + ")";
@@ -195,7 +186,6 @@ export default {
           };
           const onChange = async function (submission, changed, e3) {
             if(!changed || !changed.changed || !changed.changed.component || !changed.changed.component.label) return;
-            // console.log(changed.changed.component.label, changed);
             var submitComponents = ["Checkbox", "Select Boxes", "Radio", "Select"];
             if(submitComponents.indexOf(changed.changed.component.label) == -1) {
               return;
@@ -208,7 +198,6 @@ export default {
           setTimeout(() => {
             form.on('change', _onChange);
           }, 500);
-          console.log(me.model.state, me.model)
           
           if(me.model.state !="idle") {
             me.disableform(form, form.components);
@@ -248,9 +237,6 @@ export default {
     }
     let cssurls = ['/libs/font-awesome.4.7.0.css',
       '/libs/formio.full.css']
-    // let cssurls = ['https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
-    // 'https://cdn.form.io/formiojs/formio.full.min.css']
-    // 'https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css', 
     for (let i = 0; i < cssurls.length; i++) {
       let tag = document.head.querySelector(`[href="${cssurls[i]}"`);
       if (tag) {

@@ -10,6 +10,18 @@ export async function configureRouter(idsrvAuth) {
       component: TasksView,
     },
     {
+      path: '/Tasks',
+      name: 'Tasks',
+      component: TasksView,
+    },
+    {
+      path: '/Workflows',
+      name: 'Workflows',
+      meta: { authName: idsrvAuth.authName },
+      component: () => import(/* webpackChunkName: "about" */ '../views/Workflows.vue')
+    },
+    
+    {
       path: '/lookup/:id',
       name: 'taskwithid',
       props: true,
@@ -62,6 +74,13 @@ export async function configureRouter(idsrvAuth) {
       component: () => import(/* webpackChunkName: "about" */ '../views/Agent.vue')
     },
     {
+      path: '/Packages',
+      name: 'Packages',
+      meta: { authName: idsrvAuth.authName },
+      component: () => import(/* webpackChunkName: "about" */ '../views/Agents.vue')
+    },
+
+    {
       path: '/Workitems',
       name: 'WorkItemsView',
       meta: { authName: idsrvAuth.authName },
@@ -75,26 +94,75 @@ export async function configureRouter(idsrvAuth) {
       component: () => import(/* webpackChunkName: "about" */ '../views/Workitems.vue')
     },
     {
-      path: '/Workitem/edit/:id',
-      name: 'WorkItemViewWithId',
+      path: '/Workitem/:id',
+      name: 'WorkItemWithId',
       props: true,
       meta: { authName: idsrvAuth.authName },
       component: () => import(/* webpackChunkName: "about" */ '../views/Workitem.vue')
     },
     {
-      path: '/Workitem/new/:wiqid',
-      name: 'NewWorkItemViewWithwiqid',
+      path: '/Workitem',
+      name: 'Workitem',
       props: true,
       meta: { authName: idsrvAuth.authName },
       component: () => import(/* webpackChunkName: "about" */ '../views/Workitem.vue')
     },
+
+    {
+      path: '/WorkitemQueues',
+      name: 'WorkitemQueues',
+      meta: { authName: idsrvAuth.authName },
+      component: () => import(/* webpackChunkName: "about" */ '../views/Workflows.vue')
+    },
+    {
+      path: '/WorkitemQueue/:id',
+      name: 'WorkitemQueueWithId',
+      props: true,
+      meta: { authName: idsrvAuth.authName },
+      component: () => import(/* webpackChunkName: "about" */ '../views/Workitem.vue')
+    },
+    {
+      path: '/WorkitemQueue',
+      name: 'WorkitemQueue',
+      props: true,
+      meta: { authName: idsrvAuth.authName },
+      component: () => import(/* webpackChunkName: "about" */ '../views/Workitem.vue')
+    },
+
     {
       path: '/Form/:workflow/:id',
       name: 'FormView',
       meta: { authName: idsrvAuth.authName },
       props: true,
       component: () => import(/* webpackChunkName: "about" */ '../views/Form.vue')
-    }
+    },
+
+
+    {
+      path: '/Users',
+      name: 'Users',
+      meta: { authName: idsrvAuth.authName },
+      component: () => import(/* webpackChunkName: "about" */ '../views/Users.vue')
+    },
+    {
+      path: '/User',
+      name: 'User',
+      meta: { authName: idsrvAuth.authName },
+      component: () => import(/* webpackChunkName: "about" */ '../views/Agent.vue')
+    },
+    {
+      path: '/Roles',
+      name: 'Roles',
+      meta: { authName: idsrvAuth.authName },
+      component: () => import(/* webpackChunkName: "about" */ '../views/Roles.vue')
+    },
+    {
+      path: '/Role',
+      name: 'Role',
+      meta: { authName: idsrvAuth.authName },
+      component: () => import(/* webpackChunkName: "about" */ '../views/Agent.vue')
+    },
+
 
   ]
 

@@ -7,13 +7,17 @@ import 'vue3-easy-data-table/dist/style.css';
 import { vue3Debounce } from 'vue-debounce'
 import { createOidcAuth, SignInType, LogLevel } from 'vue-oidc-client/vue3'
 
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faUserSecret, faGlobe, faRobot, faQuestionCircle, faMobileAlt } from '@fortawesome/free-solid-svg-icons'
-import { faNodeJs, faGoogle, faWindows } from '@fortawesome/free-brands-svg-icons'
-
-library.add(faUserSecret, faGlobe, faRobot, faQuestionCircle, faMobileAlt, faNodeJs, faGoogle, faWindows)
-
+// Vuetify
+import 'vuetify/styles'
+import '@mdi/font/css/materialdesignicons.css' 
+import { createVuetify } from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
+const vuetify = createVuetify({
+    components,
+    directives,
+  })
+  
 
 const loco = window.location;
 const appRootUrl = loco.protocol + '//' + loco.host + (process.env.NODE_ENV === 'production' ? '/ui/' : '/');
@@ -49,10 +53,11 @@ void (async function () {
     // a little something extra
     store.dispatch('loadStoredState')
     app.config.globalProperties.$oidc = idsrvAuth
+    app.use(vuetify);
     app.component('EasyDataTable', Vue3EasyDataTable)
-    app.component('font-awesome-icon', FontAwesomeIcon)
     app.directive('debounce', vue3Debounce({ lock: true }));
     app.use(require('@skadefro/vue-shortkey'))
+
     app.mount('#app')
 
     app.config.globalProperties.$filters = {

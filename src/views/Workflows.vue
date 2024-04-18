@@ -1,31 +1,10 @@
 <template>
-<v-container fluid>
-    <!-- Use a v-row to contain your elements -->
-    <v-row align="center">
-      <!-- v-col to hold each component, adjust cols as needed -->
-      <v-col cols="auto">
-        <v-btn-toggle v-model="state" mandatory dense>
-          <v-btn v-for="s in states" :key="s" :value="s">
-            {{ s }}
-          </v-btn>
-        </v-btn-toggle>
-      </v-col>
-      
-      <!-- Another v-col for displaying the number of selected items -->
-      <v-col cols="auto">
-        <div v-if="itemsSelected.length > 0">
-          {{ itemsSelected.length }} items selected
-        </div>
-      </v-col>
-    </v-row>
-  </v-container>  <!-- show itemsSelected.length if length is > 0 --> 
-  <v-text-field v-model="searchValue" @input="DoSearch" label="Search" placeholder="Search" clearable dense></v-text-field>  
-
   <v-data-table-server v-model:items-per-page="serverOptions.rowsPerPage" :items-per-page-options="rowsItems"
     :page="serverOptions.page" :headers="headers" :items="serverItems" :items-length="totalItems" :loading="loading"
     :search="searchValue" item-value="_id" @update:options="GetData" show-select
     v-model="itemsSelected"
-    @click:row="handleClick">
+    @click:row="handleClick"
+    >
   </v-data-table-server>
   <button class="hidden" v-shortkey.propagte="['insert']" @shortkey="Insert">Next</button>
   <button class="hidden" v-shortkey.propagte="['arrowright']" @shortkey="NextPage">Next</button>
@@ -34,6 +13,7 @@
   <button class="hidden" v-shortkey.propagte="['arrowdown']" @shortkey="NextCollection">Previus</button>
   <button class="hidden" @click="SelectAll" v-shortkey.propagte="['ctrl', 'a']" @shortkey="SelectAll">SelectAll</button>
   <button class="hidden" v-shortkey.propagte="['ctrl', 'f']" @shortkey="FocusSearch">Search</button>
+
 </template>
 
 <script>
@@ -60,7 +40,7 @@ export default {
       errormessage: "",
       loading: false,
       searchValue: "",
-      collectionname: "workitems",
+      collectionname: "workflow",
       wiqid: "",
       lastSearchValue: "",
       serverItemsLength: 0,
@@ -87,7 +67,6 @@ export default {
   created() {
     if (!Util.IsNullEmpty(this.propwiqid)) this.wiqid = this.propwiqid;
     this.GetData()
-    this.LoadWorkitemQueues()
   },
   mounted() {
     this.FocusSearch();
@@ -104,7 +83,6 @@ export default {
     Signedin: function (val, oldVal) {
       if (val == true && oldVal != val) {
         this.GetData();
-        this.LoadWorkitemQueues()
       }
     },
     state: function (val, oldVal) {
@@ -224,7 +202,7 @@ export default {
       }
       this.state = this.states[index];
     },
-    SelectAll() {
+    SelectAll(e) {
       for(let i = 0; i < this.items.length; i++) {
         if(this.itemsSelected.indexOf(this.items[i]._id) == -1) {
           this.itemsSelected.push(this.items[i]._id)
@@ -233,18 +211,6 @@ export default {
     },
     FocusSearch() {
       // this.$refs.searchfield.focus();
-    },
-    async LoadWorkitemQueues() {
-      try {
-        if (!this.Signedin) return;
-        var result = [];
-        result.push({ _id: "", name: "All" });
-        var workitemqueues = await this.Client.Query({ query: { "_type": "workitemqueue" }, collectionname: "mq" });
-        this.workitemqueues = result.concat(workitemqueues)
-        // if (this.workitemqueues.length > 0 && this.ClientIsNullEmpty(this.wiqid)) this.wiqid = this.workitemqueues[0]._id;
-      } catch (error) {
-        this.errormessage = error;
-      }
     },
     async loadItems() {
       this.loading = true
@@ -287,7 +253,7 @@ export default {
         // if (this.serverOptions.sortType == "desc") {
         //   orderby[this.serverOptions.sortBy] = -1;
         // }
-        var query = { "_type": "workitem" };
+        var query = { "_type": "workflow" };
         var exactquery = null;
         if (!Util.IsNullEmpty(this.wiqid)) query["wiqid"] = this.wiqid;
         if (!Util.IsNullEmpty(this.wiqid)) query["wiqid"] = this.wiqid;
@@ -361,42 +327,17 @@ export default {
         //   key: 'name',
         // },
 
-        if (Util.IsNullEmpty(this.wiqid)) {
-          this.headers = [
-            { title: "Name", key: "name", sortable: true },
-            { title: "State", key: "state", sortable: true },
-            { title: "Queue", key: "wiq", sortable: false },
-            { title: "By", key: "_createdby", sortable: false },
-            { title: "Created", key: "_created", sortable: true },
-            { title: "Due", key: "lastrun", sortable: false },
-            { title: "Operation", key: "operation" },
-          ]
-        } else {
-          this.headers = [
-            { title: "Name", key: "name", sortable: true },
-            { title: "State", key: "state", sortable: true },
-            { title: "By", key: "_createdby", sortable: false },
-            { title: "Created", key: "_created", sortable: true },
-            { title: "Due", key: "lastrun", sortable: false },
-            { title: "Operation", key: "operation" },
-          ]
-        }
+        this.headers = [
+          { title: "Name", key: "name", sortable: true },
+          { title: "By", key: "_createdby", sortable: false },
+        ]
 
         this.items = [];
-        if (this.collectionname != "cvr" && this.collectionname != "linkedin" && this.collectionname != "dbusage") {
-          if (this.serverItemsLength == 0) {
-            this.serverItemsLength = ((this.serverOptions.page - 1) * this.serverOptions.rowsPerPage) + this.serverOptions.rowsPerPage + 1;
-            this.Client.Count({ query, collectionname: this.collectionname }).then(value => {
-              this.serverItemsLength = value;
-            });
-          }
-        } else {
-          // fake more items
+        if (this.serverItemsLength == 0) {
           this.serverItemsLength = ((this.serverOptions.page - 1) * this.serverOptions.rowsPerPage) + this.serverOptions.rowsPerPage + 1;
-          if (this.items.length < this.serverOptions.rowsPerPage) {
-            this.serverItemsLength = ((this.serverOptions.page - 1) * this.serverOptions.rowsPerPage) + this.items.length;
-          }
-          if (this.serverItemsLength < 1) this.serverItemsLength = 11;
+          this.Client.Count({ query, collectionname: this.collectionname }).then(value => {
+            this.serverItemsLength = value;
+          });
         }
         if (this.serverItemsLength > 0) {
           if (exactquery != null && this.serverOptions.page == 1) {
@@ -543,9 +484,6 @@ document.addEventListener('keydown', function (event) {
   if (event.ctrlKey && event.key === 'a') {
     event.preventDefault();
   }
-  if (event.ctrlKey && event.key === 'f') {
-    event.preventDefault();
-  }
 }); 
 </script>
 
@@ -571,4 +509,5 @@ body.dark .card a {
 body.dark .operation-wrapper .operation-icon {
   filter: invert(100%);
 }
+
 </style>

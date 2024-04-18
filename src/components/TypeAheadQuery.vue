@@ -3,7 +3,7 @@
         :minItemLength="minItemLength" :selectOnTab="selectOnTab" :defaultItem="defaultItem"
         @selectItem="selectItemEventHandler" @onInput="onInputEventHandler" @onFocus="onFocusEventHandler"
         :filterlocal="false" :allowempty="allowempty" :itemProjection="itemProjection" @onBlur="onBlurEventHandler"
-        ref="typeahead" v-model="modelValue">
+        ref="typeahead" :v-model="modelValue">
     </TypeAhead>
 </template >
 <script>

@@ -33,12 +33,10 @@ export default {
     ...mapGetters(['User', 'Signedin', 'Client']),
   },
   async created() {
-    console.log("created")
     this.GetData()
   },
   methods: {
     async selectItemEventHandler(item) {
-      console.log(JSON.parse( JSON.stringify(item)) )
       if(item.queue == null || item.queue == "") {
         console.log("no queue defined for this workflow")
         return
@@ -80,7 +78,6 @@ export default {
   },
   watch: {
     Signedin: function (val, oldVal) {
-      console.log("Signedin changed")
       if (val == true && oldVal != val) {
         this.GetData();
       }

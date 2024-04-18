@@ -16,15 +16,10 @@
     "updatejsapidev": "npm uninstall @openiap/jsapi && npm i ../jsapi"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^6.2.0",
-    "@fortawesome/free-brands-svg-icons": "^6.2.0",
-    "@fortawesome/free-solid-svg-icons": "^6.2.0",
-    "@fortawesome/vue-fontawesome": "^3.0.1",
     "@openiap/jsapi": "github:openiap/jsapi",
     "@skadefro/vue-shortkey": "^3.1.8",
     "@vue-flow/additional-components": "^1.1.0",
     "@vue-flow/core": "^1.1.4",
-    "chota": "^0.8.0",
     "core-js": "^3.8.3",
     "express": "^4.19.2",
     "register-service-worker": "^1.7.2",
@@ -34,15 +29,17 @@
     "vue-router": "^4.0.3",
     "vue-shortkey": "file:../vue-shortkey",
     "vue3-easy-data-table": "^1.5.0",
+    "vuetify": "^3.5.15",
     "vuex": "^4.0.0"
   },
   "devDependencies": {
+    "@mdi/font": "^7.4.47",
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-router": "~5.0.0",
     "@vue/cli-plugin-typescript": "~5.0.0",
     "@vue/cli-plugin-vuex": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
-    "typescript": "~4.5.5"
+    "fork-ts-checker-webpack-plugin": "^9.0.2"
   },
   "openiap": {
     "language": "nodejs",

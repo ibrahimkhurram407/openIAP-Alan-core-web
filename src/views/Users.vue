@@ -4,49 +4,37 @@
       <!-- Filtering Button Group -->
       <v-col cols="12">
         <v-btn-toggle v-model="selectedType" mandatory dense>
-          <v-btn v-for="s in types" :key="s" :value="s">
-            {{ s }}
-          </v-btn>
-        </v-btn-toggle>
-
-        <!-- <v-btn-toggle v-model="selectedType" mandatory dense>
-          <v-btn v-for="type in types" :key="type" @click="filterAgents(type)">
+          <v-btn v-for="type in types" :key="type" @click="GetData()">
             {{ type }}
           </v-btn>
-        </v-btn-toggle> -->
+        </v-btn-toggle>
       </v-col>
     </v-row>
-    <button class="hidden" v-shortkey.propagte="['arrowright']" @shortkey="NextPage">Next</button>
-    <button class="hidden" v-shortkey.propagte="['arrowleft']" @shortkey="PreviusPage">Previus</button>
-    <button class="hidden" v-shortkey.propagte="['arrowup']" @shortkey="PreviusCollection">Next</button>
-    <button class="hidden" v-shortkey.propagte="['arrowdown']" @shortkey="NextCollection">Previus</button>
-    <button class="hidden" @click="SelectAll" v-shortkey.propagte="['ctrl', 'a']" @shortkey="SelectAll">SelectAll</button>
-
     <v-row>
-      <v-col cols="12" sm="6" md="4" lg="3" v-for="agent in filteredItems" :key="agent.id">
+      <v-col cols="12" sm="6" md="4" lg="3" v-for="item in filteredItems" :key="item.id">
         <v-card class="pa-3" flat tile>
           <v-card-text>
             <div>
-              <h3>{{ agent.name }}</h3>
-              <p>Slug: {{ agent.slug }}</p>
-              <p>Image: {{ agent.image }}</p>
-              <p>Architecture: {{ agent.arc }}</p>
-              <p>Status: {{ agent.status }}</p>
+              <h3>{{ item.name }}</h3>
+              <p>Slug: {{ item.slug }}</p>
+              <p>Image: {{ item.image }}</p>
+              <p>Architecture: {{ item.arc }}</p>
+              <p>Status: {{ item.status }}</p>
             </div>
             <div class="d-flex align-center justify-space-around mt-2">
-              <v-btn icon @click="startAgent(agent)">
+              <v-btn icon @click="startAgent(item)">
                 <v-icon>mdi-play</v-icon>
               </v-btn>
-              <v-btn icon @click="BrowseAgent(agent)">
+              <v-btn icon @click="BrowseAgent(item)">
                 <v-icon>mdi-open-in-new</v-icon>
               </v-btn>
-              <v-btn icon @click="stopAgent(agent)">
+              <v-btn icon @click="stopAgent(item)">
                 <v-icon>mdi-stop</v-icon>
               </v-btn>
-              <v-btn icon @click="editAgent(agent)">
+              <v-btn icon @click="editAgent(item)">
                 <v-icon>mdi-pencil</v-icon>
               </v-btn>
-              <v-btn icon @click="deleteAgent(agent)">
+              <v-btn icon @click="deleteAgent(item)">
                 <v-icon>mdi-delete</v-icon>
               </v-btn>
             </div>
@@ -69,7 +57,7 @@ export default {
       knownpods: [],
       loading: false,
       searchValue: "",
-      collectionname: "agents",
+      collectionname: "users",
       lastSearchValue: "",
       serverItemsPending: false,
       serverItemsLength: 0,
@@ -82,8 +70,8 @@ export default {
         sortType: 'desc',
       },
       collections: ['audit', 'entities', 'users'],
-      selectedType: 'All',
-      types: ['Cloud', 'Docker', 'Assistant', 'Daemon', 'All'],
+      selectedType: '4',
+      types: ['Disabled', 'Validated', 'DB Locked', 'All'],
       headers: [
       ],
       searchfields: ['name'],
@@ -122,9 +110,6 @@ export default {
       return this.User;
     },
     filteredItems() {
-      if (this.selectedType === 'Cloud') {
-        return this.items.filter(agent => this.hasPod(agent));
-      }
       return this.items;
     }
     
@@ -148,11 +133,7 @@ export default {
         }
       },
       deep: true
-    },
-    selectedType: function (val, oldVal) {
-      console.log("selectedType")
-      this.GetData();
-    }    
+    }
   },
   beforeMount() {
     this.addAutoUpdate();
@@ -195,6 +176,8 @@ export default {
       window.open(url, '_blank');
     },
     async editAgent(agent) {},
+
+
     editItem(item) {
       this.$router.push({ name: 'EntityViewWithId', params: { collectionname: this.collectionname, id: item._id } });
     },
@@ -229,25 +212,7 @@ export default {
         this.GetData();
       }
     },
-    PreviusCollection() {
-      var index = this.types.indexOf(this.selectedType);
-      if (index > 0) {
-        index--;
-      } else {
-        index = this.types.length - 1;
-      }
-      this.selectedType = this.types[index];
-    },
-    NextCollection() {
-      var index = this.types.indexOf(this.selectedType);
-      if (index < this.types.length - 1) {
-        index++;
-      } else {
-        index = 0;
-      }
-      this.selectedType = this.types[index];
-    },
-    SelectAll(e) {
+    SelectAll() {
       for(let i = 0; i < this.items.length; i++) {
         if(this.itemsSelected.indexOf(this.items[i]._id) == -1) {
           this.itemsSelected.push(this.items[i]._id)
@@ -295,15 +260,14 @@ export default {
             orderby[this.serverOptions.sortBy] = -1;
           }
         }
-        var query = {"_type": "agent"};
-        // types: ['Cloud', 'Docker', 'Assistant', 'Daemon', 'All'],
-        if(this.selectedType == 'Cloud' || this.selectedType == 'All') {
-        } else if(this.selectedType == 'Docker') {
-          query["docker"] = true;
-        } else if(this.selectedType == 'Assistant') {
-          query["assistant"] = true;
-        } else if(this.selectedType == 'Daemon') {
-          query["daemon"] = true;
+        var query = {"_type": "user"};
+        // types: ['Disabled', 'Validated', 'DB Locked', 'All'],
+        if(this.selectedType == 0) {
+          query["disabled"] = true;
+        } else if(this.selectedType == 1) {
+          query["validated"] = true;
+        } else if(this.selectedType == 2) {
+          query["dblocked"] = true;
         }
         var exactquery = null;
         await this.PageStateSet({ key: "entities_" + this.collectionname + "_searchValue", value: this.searchValue });

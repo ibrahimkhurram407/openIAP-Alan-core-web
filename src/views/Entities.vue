@@ -16,11 +16,14 @@
           v-debounce:300ms="DoSearch" placeholder="Search term or json query">
       </div>
       <div class="col">
+        {{  serverItemsPending ? 'counting' : '' }}
+      </div>
+      <div class="col">
         <footer class="is-right">
           <button @click="Reload" class="button">Reload</button>
           <button v-shortkey.propagte="['insert']" @shortkey="Insert" @click="Insert"
             class="button primary">Insert</button>
-          <input type="file" id="fileupload" v-if="this.collectionname == 'files' || this.collectionname == 'fs.files'"
+          <input type="file" id="fileupload" v-if="this.collectionname.endsWith('.files')"
             @change="Upload" />
 
           <button @click="Delete" v-shortkey.propagte="['del']" @shortkey="Delete" class="button error">Delete</button>
@@ -56,6 +59,9 @@
       <template #item-_created="item">
         {{ _timeSince(item._created) }}
       </template>
+      <template #item-metadata.uploadDate="item">
+        {{ _timeSince(item.uploadDate) }}
+      </template>
       <template #item-metadata._created="item">
         {{ _timeSince(item.metadata?._created) }}
       </template>
@@ -74,6 +80,10 @@
       <template #item-lastrun="item">
         {{ _timeSince(item.lastrun) }}
       </template>
+      <template #item-metadata.name="item">
+        <router-link :to="{ name: 'EntityViewWithId', params: { collectionname, id: item._id } }">{{ item.metadata?.name || item.name || item.filename }}
+        </router-link>
+      </template>      
       <template #item-name="item">
         <router-link :to="{ name: 'EntityViewWithId', params: { collectionname, id: item._id } }">{{ item.name }}
         </router-link>
@@ -82,7 +92,7 @@
         <div class="operation-wrapper">
           <img v-if="item.href != '' && item.href != null" src="./images/link.png" class="operation-icon"
             @click="openlinkItem(item)" />
-          <img v-if="collectionname == 'fs.files'" src="./images/download.png" class="operation-icon"
+          <img v-if="collectionname.endsWith('.files')" src="./images/download.png" class="operation-icon"
             @click="downloadFile(item)" />
           <img src="./images/edit.png" class="operation-icon" @click="editItem(item)" />
 
@@ -90,8 +100,8 @@
       </template>
       <template #item-fa="item">
         <div>
-          <font-awesome-icon :icon="item.fa" />
-          <font-awesome-icon :icon="item.fa2" v-if="item.fa2 != ''" />
+          <!-- <font-awesome-icon :icon="item.fa" />
+          <font-awesome-icon :icon="item.fa2" v-if="item.fa2 != ''" /> -->
         </div>
       </template>
 
@@ -145,7 +155,7 @@ export default {
     this.searchValue = await this.PageStateGet({ key: "entities_" + this.collectionname + "_searchValue", defaultvalue: "" });
     this.serverOptions.rowsPerPage = await this.PageStateGet({ key: "entities_" + this.collectionname + "_rowsPerPage", defaultvalue: 10 });
     this.serverOptions.sortBy = await this.PageStateGet({ key: "entities_" + this.collectionname + "_sortby", defaultvalue: "" });
-    if (this.collectionname == "fs.files" && this.serverOptions.sortBy == "_created") {
+    if (this.collectionname.endsWith(".files") && this.serverOptions.sortBy == "_created") {
       this.serverOptions.sortBy = "metadata._created"
     }
     this.serverOptions.sortType = await this.PageStateGet({ key: "entities_" + this.collectionname + "_sorttype", defaultvalue: "desc" });
@@ -179,7 +189,7 @@ export default {
         this.serverItemsLength = 0;
         this.serverOptions.page = await this.PageStateGet({ key: "entities_" + this.collectionname + "_page", defaultvalue: 1 });
         this.serverOptions.sortBy = await this.PageStateGet({ key: "entities_" + this.collectionname + "_sortby", defaultvalue: "" });
-        if (this.collectionname == "fs.files" && this.serverOptions.sortBy == "_created") {
+        if (this.collectionname.endsWith(".files") && this.serverOptions.sortBy == "_created") {
           this.serverOptions.sortBy = "metadata._created"
         }
 
@@ -239,7 +249,6 @@ export default {
     },
     async downloadFile(item) {
       try {
-        console.log("downloading file", item)
         var filecontent = await this.Client.DownloadFile({ id: item._id })
         var blob = new Blob([filecontent], { type: item.contentType });
         var link = document.createElement('a');
@@ -281,7 +290,6 @@ export default {
         var name = file1.name;
         var type = file1.typr;
         var id = await me.Client.UploadFile(name, type, content)
-        console.log("file " + name + " uploaded with id " + id);
         e.target.value = null;
         me.Reload();
       }
@@ -326,7 +334,11 @@ export default {
       }
     },
     SelectAll() {
-      this.itemsSelected = this.items;
+      for(let i = 0; i < this.items.length; i++) {
+        if(this.itemsSelected.indexOf(this.items[i]._id) == -1) {
+          this.itemsSelected.push(this.items[i]._id)
+        }
+      }
     },
     FocusSearch() {
       this.$refs.searchfield.focus();
@@ -382,13 +394,12 @@ export default {
           if (this.serverOptions.sortBy == "" || this.serverOptions.sortBy == null) {
             this.serverOptions.sortBy = await this.PageStateGet({ key: "entities_" + this.collectionname + "_sortby", defaultvalue: "_created" });
           }
-        } else if (this.collectionname == "fs.files") {
+        } else if (this.collectionname.endsWith(".files")) {
           this.headers = [
             { text: "Name", value: "metadata.name" },
             { text: "Type", value: "contentType", sortable: false },
             { text: "By", value: "metadata._createdby", sortable: false },
-            { text: "Created", value: "metadata._created", sortable: true },
-            { text: "Modified", value: "metadata._modified", sortable: false },
+            { text: "upload", value: "uploadDate", sortable: true },
             { text: "Operation", value: "operation" },
           ]
           if (this.serverOptions.sortBy == "" || this.serverOptions.sortBy == null) {
@@ -491,7 +502,6 @@ export default {
           }
         }
 
-        console.log("sortBy", this.serverOptions.sortBy);
         if (this.serverOptions.sortBy != null && this.serverOptions.sortBy != "") {
           if (this.serverOptions.sortType == "asc") {
             orderby[this.serverOptions.sortBy] = 1;
@@ -563,9 +573,9 @@ export default {
         } else {
           await this.PageStateSet({ key: "entities_" + this.collectionname + "_rowsperpage", value: this.serverOptions.page });
         }
-        if (this.serverOptions.sortBy == "_created" && this.collectionname != "fs.files") {
+        if (this.serverOptions.sortBy == "_created" && !this.collectionname.endsWith(".files")) {
           await this.PageStateSet({ key: "entities_" + this.collectionname + "_sortby", value: "" });
-        } else if (this.serverOptions.sortBy == "metadata._created" && this.collectionname == "fs.files") {
+        } else if (this.serverOptions.sortBy == "metadata._created" && this.collectionname.endsWith(".files")) {
           await this.PageStateSet({ key: "entities_" + this.collectionname + "_sortby", value: "" });
         } else {
           await this.PageStateSet({ key: "entities_" + this.collectionname + "_sortby", value: this.serverOptions.sortBy });
@@ -578,28 +588,21 @@ export default {
 
         if (this.serverItemsLength == 0 && !this.serverItemsPending) {
           var _collectionname = this.collectionname.toString();
+          this.serverItemsPending = true;
           this.Client.Count({ query, collectionname: this.collectionname }).then(value => {
-            console.log("count", value, _collectionname, this.collectionname)
             if (_collectionname == this.collectionname) {
+              this.serverItemsPending = false;
               this.serverItemsLength = value;
             }
           });
         }
-        console.log("serverItemsLength", this.serverItemsLength)
-        console.log("page", this.serverOptions.page)
         if (this.serverItemsLength == 0) {
           this.serverItemsLength = ((this.serverOptions.page - 1) * this.serverOptions.rowsPerPage) + this.serverOptions.rowsPerPage + 1;
           // this.serverItemsLength = await this.Client.Count({ query, collectionname: this.collectionname });
         }
-        console.log("Config", JSON.parse(JSON.stringify(this.Config)));
-        console.log("orderby", orderby);
         if (this.Config.timeseries_collections.indexOf(this.collectionname) > -1) {
-          console.log("timeseries_collections", this.collectionname)
-          // orderby = undefined;
         }
         if (this.Config.collections_with_text_index.indexOf(this.collectionname) > -1) {
-          console.log("collections_with_text_index", this.collectionname)
-          // orderby = undefined;
         }
         if (this.serverItemsLength > 0) {
           if (exactquery != null && this.serverOptions.page == 1) {

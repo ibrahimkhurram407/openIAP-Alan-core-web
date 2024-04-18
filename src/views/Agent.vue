@@ -12,22 +12,22 @@
     <div v-for="(instance, i) in instances" :key="i" class="card">
       <div class="row">
         <div class="col">name</div>
-        <div class="col">{{instance.metadata.name}}</div>
+        <div class="col">{{instance.metadata?.name}}</div>
       </div>
       <div class="row">
         <div class="col">cpu</div>
         <div class="col">{{instance.metrics?.cpu + "/" +
-        instance.spec.containers[0].resources.limits.cpu}}</div>
+        instance.spec?.containers[0].resources.limits.cpu}}</div>
       </div>
       <div class="row">
         <div class="col">mem</div>
         <div class="col">{{instance.metrics?.memory + "/" +
-        instance.spec.containers[0].resources.limits.memory}}</div>
+        instance.spec?.containers[0].resources.limits.memory}}</div>
       </div>
       <div class="row">
         <div class="col">status</div>
-        <div class="col">{{ instance.metadata.deletionTimestamp != null ? " deleting" :
-        instance.status.phase }}
+        <div class="col">{{ instance.metadata?.deletionTimestamp != null ? " deleting" :
+        instance.status?.phase }}
           <button class="button" @click="GetInstanceLog(instance)">Logs</button>
         </div>
       </div>
@@ -165,6 +165,12 @@ export default {
   },
   computed: {
     ...mapGetters(["Config", "Signedin", "User", "Client"]),
+    /**
+     * @returns {openiap} Client object with server-side functions
+     */
+     client() {
+      return this.Client;
+    },
   },
   methods: {
     hasrole(role) {
@@ -182,14 +188,14 @@ export default {
       if (!this.Signedin)
         return;
       if (this.labels.length == 0) {
-        this.labels = await this.Client.GetKubeNodeLabels({});
-        if (this.labels != null)
-          this.keys = Object.keys(this.labels);
+        // this.labels = await this.Client.GetKubeNodeLabels({});
+        // if (this.labels != null)
+        //   this.keys = Object.keys(this.labels);
       }
-      if (Util.IsNullEmpty(this.userid)) {
+      if (this.userid == null || this.userid == "") {
         this.userid = this.User._id;
       }
-      if (Util.IsNullEmpty(this.username)) {
+      if (this.username == "" || this.user == null) {
         var users = await this.Client.Query({ collectionname: "users", query: { _id: this.userid }, top: 1 });;
         this.user = users[0];
         this.username = this.user.username;
@@ -200,7 +206,8 @@ export default {
       if (this.nodered != null && this.nodered.resources != null && this.nodered.resources.limits != null) {
         this.limitsmemory = this.nodered.resources.limits.memory;
       }
-      this.instances = await this.Client.GetNoderedInstance({ _id: this.userid });
+      this.instances = await this.client.CustomCommand({ command: "getagentpods" })
+      // await this.Client.GetNoderedInstance({ _id: this.userid });
       if (this.instances > 0) {
         this.instance = this.instances[0];
       }
@@ -213,8 +220,9 @@ export default {
     },
     async GetInstanceLog(instance) {
       try {
-        if (Util.IsNullEmpty(this.instancelog)) {
-          var logs = await this.Client.GetNoderedInstanceLog({ _id: this.userid, instancename: instance.metadata.name });
+        if (this.instancelog == "" || this.instance.metadata.name != instance.metadata.name) {
+          // var logs = await this.Client.GetNoderedInstanceLog({ _id: this.userid, instancename: instance.metadata.name });
+          var logs = await this.client.CustomCommand({ command: "getagentlog", id:  this.userid, name: instance.metadata.name})
           this.instancelog = logs.split("\n").reverse().join("\n");
         } else {
           this.instancelog = "";

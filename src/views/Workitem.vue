@@ -181,7 +181,6 @@ export default {
     },
     async Save() {
       var item = { ...this.item };
-      console.log("save",item)
       if (this.mode == "json") { item.payload = JSON.parse(this.json); }
       try {
         if (!Util.IsNullEmpty(this.id)) {
