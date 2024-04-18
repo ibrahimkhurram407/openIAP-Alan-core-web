@@ -15,6 +15,12 @@ const config = {
       pages: "dist",
       strict: true,
     }),
+    // prerender: {
+    //   crawl: true,
+    //   enabled: true,
+    //   onError: 'continue',
+    //   default: true
+    // },
     paths: {
       base: "/ui",
     },
