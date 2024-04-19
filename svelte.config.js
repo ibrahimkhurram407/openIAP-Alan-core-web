@@ -1,7 +1,5 @@
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import adapter from "@sveltejs/adapter-static";
-import { sveltekit } from "@sveltejs/kit/vite";
-
 import path from "path";
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -13,16 +11,12 @@ const config = {
       },
       assets: "dist",
       pages: "dist",
+      fallback: 'index.html',
       strict: true,
     }),
-    // prerender: {
-    //   crawl: true,
-    //   enabled: true,
-    //   onError: 'continue',
-    //   default: true
-    // },
     paths: {
       base: "/ui",
+      relative: false
     },
   },
 

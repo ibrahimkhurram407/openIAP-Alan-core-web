@@ -7,12 +7,32 @@
 	export let variant = "default";
 	/** @type {"default" | "sm" | "lg" | "icon"} */
 	export let size = "default";
-	export let builders = [];
+	export let hidden = false;
+	// export let builders = [];
 	export { className as class };
-</script>
+	let Ref;
+	import { onMount } from 'svelte';
+	import { onDestroy } from 'svelte';
+	import { install, uninstall } from '@github/hotkey';
+	onMount(() => {
+		const button = Ref?.querySelector('button');
+		if(button && button.dataset && button.dataset.shortcut) {
+			// console.debug("install hotkey", Ref.dataset.shortcut)
+			install(button, button.dataset.shortcut)
+		}		
+	});
+	onDestroy(() => {
+		const button = Ref?.querySelector('button');
+		if(button && button.dataset && button.dataset.shortcut) {
+			// console.debug("uninstall hotkey", Ref.dataset.shortcut)
+			uninstall(button)
+		}
+	});
 
-<ButtonPrimitive.Root
-	{builders}
+</script>
+<div bind:this={Ref} style:display={!hidden == true ? 'block' : 'none'}>
+	<ButtonPrimitive.Root
+	
 	class={cn(buttonVariants({ variant, size, className }))}
 	type="button"
 	{...$$restProps}
@@ -21,3 +41,4 @@
 >
 	<slot />
 </ButtonPrimitive.Root>
+</div>

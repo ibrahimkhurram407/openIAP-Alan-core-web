@@ -1,13 +1,13 @@
 import { UserManager, WebStorageStateStore } from 'oidc-client';
 import { isAuthenticated, user } from '$lib/stores';
-
+import { base } from '$app/paths';
 const settings = {
     authority: 'https://home.openiap.io/oidc',
-    client_id: 'agent',
-    redirect_uri: window.location.origin + '/ui/',
+    client_id: 'webapp',
+    redirect_uri: window.location.origin + base + '/',
     response_type: 'code',
     scope: 'openid profile email',
-    post_logout_redirect_uri: window.location.origin + '/ui/',
+    post_logout_redirect_uri: window.location.origin + base + '/',
     userStore: new WebStorageStateStore({ store: window.localStorage })
 };
 

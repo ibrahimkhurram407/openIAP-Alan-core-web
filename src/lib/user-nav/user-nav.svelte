@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import * as Avatar from "$lib/components/ui/avatar";
     import { Button } from "$lib/components/ui/button";
@@ -7,7 +8,7 @@
 	import { isAuthenticated, user } from '$lib/stores';
 	// random number between 1 an 4
 	let random = Math.floor(Math.random() * 4) + 1;
-	let pictureurl = '/ui/avatars/0' + random + '.png';
+	let pictureurl = base + '/avatars/0' + random + '.png';
 	if($user != null && $user.profile != null && $user.profile.picture != null && $user.profile.picture != "") {
 		pictureurl = $user.profile.picture;
 	}
@@ -46,7 +47,7 @@
 			<DropdownMenu.Item>New Team</DropdownMenu.Item>
 		</DropdownMenu.Group>
 		<DropdownMenu.Separator />
-		<DropdownMenu.Item on:click={signOut}>
+		<DropdownMenu.Item on:click={signOut} data-shortcut={'Control+q,Meta+q' } >
 			Log out
 			<DropdownMenu.Shortcut>⇧⌘Q</DropdownMenu.Shortcut>
 		</DropdownMenu.Item>
@@ -55,7 +56,7 @@
 {:else}
 <Button variant="ghost" class="relative h-8 w-8 rounded-full" on:click={signIn}>
 	<Avatar.Root class="h-8 w-8">
-		<Avatar.Image src="/ui/login.png" alt="@shadcn" />
+		<Avatar.Image src="{base}/login.png" alt="@shadcn" />
 		<Avatar.Fallback>SC</Avatar.Fallback>
 	</Avatar.Root>
 </Button>

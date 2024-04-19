@@ -1,31 +1,38 @@
 <script lang="ts">
 	import { cn } from "$lib/utils.js";
+	import { base } from '$app/paths';
 
 	let className: string | undefined | null = undefined;
 	export { className as class };
 </script>
 
 <nav class={cn("flex items-center space-x-4 lg:space-x-6", className)}>
-	<a href="/ui/" class="text-sm font-medium transition-colors hover:text-primary">
+	<a href="{base}/" class="text-sm font-medium transition-colors hover:text-primary">
 		Overview
 	</a>
 
 	<a
-		href="/ui/customers"
+		href="{base}/users"
 		class="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
 	>
-		Customers
+	Users
 	</a>
 	<a
-		href="/ui/customers"
+		href="{base}/users/newuser"
 		class="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
 	>
-		Products
+		User
 	</a>
 	<a
-		href="/ui/customers"
+		href="{base}/users/1"
 		class="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
 	>
-		Settings
+		User 1
+	</a>
+	<a
+		href="{base}/users/2"
+		class="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+	>
+	User 2
 	</a>
 </nav>

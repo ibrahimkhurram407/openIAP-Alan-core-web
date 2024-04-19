@@ -1,8 +1,10 @@
 
 <script>
 	import "../app.pcss";
+	import { base } from '$app/paths';
+	import { Button } from "$lib/components/ui/button";
 
-	import { isAuthenticated, user, client } from '$lib/stores';
+	import { isAuthenticated, isSignedin, user, client } from '$lib/stores';
 	import { onMount } from 'svelte';
     import { signIn, userManager, signOut, getUser } from '$lib/auth';
 	import { replaceState, pushState } from '$app/navigation';
@@ -10,7 +12,7 @@
 		if (window.location.search.includes('code=')) {
             console.log('Code found, finishing sign in process');
             await userManager.signinRedirectCallback();
-            pushState('/ui/', {});
+            pushState(base + '/', {});
         }
 		try {
 			user.set(await getUser());
@@ -21,18 +23,27 @@
 				// console.log('Authenticated as ', $user)
 				$client.jwt = $user.access_token;
 				var result = await $client.connect(true);
+				$client.onDisconnected = (() => {
+					isSignedin.set(false);
+				});
+				isSignedin.set(true);
 				// console.log('Signed in as ', result)		
 			}
 		} catch (error) {
+			isSignedin.set(false);
 			console.error('Error signing in', error);			
 		}
     });
 	import { Input } from "$lib/components/ui/input";
-	import { Search } from "$lib/components/search";
-	import { Support } from "$lib/components/support";
-	import { MainNav } from "$lib/components/main-nav";
-	import { UserNav } from "$lib/components/user-nav";
-	import { SideBar } from "$lib/components/side-bar";
+	import { Search } from "$lib/search";
+	import { Support } from "$lib/support";
+	import { MainNav } from "$lib/main-nav";
+	import { UserNav } from "$lib/user-nav";
+	import { SideBar } from "$lib/side-bar";
+
+	import { setContext } from 'svelte';
+	const items = ['item1', 'item2', 'item3'];
+	setContext('search', items);
 	
 </script>
 
@@ -60,3 +71,4 @@
 	<footer>
 	</footer>
 </div>
+<Button hidden on:click={($isAuthenticated ? signOut : signIn)} data-shortcut={'Control+q,Meta+q' }>Sign In/Out</Button>
