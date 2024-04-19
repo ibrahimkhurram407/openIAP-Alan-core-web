@@ -60,10 +60,12 @@
 	</div>
 	<div class="border-t">
 		<div class="bg-background">
-			<div class="grid lg:grid-cols-5">
-				<SideBar />
-				<div class="col-span-3 lg:col-span-4 lg:border-l">
-					<slot />
+			<div class="grid lg:grid-cols-[16rem,1fr] ml-2">
+				<div class="sidebar w-64"> <!-- Sidebar with fixed width -->
+					<SideBar />
+				</div>
+				<div class="content lg:border-l">
+					<slot /> <!-- Main content area -->
 				</div>
 			</div>
 		</div>

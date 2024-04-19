@@ -12,22 +12,29 @@
   import DataTableCheckbox from "./data-table-checkbox.svelte";
   import { writable, type Writable } from 'svelte/store';
   import { setting } from '$lib/pstore';
-  // https://muonw.github.io/muonw-powertable/examples/example8
   // https://www.shadcn-svelte.com/docs/components/data-table
+  // https://github.com/bryanmylee/svelte-headless-table/discussions/56
 
   let serverItemCount = writable(0);
 
   export let collectionname = "entities";
+  let currentcollectionname = collectionname;
   export let query = {};
   export let key:string;
 
   export let selecteditems = [];
 
-  const _pageindex = setting(key, 'pageindex', 0);
   
-  const items = writable([]);
+
+  let _pageindex = setting(key, 'pageindex', 0);
+  if(isNaN(parseInt($_pageindex))) {
+    _pageindex.set(0);
+  }
+
+  const items = writable([{_id: "12", name: "test"}]);
   let initialPageSize = 5;
-  const table = createTable(items, {
+  function reCreateTable() {
+    let table = createTable(items, {
     page: addPagination({
       initialPageIndex: $_pageindex,
       initialPageSize,
@@ -42,44 +49,62 @@
     hide: addHiddenColumns(),
     select: addSelectedRows(),
   });
+  let columns = [];
+  columns.push(table.column({
+    id: "_id",
+    accessor: ({ _id }) => _id,
+    header: (_, { pluginStates }) => {
+      const { allPageRowsSelected } = pluginStates.select;
+      return createRender(DataTableCheckbox, {
+        checked: allPageRowsSelected,
+      });
+    },
+    cell: ({ row }, { pluginStates }) => {
+      const { getRowState } = pluginStates.select;
+      const { isSelected } = getRowState(row);
 
-  const columns = table.createColumns([
-    table.column({
-      id: "_id",
-      accessor: ({ _id }) => _id,
-      header: (_, { pluginStates }) => {
-        const { allPageRowsSelected } = pluginStates.select;
-        return createRender(DataTableCheckbox, {
-          checked: allPageRowsSelected,
-        });
+      return createRender(DataTableCheckbox, {
+        checked: isSelected,
+      });
+    },
+    plugins: {
+      sort: {
+        disable: false,
       },
-      cell: ({ row }, { pluginStates }) => {
-        const { getRowState } = pluginStates.select;
-        const { isSelected } = getRowState(row);
- 
-        return createRender(DataTableCheckbox, {
-          checked: isSelected,
-        });
+      filter: {
+        exclude: true,
       },
-      plugins: {
-        sort: {
-          disable: false,
+    },
+  }));
+  columns.push(table.column({
+    // @ts-ignore
+    accessor: "name",
+    header: "Name",
+    plugins: {
+      sort: {
+        disable: false,
+      },
+    },
+  }));
+
+  var keys = Object.keys($items[0]);
+  for(let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    if(key.startsWith("_") || key == "name") {
+      continue;
+    }
+    columns.push(table.column({
+        // @ts-ignore
+        accessor: key,
+        header: key,
+        plugins: {
+          sort: {
+            disable: false,
+          },
         },
-        filter: {
-          exclude: true,
-        },
-      },
-    }),
-    table.column({
-      accessor: "name",
-      header: "Name",
-      plugins: {
-        sort: {
-          disable: false,
-        },
-      },
-    }),
-    table.column({
+      }));
+  }
+  columns.push(table.column({
       accessor: ({ _id }) => _id,
       header: "",
       cell: ({ value }) => {
@@ -93,21 +118,38 @@
           exclude: true,
         },
       },
-    }),
-  ]);
+    }));
+    let viewModel = table.createViewModel(table.createColumns(columns), { rowDataId: ({ _id }) => _id  });
+    return viewModel;
+  }
+  let viewModel = reCreateTable();
 
-  const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates, flatColumns, rows, } =
-    table.createViewModel(columns, {
-      rowDataId: ({ _id }) => _id,
+  let { hasNextPage, hasPreviousPage, pageIndex } = viewModel.pluginStates.page;
+  let { filterValue } = viewModel.pluginStates.filter;
+  let { selectedDataIds } = viewModel.pluginStates.select;
 
-    });
 
-  const { hasNextPage, hasPreviousPage, pageIndex } = pluginStates.page;
-  const { filterValue } = pluginStates.filter;
-  const { hiddenColumnIds } = pluginStates.hide;
-  const { selectedDataIds } = pluginStates.select;
+  let tableAttrs = viewModel.tableAttrs;
+  let headerRows = viewModel.headerRows;
+  let tableBodyAttrs = viewModel.tableBodyAttrs;
+  let pageRows = viewModel.pageRows;
+  let rows = viewModel.rows;
+  let _selectedDataIds = setting(key, 'selectedDataIds', {});
 
-  const _selectedDataIds = setting(key, 'selectedDataIds', {});
+  $: tableAttrs = viewModel.tableAttrs;
+  $: headerRows = viewModel.headerRows;
+  $: tableBodyAttrs = viewModel.tableBodyAttrs;
+  $: pageRows = viewModel.pageRows;
+  $: rows = viewModel.rows;
+  $: if(collectionname != currentcollectionname) {
+    currentcollectionname = collectionname;
+    _pageindex = setting(key, 'pageindex', 0);
+    $pageIndex = $_pageindex;
+    _selectedDataIds = setting(key, 'selectedDataIds', {});
+    $selectedDataIds = $_selectedDataIds;
+    GetData();
+  }
+
   let lastselectedDataIds = -1;
   $selectedDataIds = $_selectedDataIds;
   selectedDataIds.subscribe((value) => {
@@ -116,47 +158,49 @@
   });
  
 
-  const ids = flatColumns.map((col) => col.id);
+  const ids = viewModel.flatColumns.map((col) => col.id);
   let hideForId = Object.fromEntries(ids.map((id) => [id, true]));
  
-  $: $hiddenColumnIds = Object.entries(hideForId)
+  $: viewModel.pluginStates.hide.hiddenColumnIds.set(Object.entries(hideForId)
     .filter(([, hide]) => !hide)
-    .map(([id]) => id);
+    .map(([id]) => id));
  
   const nonhidableCols = ["_id", ""];
 
   let loading = false;
   const GetData = async () => {
-    console.log("GetData", $isSignedin, loading);
-    if(loading) return;
-    if($isSignedin == false) return;
-    loading = true;
     try {
-    if($isSignedin == true) {
-      var q = {...query};
+      if(loading) return;
+      if($isSignedin == false) return;
+      loading = true;
+      try {
+        var q = {...query};
 
-      var _items: any = await $client.Query({collectionname, top: initialPageSize, skip: $pageIndex * initialPageSize, query: q})
-      for(let i = 0; i < _items.length; i++) {
-        const item = _items[i];
-        // @ts-ignore
-        item.id = item._id;
+        var _items: any = await $client.Query({collectionname, top: initialPageSize, skip: $pageIndex * initialPageSize, query: q})
+        // for(let i = 0; i < _items.length; i++) {
+        //   const item = _items[i];
+        //   // @ts-ignore
+        //   item.id = item._id;
+        // }
+        $items = _items;
+        viewModel = reCreateTable();
+      } catch (error) {
+        console.error("Error getting data", error);
       }
-      $items = _items;
-    }
-    } catch (error) {
-      console.error("Error getting data", error);
-    }
-    loading = false;
-    if($serverItemCount == 0) {
-      $serverItemCount = await $client.Count({collectionname, query: q})
-      if($pageIndex > 0) {
-        console.log($pageIndex * initialPageSize, ($pageIndex * initialPageSize) - initialPageSize, $serverItemCount)
-        if(($pageIndex * initialPageSize) - initialPageSize >= $serverItemCount) {
-          console.log("Resetting page index")
-          _pageindex.set(0);
-          GetData();
+      loading = false;
+      if($serverItemCount == 0) {
+        $serverItemCount = await $client.Count({collectionname, query: q})
+        if($pageIndex > 0) {
+          console.log($pageIndex * initialPageSize, ($pageIndex * initialPageSize) - initialPageSize, $serverItemCount)
+          if(($pageIndex * initialPageSize) - initialPageSize >= $serverItemCount) {
+            console.log("Resetting page index")
+            _pageindex.set(0);
+            GetData();
+          }
         }
       }
+    } catch (error) {
+      console.error("Error getting data", error);      
     }
   }
   isSignedin.subscribe((value) => {
@@ -171,7 +215,7 @@
   GetData();
   const cmdK = ['⌘', 'k']
   </script>
-
+collectionname:{collectionname} key: {key}
 <div>
   <div class="flex items-center py-4">
     <Input
@@ -187,7 +231,7 @@
         </Button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Content>
-        {#each flatColumns as col}
+        {#each viewModel.flatColumns as col}
           {#if !nonhidableCols.includes(col.id)}
             <DropdownMenu.CheckboxItem bind:checked={hideForId[col.id]}>
               {col.header}
@@ -211,21 +255,25 @@
                 props={cell.props()}
                 let:props
               >
+              {#if cell.id === "name"}
                 <Table.Head {...attrs}>
-                  {#if cell.id === "name"}
-                    <Button variant="ghost" on:click={props.sort.toggle}>
-                        <Render of={cell.render()} />
-                        <ArrowUpDown class="ml-2 h-4 w-4" />
-                    </Button>
-                  {:else if cell.id === "id" || cell.id === "_id" || cell.id === ""}
+                  <Button variant="ghost" on:click={props.sort.toggle}>
+                    <Render of={cell.render()} />
+                    <ArrowUpDown class="ml-2 h-4 w-4" />
+                  </Button>
+                </Table.Head>
+                {:else if cell.id === "id" || cell.id === "_id" || cell.id === ""}
+                  <Table.Head {...attrs} style="width: 35px;">
                     <Render of={cell.render()} /> 
-                  {:else}
+                  </Table.Head>
+                {:else}
+                <Table.Head {...attrs}>
                     <Button variant="ghost" on:click={props.sort.toggle}>
                       <Render of={cell.render()} />
                       <ArrowUpDown class={"ml-2 h-4 w-4"} />
                     </Button>
-                  {/if}
-                </Table.Head>
+                  </Table.Head>
+                {/if}
               </Subscribe>
             {/each}
           </Table.Row>
@@ -238,15 +286,9 @@
           <Table.Row {...rowAttrs}>
             {#each row.cells as cell (cell.id)}
               <Subscribe attrs={cell.attrs()} let:attrs>
-                {#if cell.id === "id" || cell.id === "_id" || cell.id === ""}
-                  <Table.Cell {...attrs} style="width: 10px;">
-                      <Render of={cell.render()} />
-                  </Table.Cell>
-                {:else}
-                  <Table.Cell {...attrs}>
+                <Table.Cell {...attrs}>
                     <Render of={cell.render()} />
-                  </Table.Cell>
-                {/if}
+                </Table.Cell>
               </Subscribe>
             {/each}
           </Table.Row>
@@ -294,7 +336,6 @@
   size="sm"
   data-shortcut={'Control+u,Meta+u' }
   on:click={() => {
-    console.log("Unselect all")
     selectedDataIds.clear();
     }}>Unselect all</Button
   >
@@ -304,7 +345,6 @@
     size="sm"
     data-shortcut={'Control+a,Meta+a' }
     on:click={() => {
-      console.log("Select all")
       const selectcount = Object.keys($selectedDataIds).length;
       // if(selectcount == 0) {
       //   const { allPageRowsSelected } = pluginStates.select;
@@ -338,4 +378,3 @@
     }}>Select all</Button
   >
   </div>
->

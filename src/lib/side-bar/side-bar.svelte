@@ -15,7 +15,6 @@
 		return $currentRoute === href;
 	}
 
-
 	let localItems:any[] = [
 		// {
 		// 	title: "Reports",
