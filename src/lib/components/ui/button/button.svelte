@@ -3,7 +3,9 @@
 	import { buttonVariants } from "./index.js";
 	import { cn } from "$lib/utils.js";
 	let className = undefined;
+	/** @type {"default" | "secondary" | "link" | "destructive" | "outline" | "ghost"} */
 	export let variant = "default";
+	/** @type {"default" | "sm" | "lg" | "icon"} */
 	export let size = "default";
 	export let builders = [];
 	export { className as class };
