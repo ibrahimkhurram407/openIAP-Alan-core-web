@@ -10,10 +10,6 @@
 	let className: string | null | undefined = undefined;
 	export { className as class };
 	const currentRoute = derived(page, $page => $page.url.pathname);
-	function isCurrentRoute(href) {
-		console.log($currentRoute, href, $currentRoute === href)
-		return $currentRoute === href;
-	}
 
 	let localItems:any[] = [
 		// {
@@ -26,6 +22,21 @@
 		// 	icon: "settings.svg",
 		// 	href: base + "/settings",
 		// },
+		{
+			title: "Entities",
+			icon: "entities.svg",
+			href: base + "/entities",
+		},
+		{
+			title: "Agents",
+			icon: "agents.svg",
+			href: base + "/agents",
+		},
+		{
+			title: "Workitems",
+			icon: "workitems.svg",
+			href: base + "/workitems",
+		},
 		{
 			title: "Users",
 			icon: "users.svg",
@@ -47,21 +58,6 @@
 			href: base + "/queues",
 		},
 		{
-			title: "Entities",
-			icon: "entities.svg",
-			href: base + "/entities",
-		},
-		{
-			title: "Agents",
-			icon: "agents.svg",
-			href: base + "/agents",
-		},
-		{
-			title: "Workitems",
-			icon: "workitems.svg",
-			href: base + "/workitems",
-		},
-		{
 			title: "Form Workflows",
 			icon: "workflows.svg",
 			href: base + "/form-workflows",
@@ -77,9 +73,38 @@
 			href: base + "/grafana",
 		}
 	]
-	import { searchItems, filteredsearchItems } from '$lib/stores.js';
-	searchItems.set(localItems);
-	filteredsearchItems.set(localItems);
+	import { eventStore, searchQuery } from '$lib/stores.js';
+	function onSearchSelect(data) {
+		if(data.name != "search:select") return;
+		if(data.item == null) return;
+		if(data.source != "sidebar") return;
+		if(data.item.href == null || data.item.href == "") return;
+    	goto(data.item.href);
+		// $searchQuery = "";
+	}
+	function onSearchQuery(value) {
+		let filteredresults = [];
+		// if(value != null && value != "")
+			for(let i = 0; i < localItems.length; i++) {
+				if(localItems[i].title.toLowerCase().includes(value.toLowerCase())) {
+					var item = {...localItems[i]};
+					item.source = "sidebar";
+					item.name = item.title;
+					filteredresults.push(item);
+					if(filteredresults.length == 3) break;
+				}
+			}
+		eventStore.dispatch({ name: "search:results", items: filteredresults, source: "sidebar" });
+	};
+	import { onMount } from 'svelte';
+	onMount(() => {
+		eventStore.addListener(onSearchSelect);
+		const unsubscribe = searchQuery.subscribe(onSearchQuery);
+		return () => {
+		eventStore.removeListener(onSearchSelect);
+		unsubscribe();
+		};
+	});
 
 	// variant={$page.url.pathname === item.href ? 'secondary' : 'ghost'} 
 	// variant="{!isCurrentRoute(item.href) ? 'ghost' : 'secondary'}"
@@ -90,7 +115,7 @@
 	<div class="space-y-4 py-4">
 		<div class="px-3 py-2">
 			<div class="space-y-1">
-				{#each $filteredsearchItems as item}
+				{#each localItems as item}
 				<Button 
 				variant={$page.url.pathname.startsWith(item.href) ? 'secondary' : 'ghost'} 
 				 class="w-full justify-start "

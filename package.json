@@ -36,6 +36,7 @@
     "clsx": "^2.1.0",
     "formsnap": "^1.0.0",
     "lucide-svelte": "^0.371.0",
+    "mode-watcher": "^0.3.0",
     "sveltekit-superforms": "^2.12.5",
     "tailwind-merge": "^2.2.2",
     "tailwind-variants": "^0.2.1",

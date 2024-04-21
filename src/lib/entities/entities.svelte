@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { client, isSignedin } from '$lib/stores';
+  import SuperDebug from 'sveltekit-superforms';
+	import { client, isSignedin, searchQuery } from '$lib/stores';
   import { createTable , Render, Subscribe, createRender } from "svelte-headless-table";
-  import { addPagination, addSortBy, addTableFilter, addHiddenColumns, addSelectedRows } from "svelte-headless-table/plugins";
+  import { addPagination, addSortBy, addHiddenColumns, addSelectedRows } from "svelte-headless-table/plugins";
   import ArrowUpDown from "lucide-svelte/icons/arrow-up-down";
   import ChevronDown from "lucide-svelte/icons/chevron-down";
   import * as Table from "$lib/components/ui/table";
@@ -15,7 +16,7 @@
   // https://www.shadcn-svelte.com/docs/components/data-table
   // https://github.com/bryanmylee/svelte-headless-table/discussions/56
 
-  let serverItemCount = writable(0);
+  let serverItemCount = writable(-1);
 
   export let collectionname = "entities";
   let currentcollectionname = collectionname;
@@ -23,9 +24,76 @@
   export let key:string;
 
   export let selecteditems = [];
+  const currentquery = writable({});
 
   
-
+  function parseJson(txt, reviver, context) {
+        context = context || 20
+        try {
+            return JSON.parse(txt, reviver)
+        } catch (e) {
+            if (typeof txt !== "string") {
+                const isEmptyArray = Array.isArray(txt) && txt.length === 0
+                const errorMessage = "Cannot parse " +
+                    (isEmptyArray ? "an empty array" : String(txt))
+                throw new TypeError(errorMessage)
+            }
+            const syntaxErr = e.message.match(/^Unexpected token.*position\s+(\d+)/i)
+            const errIdx = syntaxErr
+                ? +syntaxErr[1]
+                : e.message.match(/^Unexpected end of JSON.*/i)
+                    ? txt.length - 1
+                    : null
+            if (errIdx != null) {
+                const start = errIdx <= context
+                    ? 0
+                    : errIdx - context
+                const end = errIdx + context >= txt.length
+                    ? txt.length
+                    : errIdx + context
+                e.message += ` while parsing near "${start === 0 ? "" : "..."
+                    }${txt.slice(start, end)}${end === txt.length ? "" : "..."
+                    }"`
+            } else {
+                e.message += ` while parsing "${txt.slice(0, context * 2)}"`
+            }
+            throw e
+        }
+    }
+    function safeEval(jsStr) {
+    try {
+        return Function('"use strict";return (' + jsStr + ')')();
+    } catch (error) {
+        console.error("Failed to parse string", error);
+        return null;
+    }
+}
+  function createQuery() {
+    let q = {...query};
+    console.log("query", JSON.stringify(query))
+    let searchstring = $searchQuery;
+    if(searchstring == null || searchstring == "") {
+      return q;
+    }
+    if ((searchstring as string).indexOf("{") == 0) {
+        if ((searchstring as string).lastIndexOf("}") == ((searchstring as string).length - 1)) {
+            try {
+                q = parseJson(searchstring, null, null);
+            } catch (error) {
+              try {
+                q = safeEval(searchstring);
+              } catch (error2) {
+                console.error("Error parsing query", error);
+                throw error;
+              }
+            }
+        }
+    } else {
+      // q["name"] = new RegExp([searchstring.substring(1)].join(""), "i")
+      q["name"] = {"$regex": searchstring, "$options": "i"}
+    }
+    return q;
+  }
   let _pageindex = setting(key, 'pageindex', 0);
   if(isNaN(parseInt($_pageindex))) {
     _pageindex.set(0);
@@ -42,10 +110,6 @@
       serverSide: true
     }),
     sort: addSortBy(),
-    filter: addTableFilter({
-      fn: ({ filterValue, value }) =>
-        value.toLowerCase().includes(filterValue.toLowerCase()),
-    }),
     hide: addHiddenColumns(),
     select: addSelectedRows(),
   });
@@ -70,10 +134,7 @@
     plugins: {
       sort: {
         disable: false,
-      },
-      filter: {
-        exclude: true,
-      },
+      }
     },
   }));
   columns.push(table.column({
@@ -86,7 +147,6 @@
       },
     },
   }));
-
   var keys = Object.keys($items[0]);
   for(let i = 0; i < keys.length; i++) {
     const key = keys[i];
@@ -113,10 +173,7 @@
       plugins: {
         sort: {
           disable: true,
-        },
-        filter: {
-          exclude: true,
-        },
+        }
       },
     }));
     let viewModel = table.createViewModel(table.createColumns(columns), { rowDataId: ({ _id }) => _id  });
@@ -125,7 +182,6 @@
   let viewModel = reCreateTable();
 
   let { hasNextPage, hasPreviousPage, pageIndex } = viewModel.pluginStates.page;
-  let { filterValue } = viewModel.pluginStates.filter;
   let { selectedDataIds } = viewModel.pluginStates.select;
 
 
@@ -145,6 +201,7 @@
     currentcollectionname = collectionname;
     _pageindex = setting(key, 'pageindex', 0);
     $pageIndex = $_pageindex;
+    $serverItemCount = -1;
     _selectedDataIds = setting(key, 'selectedDataIds', {});
     $selectedDataIds = $_selectedDataIds;
     GetData();
@@ -152,10 +209,6 @@
 
   let lastselectedDataIds = -1;
   $selectedDataIds = $_selectedDataIds;
-  selectedDataIds.subscribe((value) => {
-    _selectedDataIds.set(value);
-    selecteditems = Object.keys(value);
-  });
  
 
   const ids = viewModel.flatColumns.map((col) => col.id);
@@ -174,74 +227,78 @@
       if($isSignedin == false) return;
       loading = true;
       try {
-        var q = {...query};
-
-        var _items: any = await $client.Query({collectionname, top: initialPageSize, skip: $pageIndex * initialPageSize, query: q})
-        // for(let i = 0; i < _items.length; i++) {
-        //   const item = _items[i];
-        //   // @ts-ignore
-        //   item.id = item._id;
-        // }
-        $items = _items;
-        viewModel = reCreateTable();
+        $currentquery = createQuery();
+        console.log(JSON.stringify($currentquery));
+        $items = await $client.Query({collectionname, top: initialPageSize, skip: $pageIndex * initialPageSize, query: $currentquery})
+        if($items.length > 0) {
+          viewModel = reCreateTable();
+        }
+        let filteredresults = [];
+        for(let i = 0; i < $items.length; i++) {
+          var item:any = {...$items[i]};
+          item.source = key;
+          filteredresults.push(item);
+          if(filteredresults.length == 3) break;
+        }
       } catch (error) {
         console.error("Error getting data", error);
       }
       loading = false;
-      if($serverItemCount == 0) {
-        $serverItemCount = await $client.Count({collectionname, query: q})
+      if($serverItemCount == -1) {
+        $serverItemCount = await $client.Count({collectionname, query: $currentquery})
         if($pageIndex > 0) {
-          console.log($pageIndex * initialPageSize, ($pageIndex * initialPageSize) - initialPageSize, $serverItemCount)
+          console.debug($pageIndex * initialPageSize, ($pageIndex * initialPageSize) - initialPageSize, $serverItemCount)
           if(($pageIndex * initialPageSize) - initialPageSize >= $serverItemCount) {
-            console.log("Resetting page index")
+            console.debug("Resetting page index")
             _pageindex.set(0);
             GetData();
           }
         }
       }
     } catch (error) {
-      console.error("Error getting data", error);      
+      console.error("Error getting data", error.message);      
     }
   }
-  isSignedin.subscribe((value) => {
-    if (value) {
-      GetData();
-    }
-  });
-  pageIndex.subscribe((value) => {
-    _pageindex.set(value);
+  function onSearchQuery(value) {
+    $serverItemCount = -1;
     GetData();
+  };
+
+  import { onMount } from 'svelte';
+  onMount(() => {
+    const unsubscribe2 = isSignedin.subscribe((value) => {
+      if (value) {
+        GetData();
+      }
+    });
+    const unsubscribe3 = pageIndex.subscribe((value) => {
+      _pageindex.set(value);
+      GetData();
+    });
+    const unsubscribe4 = selectedDataIds.subscribe((value) => {
+      _selectedDataIds.set(value);
+      selecteditems = Object.keys(value);
+    });
+
+    return () => {
+      unsubscribe2();
+      unsubscribe3();
+      unsubscribe4();
+    };
   });
+
   GetData();
   const cmdK = ['⌘', 'k']
   </script>
-collectionname:{collectionname} key: {key}
-<div>
+<!-- <div>
   <div class="flex items-center py-4">
-    <Input
-      class="max-w-sm"
-      placeholder="Filter emails..."
-      type="text"
-      bind:value={$filterValue}
-    />
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild let:builder>
-        <Button variant="outline" class="ml-auto" builders={[builder]}>
-          Columns <ChevronDown class="ml-2 h-4 w-4" />
-        </Button>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Content>
-        {#each viewModel.flatColumns as col}
-          {#if !nonhidableCols.includes(col.id)}
-            <DropdownMenu.CheckboxItem bind:checked={hideForId[col.id]}>
-              {col.header}
-            </DropdownMenu.CheckboxItem>
-          {/if}
-        {/each}
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
+    <div>
+    </div>
+    <div>
+      collectionname:{collectionname} key: {key}
+    </div>
   </div>
-</div>
+</div> -->
 <div class="rounded-md border">
   <Table.Root {...$tableAttrs}>
     <Table.Header class="table-head">
@@ -262,7 +319,26 @@ collectionname:{collectionname} key: {key}
                     <ArrowUpDown class="ml-2 h-4 w-4" />
                   </Button>
                 </Table.Head>
-                {:else if cell.id === "id" || cell.id === "_id" || cell.id === ""}
+                {:else if cell.id === ""}
+                <Table.Head {...attrs}>
+                  <DropdownMenu.Root>
+                    <DropdownMenu.Trigger asChild let:builder>
+                      <Button variant="outline" class="ml-auto" builders={[builder]}>
+                        Columns <ChevronDown class="ml-2 h-4 w-4" />
+                      </Button>
+                    </DropdownMenu.Trigger>
+                    <DropdownMenu.Content>
+                      {#each viewModel.flatColumns as col}
+                        {#if !nonhidableCols.includes(col.id)}
+                          <DropdownMenu.CheckboxItem bind:checked={hideForId[col.id]}>
+                            {col.header}
+                          </DropdownMenu.CheckboxItem>
+                        {/if}
+                      {/each}
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Root>
+                </Table.Head>
+                {:else if cell.id === "id" || cell.id === "_id"}
                   <Table.Head {...attrs} style="width: 35px;">
                     <Render of={cell.render()} /> 
                   </Table.Head>
@@ -378,3 +454,4 @@ collectionname:{collectionname} key: {key}
     }}>Select all</Button
   >
   </div>
+<SuperDebug data={$currentquery} />

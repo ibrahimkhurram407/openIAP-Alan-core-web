@@ -42,14 +42,14 @@
     disabled={search === 'ready'}
     
 
-    on:click={() => { console.log('f'); search = 'ready';}}>Next</Button
+    on:click={() => { search = 'ready';}}>Next</Button
   >
   <Button
   variant="outline"
   size="sm"
   disabled={search !== 'ready'}
   data-shortcut={'Escape' }
-  on:click={() => { console.log('esc'); search = 'not-ready';}}>Next</Button
+  on:click={() => { search = 'not-ready';}}>Next</Button
 >
 
 

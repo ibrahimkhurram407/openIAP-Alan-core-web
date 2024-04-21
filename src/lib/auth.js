@@ -14,7 +14,7 @@ const settings = {
 export const userManager = new UserManager(settings);
 
 userManager.events.addUserLoaded((user) => {
-    console.log('User loaded', user);
+    // console.debug('User loaded', user);
     // Handle user loading
 });
 
@@ -23,7 +23,7 @@ userManager.events.addSilentRenewError((error) => {
 });
 
 userManager.events.addAccessTokenExpired(() => {
-    console.log('Token expired');
+    // console.debug('Token expired');
     // Handle token expiration
 });
 

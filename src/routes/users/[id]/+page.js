@@ -10,7 +10,6 @@ export const _userSchema = z.object({
 });
 
 export const load = async ({ params, fetch }) => {
-  console.log(JSON.parse(JSON.stringify(params)));
   const id = params.id && params.id.length ? params.id[0] : null;
   if (id) {
     const request = await fetch(
