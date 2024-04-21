@@ -2,6 +2,9 @@
 	import { base } from '$app/paths';
 	import * as Avatar from "$lib/components/ui/avatar";
     import { Button } from "$lib/components/ui/button";
+	import Heart from 'lucide-svelte/icons/heart';
+	import Github from 'lucide-svelte/icons/github';
+	
 	const openSupportPage = () => {
 		window.open('https://github.com/sponsors/skadefro', '_blank');
 	}
@@ -10,15 +13,10 @@
 	}
 </script>
 
-<Button variant="ghost" class="relative h-8 w-8 rounded-full" on:click={openSupportPage}>
-	<Avatar.Root class="h-8 w-8">
-		<Avatar.Image src="{base}/heart.svg" alt="@shadcn" />
-		<Avatar.Fallback>SC</Avatar.Fallback>
-	</Avatar.Root>
+
+<Button variant="ghost" class="relative rounded-full" on:click={openSupportPage}>
+	<Heart />
 </Button>
-<Button variant="ghost" class="relative h-8 w-8 rounded-full" on:click={openGithubPage}>
-	<Avatar.Root class="h-8 w-8">
-		<Avatar.Image src="{base}/github.svg" alt="@shadcn" />
-		<Avatar.Fallback>SC</Avatar.Fallback>
-	</Avatar.Root>
+<Button variant="ghost" class="relative rounded-full" on:click={openGithubPage}>
+	<Github />
 </Button>

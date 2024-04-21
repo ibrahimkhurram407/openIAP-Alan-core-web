@@ -27,8 +27,8 @@
 
         const readyToFire = isComboPressed();
         if (readyToFire) {
-            if (debug) console.log('combo', keys)
-            if (debug) console.log('HotKeys <combo>\t', keys)
+            if (debug) console.debug('combo', keys)
+            if (debug) console.debug('HotKeys <combo>\t', keys)
             dispatch('hot', key)
             value = true
         }

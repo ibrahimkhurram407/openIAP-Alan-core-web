@@ -1,5 +1,5 @@
 import { UserManager, WebStorageStateStore } from 'oidc-client';
-import { isAuthenticated, user } from '$lib/stores';
+import { isAuthenticated, user, config } from '$lib/stores';
 import { base } from '$app/paths';
 const settings = {
     authority: 'https://home.openiap.io/oidc',
@@ -38,11 +38,32 @@ export const signOut = () => {
     return userManager.signoutRedirect();
 };
 
+async function loadConfig() {
+    try {
+        let url = "/config"
+        if(window.location.origin.includes("5173")) {
+            url = "https://home.openiap.io/config"
+        }
+        const request = await fetch(url);
+        if (request.status >= 400) return console.error("Failed to load config", request.status);
+        const result = await request.json();
+        result.majorversion = result.version;
+        const dotCount = result.version.split('.').length - 1;
+        if(dotCount == 3){
+            result.majorversion = result.version.substring(0, result.version.lastIndexOf('.'));
+        }
+        console.debug("openiap version", result.version)
+        config.set(result);
+    } catch (error) {
+    }
+}
+
 export const getUser = async () => {
     try {
         const result = await userManager.getUser();
         if(result != null) {
             isAuthenticated.set(true);
+            loadConfig();
             user.set(result);
         } else {
             isAuthenticated.set(false);

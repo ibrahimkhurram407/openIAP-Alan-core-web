@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { base } from '$app/paths';
   import { client, isSignedin, collections } from '$lib/stores';
-  import { Input } from "$lib/components/ui/input";
+  import { setting } from '$lib/pstore';
+  import { writable } from 'svelte/store';
+
+  import { SearchInput } from "$lib/components/ui/searchinput";
   import { ScrollArea } from "$lib/components/ui/scroll-area/index.js";
   import { Separator } from "$lib/components/ui/separator/index.js";
   import SuperDebug from 'sveltekit-superforms';
@@ -12,10 +15,22 @@
   import { Entities } from '$lib/entities';
   // https://muonw.github.io/muonw-powertable/examples/example8
   
+  // https://melt-ui.com/
+  // https://www.bits-ui.com/
+  // https://www.shadcn-svelte.com
   // https://www.shadcn-svelte.com/docs/components/data-table
 
+  // https://lucide.dev/guide/packages/lucide-svelte
+  // https://lucide.dev/icons/
 
-  const collectionname = writable($page.params.collection || "entities");
+  // https://tailwindcss.com/docs/margin
+  // https://tailwindcss.com/docs/responsive-design
+
+
+  const collectionname = setting("entities", "collection", "entities");
+  if($page.params.collection != null && $page.params.collection != "") {
+    $collectionname = $page.params.collection;
+  }
   const collectionindex = writable(0);
   let query = {}
 
@@ -34,6 +49,18 @@
         $collectionindex = $collections.findIndex(x => x.name == $collectionname);
         return;
       }
+      // $collections = [
+      //   { name: "collection1", type: "collection" },
+      //   { name: "collection2", type: "collection" },
+      //   { name: "collection3", type: "collection" },
+      //   { name: "collection4", type: "collection" },
+      //   { name: "collection5", type: "collection" },
+      //   { name: "collection6", type: "collection" },
+      //   { name: "collection7", type: "collection" },
+      //   { name: "collection8", type: "collection" },
+      //   { name: "collection9", type: "collection" },
+      // ]
+      // return;
       if(loading) return;
       if($isSignedin == false) return;
       loading = true;
@@ -48,19 +75,21 @@
       console.error("Error getting data", error);      
     }
   }
+  import Database from 'lucide-svelte/icons/database';
+  import Fileclock from 'lucide-svelte/icons/file-clock';
+  import Foldertree from 'lucide-svelte/icons/folder-tree';
+  import Folder from 'lucide-svelte/icons/folder';
+  
   function icon(item) {
     if(item.name.endsWith('.files')) {
-      return `${base}/menu/filescollection.svg`;
-    }
-    if(item.type == 'collection') {
-      return `${base}/menu/collection.svg`;
+      return Folder;
     } else if(item.type == 'timeseries') { 
-      return `${base}/menu/timeseries.svg`;
+      return Fileclock;
     }
-    return `${base}/menu/collection.svg`;
+    return Database;
   }
 
-  import { eventStore, searchQuery } from '$lib/stores.js';
+  import { eventStore } from '$lib/stores.js';
 	function onSearchSelect(data) {
 		if(data.name != "search:select") return;
 		if(data.item == null) return;
@@ -68,15 +97,7 @@
     $collectionname = data.item.name;
     $collectionindex = $collections.findIndex(x => x.name == $collectionname);
     scrollToItem($collectionindex);
-		// $searchQuery = "";
 	}
-  function onSearchQuery(value) {
-		let filteredresults = [];
-		// if(value != null && value != "")
-    filteredresults = $collections.filter(item => item.name.toLowerCase().includes(value.toLowerCase())).slice(0, 3);
-    filteredresults.forEach(item => { item.source = "entities"; } )
-		// eventStore.dispatch({ name: "search:results", items: filteredresults, source: "entities" });
-  }
   function scrollToItem(index) {
     const element = document.getElementById('item-' + index);
     if (element) {
@@ -87,9 +108,10 @@
     }
   }
   import { onMount } from 'svelte';
+    import { Key } from 'lucide-svelte';
+  const searchstring = writable("");
   onMount(() => {
     eventStore.addListener(onSearchSelect);
-    const unsubscribe = searchQuery.subscribe(onSearchQuery);
     const unsubscribe2 = collectionindex.subscribe(onCollectionindex);
     const unsubscribe3 = isSignedin.subscribe((value) => {
       if (value) {
@@ -105,7 +127,6 @@
 
     return () => {
       eventStore.removeListener(onSearchSelect);
-      unsubscribe();
       unsubscribe2();
       unsubscribe3();
       unsubscribe4();
@@ -115,39 +136,40 @@
 
 	
 
-  import { setting } from '$lib/pstore';
-  import { writable } from 'svelte/store';
   const cmdK = ['⌘', 'k']
-  let filterValue = writable('');
-  filterValue.subscribe(value => {
-    searchQuery.set(value);
-    // if(value == "") {
-    //   eventStore.dispatch({ name: "search:results", items: [], source: "entities" });
-    // }
-  });
+  // let searchstring = setting("entities", $collectionname + "_searchstring", "");
 </script>
 <div>
-  <div class="flex items-center py-4">
-    <Input v-model.trim="searchText" dense filled rounded clearable placeholder="Search" 
-    prepend-inner-icon="mdi-magnify" 
-    type="text"
-    bind:value={$filterValue}
-    />
-  </div>
+<SearchInput placeholder="Search {$collectionname} collection using text or json query" 
+  dense filled rounded clearable
+  bind:value={$searchstring}
+  on:keyup={e => { 
+    if(e.key == "ArrowUp") {
+      $collectionindex = $collectionindex - 1;
+    } else if(e.key == "ArrowDown") {
+      $collectionindex = $collectionindex + 1;
+    }
+  }}
+  data-shortcut={'Control+f,Meta+f'}
+  type="search"> 
+  </SearchInput>
 </div>
-
 <div class="border-t">
   <div class="bg-background">
-    <div class="grid lg:grid-cols-[16rem,1fr] ml-2">
+    <!-- grid lg:grid-cols-[16rem,1fr] ml-2 -->
+    <div class="grid grid-cols-[min-content,1fr] ml-1">
       <!-- h-72 w-48 rounded-md border -->
       <!-- h-screen w-48 rounded-md border -->
-      <!-- h-svh rounded-md border -->
-      <ScrollArea class="h-svh rounded-md border">
-        <div class="p-4">
-          <h4 class="mb-4 text-sm font-medium leading-none">Collections</h4>
+      <!-- class="h-svh rounded-md border" -->
+      <!-- h-96 min-w-[12rem] rounded-md border -->
+      <!-- h-96 min-w-[12rem] rounded-md border -->
+      <ScrollArea class="max-h-[36rem] min-w-[12rem] rounded-md border">
+        <!--  class="p-4" -->
+        <div>
+          <!-- <h4 class="mb-4 text-sm font-medium leading-none">Collections</h4> -->
           {#each $collections as item, index}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <div class="flex items-center text-sm item {$collectionname == item.name ? 'bg-sky-50' : ''}" role="button" tabindex="0" 
+          <!-- <div class="flex items-center text-sm item {$collectionname == item.name ? 'outline bg-sky-50' : ''}" role="button" tabindex="0" 
           id={'item-' + index} 
           on:click={() => { collectionname.set(item.name); $collectionindex = $collections.findIndex(x => x.name == $collectionname); }}>
             <Avatar.Root class="mr-2 h-4 w-4 flex-shrink-0">
@@ -155,14 +177,20 @@
               <Avatar.Fallback />
             </Avatar.Root>
             {item.name}
-          </div>
-          <Separator class="my-2" />
+          </div> -->
+          <Button class="justify-start w-full"
+          variant={$collectionname == item.name ? 'secondary' : 'ghost'} 
+          id={'item-' + index} 
+          on:click={() => { collectionname.set(item.name); $collectionindex = $collections.findIndex(x => x.name == $collectionname); }}>
+          <svelte:component this={icon(item)} class="mr-2 h-4 w-4 flex-shrink-0" />
+            {item.name}
+          </Button>
           {/each}
         </div>
       </ScrollArea>
 
       <div class="content lg:border-l">
-        <Entities key={"entities_" + $collectionname} collectionname={$collectionname} {query} bind:selecteditems={selecteditems} />
+        <Entities key={"entities_" + $collectionname} searchstring={searchstring} collectionname={$collectionname} {query} bind:selecteditems={selecteditems} />
       </div>
     </div>
   </div>

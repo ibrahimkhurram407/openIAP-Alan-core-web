@@ -14,7 +14,6 @@
 	import { replaceState, pushState } from '$app/navigation';
     onMount(async () => {
 		if (window.location.search.includes('code=')) {
-            // console.log('Code found, finishing sign in process');
             await userManager.signinRedirectCallback();
             pushState(base + '/', {});
         }
@@ -24,14 +23,12 @@
 				return;
 				signIn();
 			} else {
-				// console.log('Authenticated as ', $user)
 				$client.jwt = $user.access_token;
 				var result = await $client.connect(true);
 				$client.onDisconnected = (() => {
 					isSignedin.set(false);
 				});
 				isSignedin.set(true);
-				// console.log('Signed in as ', result)		
 			}
 		} catch (error) {
 			isSignedin.set(false);
@@ -51,11 +48,13 @@
 	
 </script>
 <ModeWatcher />
+<Button hidden on:click={($isAuthenticated ? signOut : signIn)} data-shortcut={'Control+q,Meta+q' }>Sign In/Out</Button>
 <div class="app">
 	<div class="border-b">
 		<div class="flex h-16 items-center px-4">
 			<MainNav />
-			<div class="ml-auto flex items-center space-x-4">
+			<!-- class="ml-auto flex items-center space-x-4" -->
+			<div class="ml-auto flex items-center space-x-2">
 				<Search />
 				
 				<Button on:click={toggleMode} variant="ghost" size="icon">
@@ -74,12 +73,14 @@
 	</div>
 	<div class="border-t">
 		<div class="bg-background">
-			<div class="grid lg:grid-cols-[16rem,1fr] ml-2">
-				<div class="sidebar w-64"> <!-- Sidebar with fixed width -->
+			<!-- grid lg:grid-cols-[16rem,1fr] ml-2 -->
+			<div class="grid grid-cols-[min-content,1fr] ml-1">
+				<!--  class="sidebar" -->
+				<div>
 					<SideBar />
 				</div>
 				<div class="content lg:border-l">
-					<slot /> <!-- Main content area -->
+					<slot />
 				</div>
 			</div>
 		</div>
@@ -87,4 +88,3 @@
 	<footer>
 	</footer>
 </div>
-<Button hidden on:click={($isAuthenticated ? signOut : signIn)} data-shortcut={'Control+q,Meta+q' }>Sign In/Out</Button>

@@ -3,16 +3,18 @@
 	import * as Dialog from "$lib/components/ui/dialog";
 	import * as Avatar from "$lib/components/ui/avatar";
 	import { Input } from "$lib/components/ui/input";
+	import { Button } from "$lib/components/ui/button";
+	import { SearchInput } from "$lib/components/ui/searchinput";
 	import { page } from '$app/stores';
 	import { isSignedin, client, collections, searchQuery } from '$lib/stores.js';
 
     import { setting } from "$lib/pstore";
 	let hasFocus = false
 
-	const _searchQuery = setting('layout', 'search', '');
-	if($_searchQuery != null && $_searchQuery != "") {
-		$searchQuery = $_searchQuery;
-	}
+	// const _searchQuery = setting('layout', 'search', '');
+	// if($_searchQuery != null && $_searchQuery != "") {
+	// 	$searchQuery = $_searchQuery;
+	// }
 	let items = writable([]);
 	let selectedIndex = 0;
 	import { eventStore } from '$lib/stores.js';
@@ -47,13 +49,13 @@
 		}
 	}
 	import { onMount } from 'svelte';
-    import Button from "$lib/components/ui/button/button.svelte";
+	
     import { goto } from "$app/navigation";
 	onMount(() => {
 		eventStore.addListener(onSearchSelect);
-		const unsubscribe = page.subscribe(value => {
-			$items = $items.filter(item => item.source == "sidebar");
-		});
+		// const unsubscribe = page.subscribe(value => {
+		// 	$items = $items.filter(item => item.source == "sidebar");
+		// });
 		const unsubscribe2 = searchQuery.subscribe(async (value) => {
 			if(value == null || value == "") {
 				$items = $items.filter(item => item.source != "customers");
@@ -65,7 +67,12 @@
 				customers[i].source = "customers";
 			}
 			if(customers.length > 0) {
-				eventStore.dispatch({ name: "search:results", items: customers, source: "customers" });
+				try {
+					eventStore.dispatch({ name: "search:results", items: customers, source: "customers" });	
+				} catch (error) {
+					console.error("Error in search:results", error);					
+				}
+				
 			} else {
 				$items = $items.filter(item => item.source != "customers");
 			}
@@ -76,15 +83,18 @@
 				let collection = $collections.filter(x => x.name.indexOf(value) > -1);
 				collection = collection.slice(0, 3);
 				if(collection.length > 0) {
-					console.log("Found collection", collection, $collections.map(x => x.name));
-					eventStore.dispatch({ name: "search:results", items: collection, source: "entities" });
+					try {
+						eventStore.dispatch({ name: "search:results", items: collection, source: "entities" });
+					} catch (error) {
+						console.error("Error in search:results", error);						
+					}
 				}
 			}
 		});
 		searchQuery.set($searchQuery);
 		return () => {
 			eventStore.removeListener(onSearchSelect);
-			unsubscribe();
+			// unsubscribe();
 			unsubscribe2();
 		};
 	});
@@ -114,7 +124,6 @@
 		eventStore.dispatch({ name: "search:select", value: $searchQuery, item, source });
 	}
 	function handleFocus(event) {
-		hasFocus = true;
 		event.target.select();  // This will select all text in the input
 	}
 
@@ -134,26 +143,24 @@
 		if(source == "customers") return Factory;
 		if(source.indexOf("entities") > -1) return Database
 		return Cog;
-  }
+	}
 
 </script>
 <div class="search-container">
-<Dialog.Root bind:open={hasFocus}>
+<Dialog.Root bind:open={hasFocus} >
 	<Dialog.Trigger>
-		<Button variant="ghost" class="w-full text-muted-foreground focus-visible:outline-none outline flex-1 md:w-auto md:flex-none" 
-		data-shortcut={'Control+f,Meta+f,Shift+?' }>
-		<Search /> Search ...
+		<Button variant="ghost" class="text-muted-foreground" 
+		data-shortcut={'Control+k,Meta+k,Shift+?'}>
+		<Search />
 	</Button>
-
 </Dialog.Trigger>
-<Dialog.Content>
-	<Dialog.Header>
-	<Dialog.Description>
+<Dialog.Content CloseButton={false}>
+	<Dialog.Header >
+	<Dialog.Description >
 	<div class="flex items-center border-b px-3">
-	<svg width="24" height="24" class="mr-2 h-4 w-4 shrink-0 opacity-50" role="img" aria-label="magnifying glass," viewBox="0 0 15 15" fill="currentColor" xmlns="http://www.w3.org/2000/svg" ><path fill-rule="evenodd" clip-rule="evenodd" d="M10 6.5C10 8.433 8.433 10 6.5 10C4.567 10 3 8.433 3 6.5C3 4.567 4.567 3 6.5 3C8.433 3 10 4.567 10 6.5ZM9.30884 10.0159C8.53901 10.6318 7.56251 11 6.5 11C4.01472 11 2 8.98528 2 6.5C2 4.01472 4.01472 2 6.5 2C8.98528 2 11 4.01472 11 6.5C11 7.56251 10.6318 8.53901 10.0159 9.30884L12.8536 12.1464C13.0488 12.3417 13.0488 12.6583 12.8536 12.8536C12.6583 13.0488 12.3417 13.0488 12.1464 12.8536L9.30884 10.0159Z" fill="currentColor"></path></svg>
-	<Input bind:value={$searchQuery} type="search" placeholder="Search..." class="focus-visible:outline-none" autofocus
+	<SearchInput  bind:value={$searchQuery} type="search" placeholder="Search..." 
+	data-shortcut={'Control+k,Meta+k,Shift+?'} on:focus={handleFocus} on:focusin={handleFocus}
 	on:keyup={e => {
-		console.log(selectedIndex)
 		if(e.key === 'ArrowDown') {
 			selectedIndex = Math.min(selectedIndex + 1, $items.length - 1);
 		} else if(e.key === 'ArrowUp') {

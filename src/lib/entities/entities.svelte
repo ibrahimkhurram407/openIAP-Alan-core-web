@@ -1,6 +1,6 @@
 <script lang="ts">
   import SuperDebug from 'sveltekit-superforms';
-	import { client, isSignedin, searchQuery } from '$lib/stores';
+	import { client, isSignedin } from '$lib/stores';
   import { createTable , Render, Subscribe, createRender } from "svelte-headless-table";
   import { addPagination, addSortBy, addHiddenColumns, addSelectedRows } from "svelte-headless-table/plugins";
   import ArrowUpDown from "lucide-svelte/icons/arrow-up-down";
@@ -12,20 +12,70 @@
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import DataTableCheckbox from "./data-table-checkbox.svelte";
   import { writable, type Writable } from 'svelte/store';
-  import { setting } from '$lib/pstore';
+  import { setting, deleteAllSettings, deleteSettings } from '$lib/pstore';
   // https://www.shadcn-svelte.com/docs/components/data-table
   // https://github.com/bryanmylee/svelte-headless-table/discussions/56
 
   let serverItemCount = writable(-1);
+  const error = writable("");
 
   export let collectionname = "entities";
   let currentcollectionname = collectionname;
   export let query = {};
   export let key:string;
+  export let searchstring: Writable<string> = writable("");
+  export let multiselect = false;
 
+  let explain = writable(null);
+
+  // deleteAllSettings
+  // deleteSettings(key)
   export let selecteditems = [];
-  const currentquery = writable({});
+  let unsubscribe4;
 
+
+  export let defaultcolumns = ['_id', '', 'name'];
+  const currentquery = writable({});
+  let ShowColumns = setting(key, 'ShowColumns', {});
+  let _pageindex = setting(key, 'pageindex', 0);
+  let _selectedDataIds = setting(key, 'selectedDataIds', {});
+  if(Object.keys($_selectedDataIds).length > 0) {
+    multiselect = true;
+  }
+  let psearchstring = setting(key, "searchstring", "");
+  if($psearchstring != "") {
+    $searchstring = $psearchstring;
+  }
+
+
+  if(isNaN(parseInt($_pageindex))) {
+    _pageindex.set(0);
+  }
+
+  let selectedDataIds;
+
+  function updateShowColumns(viewModel) {
+    const ids = viewModel.flatColumns.map((col) => col.id)
+    for(let i = 0; i < ids.length; i++) {
+      const id = ids[i];
+      if(id == "_id") {
+        $ShowColumns[id] = multiselect;
+        continue;
+      }
+      if(id.startsWith("_") || id == "name" || id == "") {
+        $ShowColumns[id] = true;
+        continue;
+      }
+      if($ShowColumns[id] != null) {
+        continue;
+      }
+      if(defaultcolumns.indexOf(id) == -1) {
+        $ShowColumns[id] = false;
+      } else {
+        $ShowColumns[id] = true;
+      }
+    }
+  }
   
   function parseJson(txt, reviver, context) {
         context = context || 20
@@ -36,6 +86,7 @@
                 const isEmptyArray = Array.isArray(txt) && txt.length === 0
                 const errorMessage = "Cannot parse " +
                     (isEmptyArray ? "an empty array" : String(txt))
+                $error = errorMessage
                 throw new TypeError(errorMessage)
             }
             const syntaxErr = e.message.match(/^Unexpected token.*position\s+(\d+)/i)
@@ -63,40 +114,41 @@
     function safeEval(jsStr) {
     try {
         return Function('"use strict";return (' + jsStr + ')')();
-    } catch (error) {
-        console.error("Failed to parse string", error);
+    } catch (e) {
+        $error = e.message
+        // console.error("Failed to parse string", e);
         return null;
     }
 }
   function createQuery() {
     let q = {...query};
-    console.log("query", JSON.stringify(query))
-    let searchstring = $searchQuery;
-    if(searchstring == null || searchstring == "") {
+    psearchstring = setting(key, "searchstring", "");
+    $psearchstring = $searchstring;
+
+    if($searchstring == null || $searchstring == "") {
       return q;
     }
-    if ((searchstring as string).indexOf("{") == 0) {
-        if ((searchstring as string).lastIndexOf("}") == ((searchstring as string).length - 1)) {
+    if ($searchstring.indexOf("{") == 0) {
+        if ($searchstring.lastIndexOf("}") == ($searchstring.length - 1)) {
             try {
-                q = parseJson(searchstring, null, null);
-            } catch (error) {
+                q = parseJson($searchstring, null, null);
+            } catch (e) {
               try {
-                q = safeEval(searchstring);
+                q = safeEval($searchstring);
               } catch (error2) {
-                console.error("Error parsing query", error);
-                throw error;
+                $error = e.message;
+                // console.error("Error parsing query", e);
+                return null;
               }
             }
+        } else {
+          $error = "Incomplete query object";
         }
     } else {
       // q["name"] = new RegExp([searchstring.substring(1)].join(""), "i")
-      q["name"] = {"$regex": searchstring, "$options": "i"}
+      q["name"] = {"$regex": $searchstring, "$options": "i"}
     }
     return q;
-  }
-  let _pageindex = setting(key, 'pageindex', 0);
-  if(isNaN(parseInt($_pageindex))) {
-    _pageindex.set(0);
   }
 
   const items = writable([{_id: "12", name: "test"}]);
@@ -177,12 +229,21 @@
       },
     }));
     let viewModel = table.createViewModel(table.createColumns(columns), { rowDataId: ({ _id }) => _id  });
+
+    selectedDataIds = viewModel.pluginStates.select.selectedDataIds;
+    $selectedDataIds = $_selectedDataIds;
+    if(unsubscribe4) unsubscribe4();
+    unsubscribe4 = selectedDataIds.subscribe((value) => {
+      _selectedDataIds.set(value);
+      selecteditems = Object.keys(value);
+    });
+    updateShowColumns(viewModel);
+
     return viewModel;
   }
   let viewModel = reCreateTable();
 
   let { hasNextPage, hasPreviousPage, pageIndex } = viewModel.pluginStates.page;
-  let { selectedDataIds } = viewModel.pluginStates.select;
 
 
   let tableAttrs = viewModel.tableAttrs;
@@ -190,7 +251,6 @@
   let tableBodyAttrs = viewModel.tableBodyAttrs;
   let pageRows = viewModel.pageRows;
   let rows = viewModel.rows;
-  let _selectedDataIds = setting(key, 'selectedDataIds', {});
 
   $: tableAttrs = viewModel.tableAttrs;
   $: headerRows = viewModel.headerRows;
@@ -198,23 +258,26 @@
   $: pageRows = viewModel.pageRows;
   $: rows = viewModel.rows;
   $: if(collectionname != currentcollectionname) {
+    psearchstring = setting(key, "searchstring", "");
+    $searchstring = $psearchstring;
+
     currentcollectionname = collectionname;
+    ShowColumns = setting(key, 'ShowColumns', {})
     _pageindex = setting(key, 'pageindex', 0);
+    _selectedDataIds = setting(key, 'selectedDataIds', {});
+
     $pageIndex = $_pageindex;
     $serverItemCount = -1;
-    _selectedDataIds = setting(key, 'selectedDataIds', {});
-    $selectedDataIds = $_selectedDataIds;
     GetData();
   }
 
   let lastselectedDataIds = -1;
-  $selectedDataIds = $_selectedDataIds;
  
+  updateShowColumns(viewModel);
+  
 
-  const ids = viewModel.flatColumns.map((col) => col.id);
-  let hideForId = Object.fromEntries(ids.map((id) => [id, true]));
  
-  $: viewModel.pluginStates.hide.hiddenColumnIds.set(Object.entries(hideForId)
+  $: viewModel.pluginStates.hide.hiddenColumnIds.set(Object.entries($ShowColumns)
     .filter(([, hide]) => !hide)
     .map(([id]) => id));
  
@@ -223,12 +286,21 @@
   let loading = false;
   const GetData = async () => {
     try {
+      console.log("GetData", collectionname)
+      $error = "";
       if(loading) return;
       if($isSignedin == false) return;
       loading = true;
       try {
         $currentquery = createQuery();
-        console.log(JSON.stringify($currentquery));
+        if($currentquery == null) {
+          loading = false;
+          return;
+        }
+
+        // $explain = await $client.Query({collectionname, top: initialPageSize, skip: $pageIndex * initialPageSize, query: $currentquery, explain: true})
+        // $explain = await $client.Aggregate({collectionname, aggregates: [{"$match": $currentquery}] , explain: true})
+
         $items = await $client.Query({collectionname, top: initialPageSize, skip: $pageIndex * initialPageSize, query: $currentquery})
         if($items.length > 0) {
           viewModel = reCreateTable();
@@ -240,23 +312,25 @@
           filteredresults.push(item);
           if(filteredresults.length == 3) break;
         }
-      } catch (error) {
-        console.error("Error getting data", error);
+      } catch (e) {
+        $error = e.message;
+        // console.error("Error getting data", e);
       }
       loading = false;
       if($serverItemCount == -1) {
         $serverItemCount = await $client.Count({collectionname, query: $currentquery})
         if($pageIndex > 0) {
-          console.debug($pageIndex * initialPageSize, ($pageIndex * initialPageSize) - initialPageSize, $serverItemCount)
+          // console.debug($pageIndex * initialPageSize, ($pageIndex * initialPageSize) - initialPageSize, $serverItemCount)
           if(($pageIndex * initialPageSize) - initialPageSize >= $serverItemCount) {
-            console.debug("Resetting page index")
+            // console.debug("Resetting page index")
             _pageindex.set(0);
             GetData();
           }
         }
       }
-    } catch (error) {
-      console.error("Error getting data", error.message);      
+    } catch (e) {
+      $error = e.message;
+      // console.error("Error getting data", e.message);
     }
   }
   function onSearchQuery(value) {
@@ -266,6 +340,7 @@
 
   import { onMount } from 'svelte';
   onMount(() => {
+    const unsubscribe = searchstring.subscribe(GetData);
     const unsubscribe2 = isSignedin.subscribe((value) => {
       if (value) {
         GetData();
@@ -275,15 +350,12 @@
       _pageindex.set(value);
       GetData();
     });
-    const unsubscribe4 = selectedDataIds.subscribe((value) => {
-      _selectedDataIds.set(value);
-      selecteditems = Object.keys(value);
-    });
 
     return () => {
+      unsubscribe();
       unsubscribe2();
       unsubscribe3();
-      unsubscribe4();
+      if(unsubscribe4) unsubscribe4();
     };
   });
 
@@ -313,14 +385,14 @@
                 let:props
               >
               {#if cell.id === "name"}
-                <Table.Head {...attrs}>
+                <Table.Head {...attrs} style="width: *;">
                   <Button variant="ghost" on:click={props.sort.toggle}>
                     <Render of={cell.render()} />
                     <ArrowUpDown class="ml-2 h-4 w-4" />
                   </Button>
                 </Table.Head>
                 {:else if cell.id === ""}
-                <Table.Head {...attrs}>
+                <Table.Head {...attrs} style="width: 35px;">
                   <DropdownMenu.Root>
                     <DropdownMenu.Trigger asChild let:builder>
                       <Button variant="outline" class="ml-auto" builders={[builder]}>
@@ -330,7 +402,7 @@
                     <DropdownMenu.Content>
                       {#each viewModel.flatColumns as col}
                         {#if !nonhidableCols.includes(col.id)}
-                          <DropdownMenu.CheckboxItem bind:checked={hideForId[col.id]}>
+                          <DropdownMenu.CheckboxItem bind:checked={$ShowColumns[col.id]}>
                             {col.header}
                           </DropdownMenu.CheckboxItem>
                         {/if}
@@ -384,18 +456,62 @@
     {:else}
       ( { $serverItemCount } row(s) )
     {/if}
+    in {collectionname}
   </div>
+  <Button
+  class="lg:hidden"
+  variant="outline"
+  size="sm"
+  data-shortcut={'Control+a,Meta+a' }
+  on:click={() => {
+    if(multiselect == false) {
+      multiselect = true;
+      $ShowColumns["_id"] = multiselect;
+      // return;
+    }
+    const selectcount = Object.keys($selectedDataIds).length;
+    // if(selectcount == 0) {
+    //   const { allPageRowsSelected } = pluginStates.select;
+    //   allPageRowsSelected.set(true)
+    // } else 
+    if(selectcount <= $serverItemCount) {
+      for(let i = 0; i < $rows.length; i++) {
+        const row = $rows[i];
+        // @ts-ignore
+        $selectedDataIds[row.dataId] = true;
+      }
+    }
+    if(selectcount == Object.keys($selectedDataIds).length) {
+      if(lastselectedDataIds != selectcount) {
+        if(selectcount <= $serverItemCount) {
+          for(let i = 0; i < $rows.length; i++) {
+            const row = $rows[i];
+            // @ts-ignore
+            $selectedDataIds[row.dataId] = false;
+          }
+        }
+        lastselectedDataIds = selectcount;
+        return;
+      } else {
+        lastselectedDataIds = -1;
+        selectedDataIds.clear();
+      }
+    } else {
+      lastselectedDataIds = -1;
+    }
+  }}>Select all</Button
+>
   <Button
     variant="outline"
     size="sm"
     data-shortcut={'ArrowLeft' }
     on:click={() => ($pageIndex = $pageIndex - 1)}
-    disabled={!$hasPreviousPage}>Previous</Button
+    disabled={(!$hasPreviousPage && $serverItemCount > -1) || ($pageIndex == 0)}>Previous</Button
   >
   <Button
     variant="outline"
     size="sm"
-    disabled={!$hasNextPage}
+    disabled={!$hasNextPage && $serverItemCount > -1}
     data-shortcut={'ArrowRight' }
     on:click={() => ($pageIndex = $pageIndex + 1)}>Next</Button
   >
@@ -415,43 +531,14 @@
     selectedDataIds.clear();
     }}>Unselect all</Button
   >
-  <Button
-    hidden
-    variant="outline"
-    size="sm"
-    data-shortcut={'Control+a,Meta+a' }
-    on:click={() => {
-      const selectcount = Object.keys($selectedDataIds).length;
-      // if(selectcount == 0) {
-      //   const { allPageRowsSelected } = pluginStates.select;
-      //   allPageRowsSelected.set(true)
-      // } else 
-      if(selectcount <= $serverItemCount) {
-        for(let i = 0; i < $rows.length; i++) {
-          const row = $rows[i];
-          // @ts-ignore
-          $selectedDataIds[row.dataId] = true;
-        }
-      }
-      if(selectcount == Object.keys($selectedDataIds).length) {
-        if(lastselectedDataIds != selectcount) {
-          if(selectcount <= $serverItemCount) {
-            for(let i = 0; i < $rows.length; i++) {
-              const row = $rows[i];
-              // @ts-ignore
-              $selectedDataIds[row.dataId] = false;
-            }
-          }
-          lastselectedDataIds = selectcount;
-          return;
-        } else {
-          lastselectedDataIds = -1;
-          selectedDataIds.clear();
-        }
-      } else {
-        lastselectedDataIds = -1;
-      }
-    }}>Select all</Button
-  >
+
   </div>
-<SuperDebug data={$currentquery} />
+{#if $explain != null}
+<SuperDebug data={$explain} />
+{/if}
+{#if $currentquery != null && Object.keys($currentquery).length > 0}
+<SuperDebug data={$currentquery} theme="vscode" />
+{/if}
+{#if $error != null && $error != ""}
+<SuperDebug data={$error} />
+{/if}

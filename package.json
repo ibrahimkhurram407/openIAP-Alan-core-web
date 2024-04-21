@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "vite dev",
-    "serve": "vite dev",
+    "serve": "vite dev --host",
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
@@ -14,7 +14,7 @@
   "devDependencies": {
     "@github/hotkey": "^3.1.0",
     "@neoconfetti/svelte": "^1.0.0",
-    "@openiap/jsapi": "github:openiap/jsapi",
+    "@openiap/jsapi": "file:../jsapi",
     "@sveltejs/adapter-auto": "^3.0.0",
     "@sveltejs/adapter-static": "^3.0.1",
     "@sveltejs/kit": "^2.0.0",

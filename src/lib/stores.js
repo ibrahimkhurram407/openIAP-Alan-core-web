@@ -4,6 +4,8 @@ jsconfig.settings.DoPing = false;
 jsconfig.settings.DoDumpToConsole = false;
 jsconfig.settings.doDumpMesssages = false;
 
+/** @type {import('svelte/store').Writable<any>} */
+export const config = writable({});
 export const isAuthenticated = writable(false);
 export const isSignedin = writable(false);
 /** @type {import('svelte/store').Writable<any>} */
