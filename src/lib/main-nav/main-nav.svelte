@@ -12,28 +12,10 @@
 		<img src="{base}/openiap.png" alt="Logo" class="h-6 mr-4" /> {$config.majorversion}
 	</a>
 
-	<a
+	<!-- <a
 		href="{base}/users"
 		class="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
 	>
 	Users
-	</a>
-	<a
-		href="{base}/users/newuser"
-		class="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-	>
-		User
-	</a>
-	<a
-		href="{base}/users/1"
-		class="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-	>
-		User 1
-	</a>
-	<a
-		href="{base}/users/2"
-		class="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-	>
-	User 2
-	</a>
+	</a> -->
 </nav>

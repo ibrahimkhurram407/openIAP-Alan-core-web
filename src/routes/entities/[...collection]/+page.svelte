@@ -45,6 +45,8 @@
     try {
       if($collections.length > 0) {
         $collectionindex = $collections.findIndex(x => x.name == $collectionname);
+        await tick();
+        scrollToItem($collectionindex);
         return;
       }
       if(loading) return;
@@ -53,6 +55,8 @@
       try {
         $collections = await $client.ListCollections({});
         $collectionindex = $collections.findIndex(x => x.name == $collectionname);
+        await tick();
+        scrollToItem($collectionindex);
       } catch (error) {
         console.error("Error getting data", error);
       }
@@ -89,8 +93,9 @@
       }, 100);
     }
   }
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
     import { Key } from 'lucide-svelte';
+    import Toggle from '$lib/components/ui/toggle/toggle.svelte';
   const searchstring = writable("");
   onMount(() => {
     eventStore.addListener(onSearchSelect);
@@ -106,7 +111,6 @@
         currentcollectionname = value;
       }
     });
-
     return () => {
       eventStore.removeListener(onSearchSelect);
       unsubscribe2();
@@ -115,9 +119,13 @@
     };
   });
   GetData();
+  let explain = false;
+  let showquery = false;
+  
 </script>
-<div>
-<SearchInput placeholder="Search {$collectionname} collection using text or json query" 
+<div class="grid grid-cols-[1fr,min-content,min-content,0px] gap-2 mb-1">
+  <SearchInput placeholder="Search {$collectionname} collection using text or json query" 
+  class="px-2 ml-1"
   dense filled rounded clearable
   bind:value={$searchstring}
   on:keyup={e => { 
@@ -137,6 +145,8 @@
   data-shortcut={'Control+f,Meta+f'}
   type="search"> 
 </SearchInput>
+<Toggle class=" ml-1" bind:pressed={showquery} dense filled rounded variant="outline" >query</Toggle>
+<Toggle class=" ml-1" bind:pressed={explain} dense filled rounded variant="outline" >explain</Toggle>
 </div>
 <div class="border-t">
   <div class="bg-background">
@@ -174,7 +184,8 @@
       </ScrollArea>
 
       <div class="content lg:border-l">
-        <Entities key={"entities_" + $collectionname} searchstring={searchstring} collectionname={$collectionname} {query} bind:selecteditems={selecteditems} />
+        <Entities key={"entities_" + $collectionname} searchstring={searchstring} collectionname={$collectionname} {query} 
+        explain={explain} showquery={showquery} bind:selecteditems={selecteditems} />
       </div>
     </div>
   </div>

@@ -25,8 +25,10 @@
   export let key:string;
   export let searchstring: Writable<string> = writable("");
   export let multiselect = false;
+  export let showquery = false;
+  export let explain = false;
 
-  let explain = writable(null);
+  let explainquery = writable(null);
 
   // deleteAllSettings
   // deleteSettings(key)
@@ -273,6 +275,12 @@
     GetData();
   }
 
+  $: if (explain && $explainquery == null) {
+    GetData();
+  } else if(explain == false) {
+    $explainquery = null;
+  }
+
   let lastselectedDataIds = -1;
  
   updateShowColumns(viewModel);
@@ -299,8 +307,9 @@
           return;
         }
 
-        // $explain = await $client.Query({collectionname, top: initialPageSize, skip: $pageIndex * initialPageSize, query: $currentquery, explain: true})
-        // $explain = await $client.Aggregate({collectionname, aggregates: [{"$match": $currentquery}] , explain: true})
+        if(explain == true) {
+          $explainquery = await $client.Query({collectionname, top: initialPageSize, skip: $pageIndex * initialPageSize, query: $currentquery, explain: true})
+        }
 
         $items = await $client.Query({collectionname, top: initialPageSize, skip: $pageIndex * initialPageSize, query: $currentquery})
         if($items.length > 0) {
@@ -535,12 +544,11 @@
     }}>Unselect all</Button
   >
 </div>
-{#if $explain != null}
-<SuperDebug data={$explain} />
-{/if}
-{#if $currentquery != null && Object.keys($currentquery).length > 0}
-<SuperDebug data={$currentquery} theme="vscode" />
-{/if}
 {#if $error != null && $error != ""}
 <SuperDebug data={$error} />
+{/if}{#if $currentquery != null && showquery == true}
+<SuperDebug data={$currentquery} theme="vscode" />
+{/if}
+{#if $explainquery !== null}
+<SuperDebug data={$explainquery} />
 {/if}

@@ -45,7 +45,7 @@
 <Button hidden on:click={($isAuthenticated ? signOut : signIn)} data-shortcut={'Control+q,Meta+q' }>Sign In/Out</Button>
 <div class="app">
 	<div class="border-b">
-		<div class="flex h-16 items-center px-4">
+		<div class="flex h-14 items-center px-4">
 			<MainNav />
 			<div class="ml-auto flex items-center space-x-2">
 				<Search />
