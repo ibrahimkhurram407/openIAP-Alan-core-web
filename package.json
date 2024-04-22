@@ -1,6 +1,6 @@
 {
-  "name": "myapp",
-  "version": "0.0.1",
+  "name": "@openiap/core-web",
+  "version": "3.0.0",
   "scripts": {
     "dev": "vite dev",
     "serve": "vite dev --host",
