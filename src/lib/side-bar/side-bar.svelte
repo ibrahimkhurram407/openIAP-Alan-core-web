@@ -62,7 +62,7 @@
 		{
 			title: "Grafana",
 			icon: Areachart,
-			href: base + "/grafana",
+			href: $config.grafana_url,
 			category: "main",
 			sidebar: true,
 			enabled: true,
@@ -140,7 +140,7 @@
 			enabled: false,
 		},
 	]
-	import { eventStore, searchQuery } from '$lib/stores.js';
+	import { config, eventStore, searchQuery } from '$lib/stores.js';
 	function onSearchSelect(data) {
 		if(data.name != "search:select") return;
 		if(data.item == null) return;

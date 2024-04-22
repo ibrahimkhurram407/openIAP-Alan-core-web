@@ -1,17 +1,29 @@
-import { writable } from 'svelte/store';
-import { openiap, config as jsconfig } from '@openiap/jsapi';
+import { writable } from "svelte/store";
+import { openiap, config as jsconfig } from "@openiap/jsapi";
 jsconfig.settings.DoPing = false;
 jsconfig.settings.DoDumpToConsole = false;
 jsconfig.settings.doDumpMesssages = false;
 
-/** @type {import('svelte/store').Writable<any>} */
+export const baseurl = writable("");
+baseurl.set(window.location.origin);
+if(window.location.origin.includes("5173")) {
+    baseurl.set("https://home.openiap.io");
+}
+export const wsurl = writable("");
+wsurl.set(window.location.origin.replace("https://", "wss://").replace("http://", "ws://") + "/ws/v2");
+if(window.location.origin.includes("5173")) {
+    wsurl.set("wss://home.openiap.io/ws/v2")
+}
+
+
+/** @type {import("svelte/store").Writable<any>} */
 export const config = writable({});
 export const isAuthenticated = writable(false);
 export const isSignedin = writable(false);
-/** @type {import('svelte/store').Writable<any>} */
+/** @type {import("svelte/store").Writable<any>} */
 export const user = writable({});
-/** @type {import('svelte/store').Writable<openiap>} */
-export const client = writable(new openiap("wss://home.openiap.io/ws/v2", ""));
+/** @type {import("svelte/store").Writable<openiap>} */
+export const client = writable(new openiap(getStoreValue(wsurl), ""));
 
 export const searchQuery = writable("");
 export const collections = writable([]);
@@ -31,3 +43,16 @@ function createEventStore() {
   }
   
   export const eventStore = createEventStore();
+/**
+ * 
+ * @returns {any}
+ */
+  export function getStoreValue(store) {
+    let value;
+    const unsubscribe = store.subscribe(currentValue => {
+      value = currentValue;
+    });
+    unsubscribe();
+    return value;
+  }
+  

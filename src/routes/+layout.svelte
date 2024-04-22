@@ -12,6 +12,8 @@
 	import { onMount } from 'svelte';
     import { signIn, userManager, signOut, getUser } from '$lib/auth';
 	import { pushState } from '$app/navigation';
+	import { goto } from "$app/navigation";
+	
     onMount(async () => {
 		if (window.location.search.includes('code=')) {
             await userManager.signinRedirectCallback();
@@ -20,6 +22,7 @@
 		try {
 			user.set(await getUser());
 			if (!$user) {
+				// goto(base + `/login`);
 				return;
 				// signIn(); auto signin ?
 			} else {
@@ -43,6 +46,7 @@
 </script>
 <ModeWatcher />
 <Button hidden on:click={($isAuthenticated ? signOut : signIn)} data-shortcut={'Control+q,Meta+q' }>Sign In/Out</Button>
+{#if $isAuthenticated}
 <div class="app">
 	<div class="border-b">
 		<div class="flex h-14 items-center px-4">
@@ -78,3 +82,6 @@
 	<footer>
 	</footer>
 </div>
+{:else}
+	<slot />
+{/if}

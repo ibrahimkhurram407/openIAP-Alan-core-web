@@ -6,6 +6,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import { SearchInput } from "$lib/components/ui/searchinput";
 	import { page } from '$app/stores';
+	import { goto } from "$app/navigation";
 	import { isSignedin, client, collections, searchQuery } from '$lib/stores.js';
 
     import { setting } from "$lib/pstore";
@@ -50,7 +51,7 @@
 	}
 	import { onMount } from 'svelte';
 	
-    import { goto } from "$app/navigation";
+    
 	onMount(() => {
 		eventStore.addListener(onSearchSelect);
 		// const unsubscribe = page.subscribe(value => {
