@@ -3,7 +3,6 @@ import { writable } from 'svelte/store';
 // Cache object to hold the instances of the stores
 const storeCache = {};
 
-
 export function deleteSetting(page, key) {
     const fullKey = `${page}-${key}`;
     localStorage.removeItem("store_" + fullKey);
@@ -18,11 +17,9 @@ export function deleteSettings(page) {
     }
 }
 export function deleteAllSettings() {
-    console.log("Deleting all settings");
     for(let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if(key.startsWith("store_")) {
-            console.log("Deleting " + key);
             localStorage.removeItem(key);
         }
     }

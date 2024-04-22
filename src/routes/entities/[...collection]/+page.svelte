@@ -1,18 +1,16 @@
 <script lang="ts">
-	import { base } from '$app/paths';
   import { client, isSignedin, collections } from '$lib/stores';
   import { setting } from '$lib/pstore';
   import { writable } from 'svelte/store';
-
   import { SearchInput } from "$lib/components/ui/searchinput";
   import { ScrollArea } from "$lib/components/ui/scroll-area/index.js";
-  import { Separator } from "$lib/components/ui/separator/index.js";
-  import SuperDebug from 'sveltekit-superforms';
 	import { Button } from "$lib/components/ui/button";
-	import * as Avatar from "$lib/components/ui/avatar";
-  import { cn } from "$lib/utils.js";
   import { page } from '$app/stores';
   import { Entities } from '$lib/entities';
+
+  import Database from 'lucide-svelte/icons/database';
+  import Fileclock from 'lucide-svelte/icons/file-clock';
+  import Folder from 'lucide-svelte/icons/folder';
   // https://muonw.github.io/muonw-powertable/examples/example8
   
   // https://melt-ui.com/
@@ -49,18 +47,6 @@
         $collectionindex = $collections.findIndex(x => x.name == $collectionname);
         return;
       }
-      // $collections = [
-      //   { name: "collection1", type: "collection" },
-      //   { name: "collection2", type: "collection" },
-      //   { name: "collection3", type: "collection" },
-      //   { name: "collection4", type: "collection" },
-      //   { name: "collection5", type: "collection" },
-      //   { name: "collection6", type: "collection" },
-      //   { name: "collection7", type: "collection" },
-      //   { name: "collection8", type: "collection" },
-      //   { name: "collection9", type: "collection" },
-      // ]
-      // return;
       if(loading) return;
       if($isSignedin == false) return;
       loading = true;
@@ -75,10 +61,6 @@
       console.error("Error getting data", error);      
     }
   }
-  import Database from 'lucide-svelte/icons/database';
-  import Fileclock from 'lucide-svelte/icons/file-clock';
-  import Foldertree from 'lucide-svelte/icons/folder-tree';
-  import Folder from 'lucide-svelte/icons/folder';
   
   function icon(item) {
     if(item.name.endsWith('.files')) {
@@ -133,11 +115,6 @@
     };
   });
   GetData();
-
-	
-
-  const cmdK = ['⌘', 'k']
-  // let searchstring = setting("entities", $collectionname + "_searchstring", "");
 </script>
 <div>
 <SearchInput placeholder="Search {$collectionname} collection using text or json query" 
@@ -148,11 +125,18 @@
       $collectionindex = $collectionindex - 1;
     } else if(e.key == "ArrowDown") {
       $collectionindex = $collectionindex + 1;
+    }else if(e.key == "Escape") {
+      $searchstring = "";
+      // @ts-ignore
+      e.target.blur();
+    } else if (e.key == "Enter") {
+      // @ts-ignore
+      e.target.blur();
     }
   }}
   data-shortcut={'Control+f,Meta+f'}
   type="search"> 
-  </SearchInput>
+</SearchInput>
 </div>
 <div class="border-t">
   <div class="bg-background">
@@ -212,8 +196,3 @@ data-shortcut={'ArrowDown' }
 on:click={() => ($collectionindex = $collectionindex + 1)}
 disabled={$collectionindex >= ($collections.length-1)}>Next</Button
 >
-<!-- 
-
-<SuperDebug data={selecteditems} />
-
- -->

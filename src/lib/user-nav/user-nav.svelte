@@ -9,7 +9,6 @@
 	import { signOut, signIn } from '$lib/auth';
 	import { isAuthenticated, user } from '$lib/stores';
 	import { deleteAllSettings } from '$lib/pstore';
-	// random number between 1 an 4
 	let random = Math.floor(Math.random() * 4) + 1;
 	let pictureurl = base + '/avatars/0' + random + '.png';
 	if($user != null && $user.profile != null && $user.profile.picture != null && $user.profile.picture != "") {

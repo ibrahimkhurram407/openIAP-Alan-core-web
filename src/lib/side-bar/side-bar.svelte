@@ -2,57 +2,23 @@
 	import { base } from '$app/paths';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { derived } from 'svelte/store';
-
-	import { cn } from "$lib/utils.js";
 	import { Button } from "$lib/components/ui/button";
-	import * as Avatar from "$lib/components/ui/avatar";
-	// let className: string | null | undefined = undefined;
-	// export { className as class };
-	const currentRoute = derived(page, $page => $page.url.pathname);
 
-	import Home from 'lucide-svelte/icons/home';
-	
-	import Search from 'lucide-svelte/icons/search';
-	import Library from 'lucide-svelte/icons/library';
-	import Cog from 'lucide-svelte/icons/cog';
-	import Factory from 'lucide-svelte/icons/factory';
 	import Booka from 'lucide-svelte/icons/book-a';
 	import Squarelibrary from 'lucide-svelte/icons/square-library';
 	import share2 from 'lucide-svelte/icons/share-2';
 	import Bot from 'lucide-svelte/icons/bot';
 	import Areachart from 'lucide-svelte/icons/area-chart';
-
-	import User from 'lucide-svelte/icons/user';
 	import Userplus from 'lucide-svelte/icons/user-plus';
 	import Usercog from 'lucide-svelte/icons/user-cog';
 	import Users from 'lucide-svelte/icons/users';
 	import Usersround from 'lucide-svelte/icons/users-round';
-	
 	import Activity from 'lucide-svelte/icons/activity';
 	import Liststart from 'lucide-svelte/icons/list-start';
 	import Rabbit from 'lucide-svelte/icons/rabbit';
-	
-
-	
-	
-	
-	
 	import Database from 'lucide-svelte/icons/database';
-	
-	// https://lucide.dev/guide/packages/lucide-svelte
 
 	let localItems:any[] = [
-		// {
-		// 	title: "Reports",
-		// 	icon: "reports.svg",
-		// 	href: base + "/reports",
-		// },
-		// {
-		// 	title: "Settings",
-		// 	icon: "settings.svg",
-		// 	href: base + "/settings",
-		// },
 		{
 			title: "Entities",
 			icon: Database,
@@ -158,6 +124,14 @@
 			enabled: true,
 		},
 		{
+			title: "Customers",
+			icon: Factory,
+			href: base + "/customers",
+			category: "management",
+			sidebar: true,
+			enabled: true,
+		},
+		{
 			title: "Test",
 			icon: Rabbit,
 			href: base + "/workitemqueues/new",
@@ -173,7 +147,6 @@
 		if(data.source != "sidebar") return;
 		if(data.item.href == null || data.item.href == "") return;
     	goto(data.item.href);
-		// $searchQuery = "";
 	}
 	function onSearchQuery(value) {
 		let filteredresults = [];
@@ -190,7 +163,7 @@
 		eventStore.dispatch({ name: "search:results", items: filteredresults, source: "sidebar" });
 	};
 	import { onMount } from 'svelte';
-    import { Filter } from 'lucide-svelte';
+    import { Factory } from 'lucide-svelte';
 	onMount(() => {
 		eventStore.addListener(onSearchSelect);
 		const unsubscribe = searchQuery.subscribe(onSearchQuery);
@@ -199,9 +172,6 @@
 		unsubscribe();
 		};
 	});
-
-	// variant={$page.url.pathname === item.href ? 'secondary' : 'ghost'} 
-	// variant="{!isCurrentRoute(item.href) ? 'ghost' : 'secondary'}"
 
 	// get unique categories but filter out disabled items
 	let categories = localItems.filter(x => x.sidebar && x.enabled).map(x => x.category).filter((value, index, self) => self.indexOf(value) === index);

@@ -15,7 +15,6 @@ export const userManager = new UserManager(settings);
 
 userManager.events.addUserLoaded((user) => {
     // console.debug('User loaded', user);
-    // Handle user loading
 });
 
 userManager.events.addSilentRenewError((error) => {
@@ -24,9 +23,7 @@ userManager.events.addSilentRenewError((error) => {
 
 userManager.events.addAccessTokenExpired(() => {
     // console.debug('Token expired');
-    // Handle token expiration
 });
-
 
 export const signIn = () => {
     isAuthenticated.set(false);

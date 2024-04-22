@@ -62,7 +62,8 @@
         $ShowColumns[id] = multiselect;
         continue;
       }
-      if(id.startsWith("_") || id == "name" || id == "") {
+      if(id == "_created" || id == "_modified") {
+      } else if(id.startsWith("_") || id == "name" || id == "") {
         $ShowColumns[id] = true;
         continue;
       }
@@ -202,7 +203,8 @@
   var keys = Object.keys($items[0]);
   for(let i = 0; i < keys.length; i++) {
     const key = keys[i];
-    if(key.startsWith("_") || key == "name") {
+    if(key == "_created" || key == "_modified") {
+    } else if(key.startsWith("_") || key == "name") {
       continue;
     }
     columns.push(table.column({
@@ -286,7 +288,6 @@
   let loading = false;
   const GetData = async () => {
     try {
-      console.log("GetData", collectionname)
       $error = "";
       if(loading) return;
       if($isSignedin == false) return;
@@ -529,10 +530,11 @@
   data-shortcut={'Control+u,Meta+u' }
   on:click={() => {
     selectedDataIds.clear();
+    multiselect = false;
+    $ShowColumns["_id"] = false;
     }}>Unselect all</Button
   >
-
-  </div>
+</div>
 {#if $explain != null}
 <SuperDebug data={$explain} />
 {/if}

@@ -2,12 +2,12 @@
   import { Entities } from '$lib/entities';
   import { writable } from 'svelte/store';
   import { SearchInput } from "$lib/components/ui/searchinput";
-  const collectionname = "users";
-  const query = {_type: "user"}
+  const collectionname = "agents";
+  let query = {_type: "agent"};
   const searchstring = writable("");
 </script>
 
-<SearchInput placeholder="Search users using text or json query" 
+<SearchInput placeholder="Search roles using text or json query" 
     dense filled rounded clearable
     bind:value={$searchstring}
     data-shortcut={'Control+f,Meta+f'}
@@ -23,5 +23,5 @@
     }}
     type="search"> 
   </SearchInput>
-<Entities key="users" searchstring={searchstring}  {collectionname} {query} defaultcolumns={["name", "username", "lastseen", "dbusage", "validated"]} />
+<Entities key="agents" searchstring={searchstring}  {collectionname} {query} defaultcolumns={["name", "image", "os", "stripeprice"]} />
 
