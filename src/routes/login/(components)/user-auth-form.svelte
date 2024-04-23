@@ -206,6 +206,7 @@
 				<div class="grid gap-1">
 					<Label class="sr-only" for="email">Email</Label>
 					<Input
+						autoFocus
 						id="username"
 						name="username"
 						placeholder="name@example.com"

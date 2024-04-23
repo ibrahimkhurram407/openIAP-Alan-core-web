@@ -2,6 +2,7 @@
 <script>
 	import "../app.pcss";
 	import { ModeWatcher } from "mode-watcher";
+	import { page } from '$app/stores';
 	import { base } from '$app/paths';
 	import { Button } from "$lib/components/ui/button";
 	import { toggleMode } from "mode-watcher";
@@ -29,13 +30,16 @@
 				$client.jwt = $user.access_token;
 				await $client.connect(true);
 				$client.onDisconnected = (() => {
+					console.log('User.Disconnected', $user);
 					isSignedin.set(false);
 				});
+				console.log('User', $user);
 				isSignedin.set(true);
 			}
 		} catch (error) {
 			isSignedin.set(false);
-			console.error('Error signing in', error);			
+			console.error('Error signing in', error);
+			signIn();
 		}
     });
 	import { Search } from "$lib/search";
@@ -46,7 +50,7 @@
 </script>
 <ModeWatcher />
 <Button hidden on:click={($isAuthenticated ? signOut : signIn)} data-shortcut={'Control+q,Meta+q' }>Sign In/Out</Button>
-{#if $isAuthenticated}
+{#if $page.url.pathname != base + '/login'}
 <div class="app">
 	<div class="border-b">
 		<div class="flex h-14 items-center px-4">

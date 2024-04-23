@@ -18,129 +18,158 @@
 	import Rabbit from 'lucide-svelte/icons/rabbit';
 	import Database from 'lucide-svelte/icons/database';
 
-	let localItems:any[] = [
-		{
-			title: "Entities",
-			icon: Database,
-			href: base + "/entities",
-			category: "main",
-			sidebar: true,
-			enabled: true,
-		},
-		{
-			title: "Agents",
-			icon: Booka,
-			href: base + "/agents",
-			category: "main",
-			sidebar: true,
-			enabled: true,
-		},
-		{
-			title: "Workitems",
-			icon: Squarelibrary,
-			href: base + "/workitems",
-			category: "main",
-			sidebar: true,
-			enabled: true,
-		},
-		{
-			title: "Form Workflows",
-			icon: share2,
-			href: base + "/form-workflows",
-			category: "main",
-			sidebar: true,
-			enabled: true,
-		},
-		{
-			title: "OpenRPA Workflows",
-			icon: Bot,
-			href: base + "/rpaworkflows",
-			category: "main",
-			sidebar: true,
-			enabled: true,
-		},
-		{
-			title: "Grafana",
-			icon: Areachart,
-			href: $config.grafana_url,
-			category: "main",
-			sidebar: true,
-			enabled: true,
-		},
-		{
-			title: "Users",
-			icon: Users,
-			href: base + "/users",
-			category: "management",
-			sidebar: true,
-			enabled: true,
-		},
-		{
-			title: "Add user",
-			icon: Userplus,
-			href: base + "/users/new",
-			category: "management",
-			sidebar: false,
-			enabled: true,
-		},
-		{
-			title: "Roles",
-			icon: Usersround,
-			href: base + "/roles",
-			category: "management",
-			sidebar: true,
-			enabled: true,
-		},
-		{
-			title: "Add role",
-			icon: Usersround,
-			href: base + "/roles/new",
-			category: "management",
-			sidebar: false,
-			enabled: true,
-		},
-		{
-			title: "Audit Logs",
-			icon: Activity,
-			href: base + "/auditlogs",
-			category: "management",
-			sidebar: true,
-			enabled: true,
-		},
-		{
-			title: "Workitem Queues",
-			icon: Liststart,
-			href: base + "/workitemqueues",
-			category: "management",
-			sidebar: true,
-			enabled: true,
-		},
-		{
-			title: "Add Workitem Queues",
-			icon: Liststart,
-			href: base + "/workitemqueues/new",
-			category: "management",
-			sidebar: false,
-			enabled: true,
-		},
-		{
-			title: "Customers",
-			icon: Factory,
-			href: base + "/customers",
-			category: "management",
-			sidebar: true,
-			enabled: true,
-		},
-		{
-			title: "Test",
+	let categories = writable([]);
+	let localItems = writable([{
+			name: "Main",
 			icon: Rabbit,
-			href: base + "/workitemqueues/new",
-			category: "test",
-			sidebar: true,
-			enabled: false,
-		},
-	]
-	import { config, eventStore, searchQuery } from '$lib/stores.js';
+			href: base + "/",
+			source: "sidebar",
+			category: "main",
+			sidebar: false,
+			enabled: true,
+		}]);
+	
+	function loadItems() {
+		$localItems = [
+			{
+				name: "Entities",
+				icon: Database,
+				href: base + "/entities",
+				category: "main",
+				source: "sidebar",
+				sidebar: true,
+				enabled: true,
+			},
+			{
+				name: "Agents",
+				icon: Booka,
+				href: base + "/agents",
+				category: "main",
+				source: "sidebar",
+				sidebar: true,
+				enabled: true,
+			},
+			{
+				name: "Workitems",
+				icon: Squarelibrary,
+				href: base + "/workitems",
+				category: "main",
+				source: "sidebar",
+				sidebar: true,
+				enabled: true,
+			},
+			{
+				name: "Form Workflows",
+				icon: share2,
+				href: base + "/form-workflows",
+				category: "main",
+				source: "sidebar",
+				sidebar: true,
+				enabled: true,
+			},
+			{
+				name: "OpenRPA Workflows",
+				icon: Bot,
+				href: base + "/rpaworkflows",
+				category: "main",
+				source: "sidebar",
+				sidebar: true,
+				enabled: true,
+			},
+			{
+				name: "Grafana",
+				icon: Areachart,
+				href: $config.grafana_url,
+				category: "main",
+				source: "sidebar",
+				sidebar: true,
+				enabled: true,
+			},
+			{
+				name: "Users",
+				icon: Users,
+				href: base + "/users",
+				category: "management",
+				source: "sidebar",
+				sidebar: true,
+				enabled: true,
+			},
+			{
+				name: "Add user",
+				icon: Userplus,
+				href: base + "/users/new",
+				category: "management",
+				source: "sidebar",
+				sidebar: false,
+				enabled: true,
+			},
+			{
+				name: "Roles",
+				icon: Usersround,
+				href: base + "/roles",
+				category: "management",
+				source: "sidebar",
+				sidebar: true,
+				enabled: true,
+			},
+			{
+				name: "Add role",
+				icon: Usersround,
+				href: base + "/roles/new",
+				category: "management",
+				source: "sidebar",
+				sidebar: false,
+				enabled: true,
+			},
+			{
+				name: "Audit Logs",
+				icon: Activity,
+				href: base + "/auditlogs",
+				category: "management",
+				source: "sidebar",
+				sidebar: true,
+				enabled: true,
+			},
+			{
+				name: "Workitem Queues",
+				icon: Liststart,
+				href: base + "/workitemqueues",
+				category: "management",
+				source: "sidebar",
+				sidebar: true,
+				enabled: true,
+			},
+			{
+				name: "Add Workitem Queues",
+				icon: Liststart,
+				href: base + "/workitemqueues/new",
+				category: "management",
+				source: "sidebar",
+				sidebar: false,
+				enabled: true,
+			},
+			{
+				name: "Customers",
+				icon: Factory,
+				href: base + "/customers",
+				category: "management",
+				source: "sidebar",
+				sidebar: true,
+				enabled: true,
+			},
+			{
+				name: "Test",
+				icon: Rabbit,
+				href: base + "/workitemqueues/new",
+				category: "test",
+				source: "sidebar",
+				sidebar: true,
+				enabled: false,
+			},
+		]
+		$categories = $localItems.filter(x => x.sidebar && x.enabled).map(x => x.category).filter((value, index, self) => self.indexOf(value) === index);
+	}
+	import { config, eventStore, isAuthenticated, isSignedin, searchQuery } from '$lib/stores.js';
 	function onSearchSelect(data) {
 		if(data.name != "search:select") return;
 		if(data.item == null) return;
@@ -151,11 +180,10 @@
 	function onSearchQuery(value) {
 		let filteredresults = [];
 		// if(value != null && value != "")
-			for(let i = 0; i < localItems.length; i++) {
-				if(localItems[i].title.toLowerCase().includes(value.toLowerCase())) {
-					var item = {...localItems[i]};
+			for(let i = 0; i < $localItems.length; i++) {
+				if($localItems[i].name.toLowerCase().includes(value.toLowerCase())) {
+					var item = {...$localItems[i]};
 					item.source = "sidebar";
-					item.name = item.title;
 					filteredresults.push(item);
 					if(filteredresults.length == 3) break;
 				}
@@ -164,17 +192,30 @@
 	};
 	import { onMount } from 'svelte';
     import { Factory } from 'lucide-svelte';
+    import { writable } from 'svelte/store';
+    import type { Writeable } from 'zod';
 	onMount(() => {
+		console.log("SideBar mounted");
 		eventStore.addListener(onSearchSelect);
 		const unsubscribe = searchQuery.subscribe(onSearchQuery);
+		const unsubscribe2 = isSignedin.subscribe((value) => {
+			console.log("isSignedin", value);
+			if(value == true) {
+				loadItems()	
+			} else {
+				$localItems = [];
+			}
+			
+		});
 		return () => {
 		eventStore.removeListener(onSearchSelect);
 		unsubscribe();
+		unsubscribe2();
 		};
 	});
 
 	// get unique categories but filter out disabled items
-	let categories = localItems.filter(x => x.sidebar && x.enabled).map(x => x.category).filter((value, index, self) => self.indexOf(value) === index);
+	$: $categories = $localItems.filter(x => x.sidebar && x.enabled).map(x => x.category).filter((value, index, self) => self.indexOf(value) === index);
 	
 
 </script>
@@ -182,7 +223,7 @@
 <!--  class={cn("pb-12", className)} -->
 <!-- class="space-y-4 py-4" -->
 <div >
-	{#each categories as category}
+	{#each $categories as category}
 		{#if category != "main"}
 		<!-- class="px-3 py-2" -->
 		<div >
@@ -194,7 +235,7 @@
 		<div >
 			<!-- class="space-y-1" -->
 			<div>
-				{#each localItems.filter(x => x.sidebar && x.enabled && x.category == category) as item}
+				{#each $localItems.filter(x => x.sidebar && x.enabled && x.category == category) as item}
 				<Button 
 				variant={$page.url.pathname.startsWith(item.href) ? 'secondary' : 'ghost'} 
 				class="justify-start w-12 lg:w-full"
@@ -202,8 +243,8 @@
 				>
 					<svelte:component this={item.icon} class="mr-2 h-4 w-4 flex-shrink-0" />
 					<div class="hidden lg:block">
-						{item.title}
-					</div>					
+						{item.name}
+					</div>
 				</Button>
 				{/each}
 			</div>

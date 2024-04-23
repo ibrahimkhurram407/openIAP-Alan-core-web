@@ -9,7 +9,7 @@
 <nav class={cn("flex items-center space-x-4 lg:space-x-6", className)}>
 	<!-- text-sm font-medium transition-colors hover:text-primary -->
 	<a href="{base}/" class="flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-		<img src="{base}/openiap.png" alt="Logo" class="h-6 mr-4" /> {$config.majorversion}
+		<img src="{base}/openiap.png" alt="Logo" class="h-6 mr-4" /> {$config.majorversion || ""}
 	</a>
 
 	<!-- <a
