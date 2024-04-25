@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { cn } from "$lib/utils.js";
-	import { base } from '$app/paths';
-	import { config } from '$lib/stores';
+	import { base } from "$app/paths";
+	import { config } from "$lib/stores";
 
 	let className: string | undefined | null = undefined;
 	export { className as class };

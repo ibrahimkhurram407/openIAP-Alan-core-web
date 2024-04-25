@@ -2,7 +2,7 @@ import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import adapter from "@sveltejs/adapter-static";
 import path from "path";
 
-/** @type {import('@sveltejs/kit').Config} */
+/** @type {import("@sveltejs/kit").Config} */
 const config = {
   kit: {
     adapter: adapter({
@@ -11,7 +11,7 @@ const config = {
       },
       assets: "dist",
       pages: "dist",
-      fallback: 'index.html',
+      fallback: "index.html",
       strict: true,
     }),
     paths: {

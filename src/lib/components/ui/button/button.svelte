@@ -11,26 +11,24 @@
 	// export let builders = [];
 	export { className as class };
 	let Ref;
-	import { onMount } from 'svelte';
-	import { onDestroy } from 'svelte';
-	import { install, uninstall } from '@github/hotkey';
+	import { onMount } from "svelte";
+	import { onDestroy } from "svelte";
+	import { install, uninstall } from "@github/hotkey";
 	onMount(() => {
-		const button = Ref?.querySelector('button');
+		const button = Ref?.querySelector("button");
 		if(button && button.dataset && button.dataset.shortcut) {
-			// console.debug("install hotkey", Ref.dataset.shortcut)
 			install(button, button.dataset.shortcut)
 		}		
 	});
 	onDestroy(() => {
-		const button = Ref?.querySelector('button');
+		const button = Ref?.querySelector("button");
 		if(button && button.dataset && button.dataset.shortcut) {
-			// console.debug("uninstall hotkey", Ref.dataset.shortcut)
 			uninstall(button)
 		}
 	});
 
 </script>
-<div bind:this={Ref} style:display={!hidden == true ? 'block' : 'none'}>
+<div bind:this={Ref} style:display={!hidden == true ? "block" : "none"}>
 	<ButtonPrimitive.Root
 	
 	class={cn(buttonVariants({ variant, size, className }))}

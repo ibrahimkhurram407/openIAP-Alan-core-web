@@ -1,6 +1,6 @@
 <script>
-    import { signIn } from '$lib/auth';
-	import { isAuthenticated, user } from '$lib/stores';
+    import { signIn } from "$lib/auth";
+	import { isAuthenticated, user } from "$lib/stores";
 	import { Button } from "$lib/components/ui/button";
 
 </script>

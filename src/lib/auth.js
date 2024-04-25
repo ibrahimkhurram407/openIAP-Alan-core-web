@@ -2,38 +2,24 @@ import { UserManager, WebStorageStateStore } from "oidc-client";
 import { getStoreValue, isAuthenticated, user, config, baseurl, wsurl } from "$lib/stores";
 import { base } from "$app/paths";
 
-console.log("baseurl", getStoreValue(baseurl));
-console.log("wsurl", getStoreValue(wsurl));
-
 const settings = {
     authority: getStoreValue(baseurl) + "/oidc",
     client_id: "webapp",
-    redirect_uri: getStoreValue(baseurl) + base + "/",
+    redirect_uri: window.location.origin + base + "/",
     response_type: "code",
     scope: "openid profile email",
-    post_logout_redirect_uri: getStoreValue(baseurl) + base + "/",
+    post_logout_redirect_uri: window.location.origin + base + "/",
     userStore: new WebStorageStateStore({ store: window.localStorage })
 };
+// console.debug("baseurl", getStoreValue(baseurl));
+// console.debug("wsurl", getStoreValue(wsurl));
+// console.debug("settings", settings);
 
 export const userManager = new UserManager(settings);
-
-userManager.events.addUserLoaded((user) => {
-    // console.debug("User loaded", user);
-});
-
-userManager.events.addSilentRenewError((error) => {
-    console.error("Silent renew error", error);
-});
-
-userManager.events.addAccessTokenExpired(() => {
-    // console.debug("Token expired");
-});
-
 export const signIn = () => {
     isAuthenticated.set(false);
     return userManager.signinRedirect();
 };
-
 export const signOut = () => {
     isAuthenticated.set(false);
     return userManager.signoutRedirect();
@@ -70,11 +56,16 @@ export async function loadConfig() {
     } catch (error) {
     }
 }
-
+let isAuthenticatedtimer = true;
+// console.time("isAuthenticated");
 export const getUser = async () => {
     try {
         const result = await userManager.getUser();
         if(result != null) {
+            if(isAuthenticatedtimer) {
+                isAuthenticatedtimer = false;
+                // console.timeEnd("isAuthenticated");
+            }                
             isAuthenticated.set(true);
             loadConfig();
             user.set(result);

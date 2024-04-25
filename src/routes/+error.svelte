@@ -1,5 +1,5 @@
 <script>
-    import { page } from '$app/stores';
+    import { page } from "$app/stores";
     import Shieldoff from "lucide-svelte/icons/shield-off";
 </script>
 <div class="px-4 pt-4">

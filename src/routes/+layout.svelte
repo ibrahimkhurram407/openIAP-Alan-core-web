@@ -2,23 +2,25 @@
 <script>
 	import "../app.pcss";
 	import { ModeWatcher } from "mode-watcher";
-	import { page } from '$app/stores';
-	import { base } from '$app/paths';
+	import { page } from "$app/stores";
+	import { base } from "$app/paths";
 	import { Button } from "$lib/components/ui/button";
 	import { toggleMode } from "mode-watcher";
 	import Sun from "lucide-svelte/icons/sun";
 	import Moon from "lucide-svelte/icons/moon";
 
-	import { isAuthenticated, isSignedin, user, client } from '$lib/stores';
-	import { onMount } from 'svelte';
-    import { signIn, userManager, signOut, getUser } from '$lib/auth';
-	import { pushState } from '$app/navigation';
+	import { isAuthenticated, isSignedin, user, client } from "$lib/stores";
+	import { onMount } from "svelte";
+    import { signIn, userManager, signOut, getUser } from "$lib/auth";
+	import { pushState } from "$app/navigation";
 	import { goto } from "$app/navigation";
 	
+	let isSignedinTimer = true;
+	// console.time("isSignedin");
     onMount(async () => {
-		if (window.location.search.includes('code=')) {
+		if (window.location.search.includes("code=")) {
             await userManager.signinRedirectCallback();
-            pushState(base + '/', {});
+            pushState(base + "/", {});
         }
 		try {
 			user.set(await getUser());
@@ -29,16 +31,20 @@
 			} else {
 				$client.jwt = $user.access_token;
 				await $client.connect(true);
-				$client.onDisconnected = (() => {
-					console.log('User.Disconnected', $user);
+				$client.onDisconnected = async (client, error) => {
+					// console.debug("User.Disconnected", $user.profile);
 					isSignedin.set(false);
-				});
-				console.log('User', $user);
+				};
+				// console.debug("User.SignedIn", $user.profile);
+				if(isSignedinTimer) {
+					isSignedinTimer = false;
+					// console.timeEnd("isSignedin");
+				}					
 				isSignedin.set(true);
 			}
 		} catch (error) {
 			isSignedin.set(false);
-			console.error('Error signing in', error);
+			// console.error("Error signing in", error);
 			signIn();
 		}
     });
@@ -49,8 +55,8 @@
 	import { SideBar } from "$lib/side-bar";
 </script>
 <ModeWatcher />
-<Button hidden on:click={($isAuthenticated ? signOut : signIn)} data-shortcut={'Control+q,Meta+q' }>Sign In/Out</Button>
-{#if $page.url.pathname != base + '/login'}
+<Button hidden on:click={($isAuthenticated ? signOut : signIn)} data-shortcut={"Control+q,Meta+q" }>Sign In/Out</Button>
+{#if $page.url.pathname != base + "/login"}
 <div class="app">
 	<div class="border-b">
 		<div class="flex h-14 items-center px-4">

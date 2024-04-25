@@ -1,7 +1,7 @@
-import { error } from '@sveltejs/kit';
-import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
-import { z } from 'zod';
+import { error } from "@sveltejs/kit";
+import { superValidate } from "sveltekit-superforms";
+import { zod } from "sveltekit-superforms/adapters";
+import { z } from "zod";
 
 export const _userSchema = z.object({
   id: z.number().int().positive(),

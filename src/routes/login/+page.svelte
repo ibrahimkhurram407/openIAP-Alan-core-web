@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { base } from "$app/paths";
 	import UserAuthForm from "./(components)/user-auth-form.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import Hairball from "$lib/images/hairball.webp";
@@ -36,7 +36,7 @@
 </script>
 
 
-<div class="sm:grid sm:grid-cols-[1fr,min-content] min-h-screen">
+<!-- <div class="sm:grid sm:grid-cols-[1fr,min-content] min-h-screen">
 	<div class="hidden sm:block sm:flex-1 bg-white dark:bg-black">
 		<img src="{getRandomImage()}" alt="Authentication" class="h-full w-full object-cover" />
 	</div>
@@ -65,4 +65,34 @@
 {/if}
 		</div>
 	</div>
-</div>
+</div> -->
+
+<div class="grid grid-cols-[min-content,1fr] ml-1 min-h-screen">
+	<div class="lg:p-8">
+	  <div class="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+		<div class="flex flex-col space-y-2 text-center">
+		  <h1 class="text-2xl font-semibold tracking-tight">Create an account</h1>
+		  <p class="text-sm text-muted-foreground">
+			Enter your email below to create your account
+		  </p>
+		</div>
+		<UserAuthForm />
+		<p class="px-8 text-center text-sm text-muted-foreground">
+		  By clicking continue, you agree to our
+		  <a href="/terms" class="underline underline-offset-4 hover:text-primary">
+			Terms of Service
+		  </a>
+		  and
+		  <a href="/privacy" class="underline underline-offset-4 hover:text-primary">
+			Privacy Policy
+		  </a>
+		  .
+		</p>
+	  </div>
+	</div>
+	<div class="flex-1 bg-white dark:bg-black">
+	  <!-- Ensure the image covers the entire div -->
+	  <img src="{Hairball}" alt="Authentication" class="h-full w-full object-cover" />
+	</div>
+  </div>
+  

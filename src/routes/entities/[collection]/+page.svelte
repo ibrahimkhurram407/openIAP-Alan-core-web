@@ -1,16 +1,18 @@
 <script lang="ts">
-  import { client, isSignedin, collections } from '$lib/stores';
-  import { setting } from '$lib/pstore';
-  import { writable } from 'svelte/store';
+	import { base } from "$app/paths";
+	import { goto } from "$app/navigation";
+  import { client, isSignedin, collections } from "$lib/stores";
+  import { setting } from "$lib/pstore";
+  import { writable } from "svelte/store";
   import { SearchInput } from "$lib/components/ui/searchinput";
   import { ScrollArea } from "$lib/components/ui/scroll-area/index.js";
 	import { Button } from "$lib/components/ui/button";
-  import { page } from '$app/stores';
-  import { Entities } from '$lib/entities';
+  import { page } from "$app/stores";
+  import { Entities } from "$lib/entities";
 
-  import Database from 'lucide-svelte/icons/database';
-  import Fileclock from 'lucide-svelte/icons/file-clock';
-  import Folder from 'lucide-svelte/icons/folder';
+  import Database from "lucide-svelte/icons/database";
+  import Fileclock from "lucide-svelte/icons/file-clock";
+  import Folder from "lucide-svelte/icons/folder";
   // https://muonw.github.io/muonw-powertable/examples/example8
   
   // https://melt-ui.com/
@@ -67,15 +69,15 @@
   }
   
   function icon(item) {
-    if(item.name.endsWith('.files')) {
+    if(item.name.endsWith(".files")) {
       return Folder;
-    } else if(item.type == 'timeseries') { 
+    } else if(item.type == "timeseries") { 
       return Fileclock;
     }
     return Database;
   }
 
-  import { eventStore } from '$lib/stores.js';
+  import { eventStore } from "$lib/stores.js";
 	function onSearchSelect(data) {
 		if(data.name != "search:select") return;
 		if(data.item == null) return;
@@ -85,17 +87,17 @@
     scrollToItem($collectionindex);
 	}
   function scrollToItem(index) {
-    const element = document.getElementById('item-' + index);
+    const element = document.getElementById("item-" + index);
     if (element) {
       setTimeout(() => { 
         element.focus(); 
-        element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        element.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }, 100);
     }
   }
-  import { onMount, tick } from 'svelte';
-    import { Key } from 'lucide-svelte';
-    import Toggle from '$lib/components/ui/toggle/toggle.svelte';
+  import { onMount, tick } from "svelte";
+    import { Key } from "lucide-svelte";
+    import Toggle from "$lib/components/ui/toggle/toggle.svelte";
   const searchstring = writable("");
   onMount(() => {
     eventStore.addListener(onSearchSelect);
@@ -124,7 +126,7 @@
   
 </script>
 <div class="grid grid-cols-[1fr,min-content,min-content,0px] gap-2 mb-1">
-  <SearchInput placeholder="Search {$collectionname} collection using text or json query" 
+  <SearchInput placeholder="Search {$collectionname} collection using text or json query" name="search"
   class="px-2 ml-1"
   dense filled rounded clearable
   bind:value={$searchstring}
@@ -142,7 +144,7 @@
       e.target.blur();
     }
   }}
-  data-shortcut={'Control+f,Meta+f'}
+  data-shortcut={"Control+f,Meta+f"}
   type="search"> 
 </SearchInput>
 <Toggle class=" ml-1" bind:pressed={showquery} dense filled rounded variant="outline" >query</Toggle>
@@ -163,8 +165,8 @@
           <!-- <h4 class="mb-4 text-sm font-medium leading-none">Collections</h4> -->
           {#each $collections as item, index}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <!-- <div class="flex items-center text-sm item {$collectionname == item.name ? 'outline bg-sky-50' : ''}" role="button" tabindex="0" 
-          id={'item-' + index} 
+          <!-- <div class="flex items-center text-sm item {$collectionname == item.name ? "outline bg-sky-50" : ""}" role="button" tabindex="0" 
+          id={"item-" + index} 
           on:click={() => { collectionname.set(item.name); $collectionindex = $collections.findIndex(x => x.name == $collectionname); }}>
             <Avatar.Root class="mr-2 h-4 w-4 flex-shrink-0">
               <Avatar.Image src="{icon(item)}" alt="@shadcn" />
@@ -173,8 +175,8 @@
             {item.name}
           </div> -->
           <Button class="justify-start w-full"
-          variant={$collectionname == item.name ? 'secondary' : 'ghost'} 
-          id={'item-' + index} 
+          variant={$collectionname == item.name ? "secondary" : "ghost"} 
+          id={"item-" + index} 
           on:click={() => { collectionname.set(item.name); $collectionindex = $collections.findIndex(x => x.name == $collectionname); }}>
           <svelte:component this={icon(item)} class="mr-2 h-4 w-4 flex-shrink-0" />
             {item.name}
@@ -185,7 +187,11 @@
 
       <div class="content lg:border-l">
         <Entities key={"entities_" + $collectionname} searchstring={searchstring} collectionname={$collectionname} {query} 
-        explain={explain} showquery={showquery} bind:selecteditems={selecteditems} />
+        explain={explain} showquery={showquery} bind:selecteditems={selecteditems} 
+          on:insert={e => {
+            goto(base + `/entities/${e.detail.collectionname}/new`);
+          }}
+        />
       </div>
     </div>
   </div>
@@ -195,7 +201,7 @@
 hidden
 variant="outline"
 size="sm"
-data-shortcut={'ArrowUp' }
+data-shortcut={"ArrowUp" }
 on:click={() => ($collectionindex = $collectionindex - 1)}
 disabled={$collectionindex <= 0}>Previous</Button
 >
@@ -203,7 +209,7 @@ disabled={$collectionindex <= 0}>Previous</Button
 hidden
 variant="outline"
 size="sm"
-data-shortcut={'ArrowDown' }
+data-shortcut={"ArrowDown" }
 on:click={() => ($collectionindex = $collectionindex + 1)}
 disabled={$collectionindex >= ($collections.length-1)}>Next</Button
 >

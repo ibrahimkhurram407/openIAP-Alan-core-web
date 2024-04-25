@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable } from "svelte/store";
 
 // Cache object to hold the instances of the stores
 const storeCache = {};
@@ -30,10 +30,17 @@ export function deleteAllSettings() {
  * @param {string} page Page this setting belongs to
  * @param {string} key Settings key
  * @param {any} defaultValue Default value if not set
- * @returns {import('svelte/store').Writable<any>}Writeable store
+ * @returns {import("svelte/store").Writable<any>}Writeable store
  */
 export function setting(page, key, defaultValue) {
     const fullKey = `${page}-${key}`; // Unique key for each part of the app
+
+    let json2 = null;
+    try {
+        json2 = JSON.stringify(defaultValue);
+    } catch (error) {
+    }
+
 
     // Return the existing store if it has already been created
     if (storeCache[fullKey]) {
@@ -47,7 +54,17 @@ export function setting(page, key, defaultValue) {
     const store = writable(initialData);
 
     store.subscribe(value => {
+        let json1, jsonsuccess;
+        try {
+            json1 = JSON.stringify(value);
+            jsonsuccess = true;
+        } catch (error) {
+            jsonsuccess = false;            
+        }
+        // if(key == "ShowColumns") debugger;
         if(value == null || value == "") {
+            deleteSetting(page, key);
+        } else if (jsonsuccess && json1 == json2) {
             deleteSetting(page, key);
         } else {
             if(value instanceof Object) {

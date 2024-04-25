@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { Input } from '$lib/components/ui/input';
-  import * as Form from '$lib/components/ui/form';
+  import { Input } from "$lib/components/ui/input";
+  import * as Form from "$lib/components/ui/form";
 
 
-  import SuperDebug, { superForm, setMessage, setError } from 'sveltekit-superforms';
-  import { _userSchema } from './+page.js';
-  import { zod } from 'sveltekit-superforms/adapters';
+  import SuperDebug, { superForm, setMessage, setError } from "sveltekit-superforms";
+  import { _userSchema } from "./+page.js";
+  import { zod } from "sveltekit-superforms/adapters";
 
   export let data;
 
@@ -16,11 +16,11 @@
       validators: zod(_userSchema),
       onUpdate({ form }) {
         // Form validation
-        if (form.data.email.includes('spam')) {
-          setError(form, 'email', 'Suspicious email address.');
+        if (form.data.email.includes("spam")) {
+          setError(form, "email", "Suspicious email address.");
         } else if (form.valid) {
           // TODO: Call an external API with form.data, await the result and update form
-          setMessage(form, 'Valid data!');
+          setMessage(form, "Valid data!");
         }
       }
     }

@@ -1,22 +1,22 @@
 <script lang="ts">
-	import { base } from '$app/paths';
-	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
+	import { base } from "$app/paths";
+	import { page } from "$app/stores";
+	import { goto } from "$app/navigation";
 	import { Button } from "$lib/components/ui/button";
 
-	import Booka from 'lucide-svelte/icons/book-a';
-	import Squarelibrary from 'lucide-svelte/icons/square-library';
-	import share2 from 'lucide-svelte/icons/share-2';
-	import Bot from 'lucide-svelte/icons/bot';
-	import Areachart from 'lucide-svelte/icons/area-chart';
-	import Userplus from 'lucide-svelte/icons/user-plus';
-	import Usercog from 'lucide-svelte/icons/user-cog';
-	import Users from 'lucide-svelte/icons/users';
-	import Usersround from 'lucide-svelte/icons/users-round';
-	import Activity from 'lucide-svelte/icons/activity';
-	import Liststart from 'lucide-svelte/icons/list-start';
-	import Rabbit from 'lucide-svelte/icons/rabbit';
-	import Database from 'lucide-svelte/icons/database';
+	import Booka from "lucide-svelte/icons/book-a";
+	import Squarelibrary from "lucide-svelte/icons/square-library";
+	import share2 from "lucide-svelte/icons/share-2";
+	import Bot from "lucide-svelte/icons/bot";
+	import Areachart from "lucide-svelte/icons/area-chart";
+	import Userplus from "lucide-svelte/icons/user-plus";
+	import Usercog from "lucide-svelte/icons/user-cog";
+	import Users from "lucide-svelte/icons/users";
+	import Usersround from "lucide-svelte/icons/users-round";
+	import Activity from "lucide-svelte/icons/activity";
+	import Liststart from "lucide-svelte/icons/list-start";
+	import Rabbit from "lucide-svelte/icons/rabbit";
+	import Database from "lucide-svelte/icons/database";
 
 	let categories = writable([]);
 	let localItems = writable([{
@@ -169,7 +169,8 @@
 		]
 		$categories = $localItems.filter(x => x.sidebar && x.enabled).map(x => x.category).filter((value, index, self) => self.indexOf(value) === index);
 	}
-	import { config, eventStore, isAuthenticated, isSignedin, searchQuery } from '$lib/stores.js';
+	loadItems();
+	import { config, eventStore, isAuthenticated, isSignedin, searchQuery } from "$lib/stores.js";
 	function onSearchSelect(data) {
 		if(data.name != "search:select") return;
 		if(data.item == null) return;
@@ -190,27 +191,27 @@
 			}
 		eventStore.dispatch({ name: "search:results", items: filteredresults, source: "sidebar" });
 	};
-	import { onMount } from 'svelte';
-    import { Factory } from 'lucide-svelte';
-    import { writable } from 'svelte/store';
-    import type { Writeable } from 'zod';
+	import { onMount } from "svelte";
+    import { Factory } from "lucide-svelte";
+    import { writable } from "svelte/store";
+    import type { Writeable } from "zod";
 	onMount(() => {
-		console.log("SideBar mounted");
 		eventStore.addListener(onSearchSelect);
 		const unsubscribe = searchQuery.subscribe(onSearchQuery);
-		const unsubscribe2 = isSignedin.subscribe((value) => {
-			console.log("isSignedin", value);
-			if(value == true) {
-				loadItems()	
-			} else {
-				$localItems = [];
-			}
-			
-		});
+		let unsubscribe2 = null;
+		//setTimeout(() => {
+			unsubscribe2 = isAuthenticated.subscribe((value) => {
+				if(value == true) {
+					loadItems()	
+				} else {
+					$localItems = [];
+				}
+			});
+		//}, 500);
 		return () => {
 		eventStore.removeListener(onSearchSelect);
 		unsubscribe();
-		unsubscribe2();
+		if(unsubscribe2 != null) unsubscribe2();
 		};
 	});
 
@@ -237,7 +238,7 @@
 			<div>
 				{#each $localItems.filter(x => x.sidebar && x.enabled && x.category == category) as item}
 				<Button 
-				variant={$page.url.pathname.startsWith(item.href) ? 'secondary' : 'ghost'} 
+				variant={$page.url.pathname.startsWith(item.href) ? "secondary" : "ghost"} 
 				class="justify-start w-12 lg:w-full"
 				on:click={() => goto(item.href)} 
 				>

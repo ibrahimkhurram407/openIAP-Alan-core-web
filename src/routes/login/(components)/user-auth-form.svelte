@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount } from "svelte";
 	import { Button } from "$lib/components/ui/button";
     import { Input } from "$lib/components/ui/input";
     import { Label } from "$lib/components/ui/label";
 	import { cn } from "$lib/utils.js";
 
-    import Loader from 'lucide-svelte/icons/loader';
-    import Github from 'lucide-svelte/icons/github';
+    import Loader from "lucide-svelte/icons/loader";
+    import Github from "lucide-svelte/icons/github";
     import { writable, type Writable } from "svelte/store";
     import { baseurl, client, config } from "$lib/stores";
-    import { loadConfig, loadLocalJWTUser } from '$lib/auth';
+    import { loadConfig, loadLocalJWTUser } from "$lib/auth";
     
 	import Oidc from "$lib/images/openid-svgrepo-com.svg";
 	import Gmail from "$lib/images/gmail-svgrepo-com.svg";
@@ -39,7 +39,6 @@
 			const errorBody = await request.json().catch(() => ({
 				message: `Failed get ${path} ${request.status}`
 			}));
-			console.log(path, "Error response:", errorBody);
 			$errormessage = `${errorBody.message ? errorBody.message : errorBody}`;
 			return null;
 		}
@@ -51,9 +50,9 @@
 			isLoading = true;
 			let url = $baseurl + path
 			const request = await fetch(url, {
-				method: 'POST',
+				method: "POST",
 				headers: {
-					'Content-Type': 'application/json'
+					"Content-Type": "application/json"
 				},
 				body: JSON.stringify(data)
 			});
@@ -62,7 +61,7 @@
 				const errorBody = await request.json().catch(() => ({
 					message: `Failed post ${path} ${request.status}`
 				}));
-				console.log(path, data, "Error response:", errorBody);
+				console.debug(path, data, "Error response:", errorBody);
 				$errormessage = `${errorBody.message ? errorBody.message : errorBody}`;
 				return null;
 			}
@@ -87,39 +86,24 @@
 				window.location.href="/login";
 				return;
 			} 
-			console.log("load config")
 			await loadConfig();
-			console.log("jwt", tu);
-			console.log("config", $config);
-			console.log("validate_emails", $config.validate_emails == true);
-			console.log("validate_user_form", $config.validate_user_form);
 			const needsvalidation = ($config.validate_emails == true || ($config.validate_user_form != "" && $config.validate_user_form != null));
-			console.log("needsvalidation", needsvalidation);
 			if($config.validate_user_form != "" && $config.validate_user_form != null && tu.user.formvalidated == false) {
-				const form = await GetJSON('/validateuserform');
+				const form = await GetJSON("/validateuserform");
 				$ShowValidationForm = true;
 				if(form != null && form != "") {
-					const { Formio } = await import('formiojs');
-					// const Formio = await import(`formiojs/dist/formio.full.js`);
-					// await import(`formiojs/dist/formio.form.css`);
-					/// Formio.createForm(document.getElementById('formio'), form.schema);
-					console.log("form", form);
-
-					$formioRender = await Formio.createForm(document.getElementById('formio'), form.schema,
+					const { Formio } = await import("formiojs");
+					$formioRender = await Formio.createForm(document.getElementById("formio"), form.schema,
 					{
 						breadcrumbSettings: { clickable: true },
 						buttonSettings: { showCancel: false }
 					});
-					$formioRender.on('submit', async submission => {
-						console.log("form submission", submission);
+					$formioRender.on("submit", async submission => {
 						isLoading = true
 						$errormessage = "";
 						try {
-							const data = await PostJSON('/validateuserform', submission);
-							console.log("submission result", data);
+							const data = await PostJSON("/validateuserform", submission);
 							if(data != null) {
-								// window.location.href = "/";
-								// window.location.reload();
 								init();
 							}
 							return;
@@ -141,11 +125,9 @@
 				$showMailCodeForm = true;
 				return;	
 			}
-			console.log("form validation required", $config.validate_user_form);
 			return
 		}
 		await loadConfig();
-		console.log("config loaded", $config);
 		const providers = $config.loginproviders;
 		if(providers.find(x=> x.provider == "local")) {
 			$showLocalForm = true;
@@ -167,12 +149,8 @@
 		isLoading = true
 		$errormessage = "";
 		try {
-			console.log("submitting code", $emailcode);
-			const data = await PostJSON('/validateuserform', {code: $emailcode});
-			console.log("submission result", data);
+			const data = await PostJSON("/validateuserform", {code: $emailcode});
 			if(data != null) {
-				// window.location.href = "/";
-				// window.location.reload();
 				init();
 			}
 			return;
@@ -181,9 +159,6 @@
 		} finally {
 			isLoading = false;
 		}
-
-		// ihlzs19sb
-		console.log("submit code");
 	}
 	onMount(() => {
 		init();
@@ -194,14 +169,14 @@
 <div class={cn("grid", className)} {...$$restProps}>
 	<div class="gap-6">
 		{#if $showLocalForm}
-		<!-- <form method='post' action='/local'>
+		<!-- <form method="post" action="/local">
 			<input type="text" name="username">
 			<input type="password" name="password">
 			<button type="submit">signin</button>
 
 		</form> -->
 
-		<form method='post' action='/local'>
+		<form method="post" action="/local">
 			<div class="grid gap-2">
 				<div class="grid gap-1">
 					<Label class="sr-only" for="email">Email</Label>
@@ -216,7 +191,8 @@
 						autocorrect="off"
 						disabled={isLoading}
 					/>
-					<Input id="password" name="password" placeholder="Password" type="password" disabled={isLoading} />
+					<Input id="password" name="password" placeholder="Password" type="password" disabled={isLoading} 
+					autocomplete="current-password" />
 					{#if $errormessage != ""}
 						<p class="text-red-500 text-xs italic">{$errormessage}</p>
 					{/if}
@@ -274,7 +250,7 @@
 						{/if}
 						Validate Code
 					</Button>
-					<Button type="button" disabled={isLoading} on:click={() => PostJSON('/validateuserform', {resend: true})}>
+					<Button type="button" disabled={isLoading} on:click={() => PostJSON("/validateuserform", {resend: true})}>
 						{#if isLoading}
 							<Loader class="mr-2 h-4 w-4 animate-spin" />
 						{/if}
@@ -282,7 +258,7 @@
 					</Button>
 				</div>
 				<div class="flex">
-					<Button type="button" disabled={isLoading} on:click={()=> window.location.href = '/Signout' }>
+					<Button type="button" disabled={isLoading} on:click={()=> window.location.href = "/Signout" }>
 						{#if isLoading}
 							<Loader class="mr-2 h-4 w-4 animate-spin" />
 						{/if}
@@ -296,7 +272,7 @@
 	</div>
 	<div class="grid gap-2">
 		{#if $config.loginproviders != null && $showProviders == true}
-		{#each $config.loginproviders.filter(x => x.provider != 'local') as lp }
+		{#each $config.loginproviders.filter(x => x.provider != "local") as lp }
 		<Button variant="outline" type="button" disabled={isLoading} class="w-full"
 			on:click={() => isLoading = true}
 			href={$baseurl}/{lp.id}>

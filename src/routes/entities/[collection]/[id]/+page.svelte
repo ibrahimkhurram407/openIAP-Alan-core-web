@@ -8,7 +8,6 @@
   import { zod } from "sveltekit-superforms/adapters";
 
   export let data;
-
   const form = superForm(
     data.form,
     {
@@ -25,6 +24,8 @@
       }
     }
   );
+
+  console.log(form)
   
   const { form: formData, errors, message, constraints, enhance } = form;
 </script>

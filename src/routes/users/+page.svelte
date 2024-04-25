@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { base } from "$app/paths";
+	import { goto } from "$app/navigation";
   import { Entities } from '$lib/entities';
   import { writable } from 'svelte/store';
   import { SearchInput } from "$lib/components/ui/searchinput";
@@ -7,7 +9,7 @@
   const searchstring = writable("");
 </script>
 
-<SearchInput placeholder="Search users using text or json query" 
+<SearchInput placeholder="Search users using text or json query" name="search"
     dense filled rounded clearable
     bind:value={$searchstring}
     data-shortcut={'Control+f,Meta+f'}
@@ -23,5 +25,9 @@
     }}
     type="search"> 
   </SearchInput>
-<Entities key="users" searchstring={searchstring}  {collectionname} {query} defaultcolumns={["name", "username", "lastseen", "dbusage", "validated"]} />
+<Entities key="users" searchstring={searchstring}  {collectionname} {query} defaultcolumns={["name", "username", "lastseen", "dbusage", "validated"]} 
+  on:insert={e => {
+    goto(base + `/users/new`);
+  }}
+/>
 

@@ -5,18 +5,16 @@
 	export { className as class };
 	export let readonly = undefined;
 	let Ref;
-	import { onMount } from 'svelte';
-	import { onDestroy } from 'svelte';
-	import { install, uninstall } from '@github/hotkey';
+	import { onMount } from "svelte";
+	import { onDestroy } from "svelte";
+	import { install, uninstall } from "@github/hotkey";
 	onMount(() => {
 		if(Ref.dataset && Ref.dataset.shortcut) {
-			// console.debug("install hotkey", Ref.dataset.shortcut)
 			install(Ref, Ref.dataset.shortcut)
 		}		
 	});
 	onDestroy(() => {
 		if(Ref.dataset && Ref.dataset.shortcut) {
-			// console.debug("uninstall hotkey", Ref.dataset.shortcut)
 			uninstall(Ref)
 		}
 	});
@@ -47,6 +45,6 @@
 	
 	{...$$restProps}
 />
-<!-- [Violation] Added non-passive event listener to a scroll-blocking 'wheel' event. Consider marking event handler as 'passive' to make the page more responsive.  -->
+<!-- [Violation] Added non-passive event listener to a scroll-blocking "wheel" event. Consider marking event handler as "passive" to make the page more responsive.  -->
 <!-- on:wheel -->
 

@@ -1,9 +1,14 @@
 <script lang="ts">
-  import SuperDebug from 'sveltekit-superforms';
-	import { client, isSignedin } from '$lib/stores';
+  import { onMount, createEventDispatcher } from "svelte";
+  import { tick } from "svelte";
+  import SuperDebug from "sveltekit-superforms";
+	import { client, getStoreValue, isSignedin,collections } from "$lib/stores";
   import { createTable , Render, Subscribe, createRender } from "svelte-headless-table";
   import { addPagination, addSortBy, addHiddenColumns, addSelectedRows } from "svelte-headless-table/plugins";
+  import { ScrollArea } from "$lib/components/ui/scroll-area/index.js";
   import ArrowUpDown from "lucide-svelte/icons/arrow-up-down";
+  import ArrowUp from "lucide-svelte/icons/arrow-up";
+  import ArrowDown from "lucide-svelte/icons/arrow-down";
   import ChevronDown from "lucide-svelte/icons/chevron-down";
   import * as Table from "$lib/components/ui/table";
   import DataTableActions from "./data-table-actions.svelte";
@@ -11,13 +16,16 @@
   import { Input } from "$lib/components/ui/input";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import DataTableCheckbox from "./data-table-checkbox.svelte";
-  import { writable, type Writable } from 'svelte/store';
-  import { setting, deleteAllSettings, deleteSettings } from '$lib/pstore';
+  import { writable, type Writable } from "svelte/store";
+  import { setting, deleteAllSettings, deleteSettings } from "$lib/pstore";
+    import { set } from "zod";
   // https://www.shadcn-svelte.com/docs/components/data-table
   // https://github.com/bryanmylee/svelte-headless-table/discussions/56
 
   let serverItemCount = writable(-1);
   const error = writable("");
+  const dispatch = createEventDispatcher();
+
 
   export let collectionname = "entities";
   let currentcollectionname = collectionname;
@@ -27,6 +35,7 @@
   export let multiselect = false;
   export let showquery = false;
   export let explain = false;
+  export let showInsert = true;
 
   let explainquery = writable(null);
 
@@ -34,13 +43,21 @@
   // deleteSettings(key)
   export let selecteditems = [];
   let unsubscribe4;
+  let unsubscribe5;
 
 
-  export let defaultcolumns = ['_id', '', 'name'];
+  export let defaultcolumns = ["_id", "", "name"];
+  
   const currentquery = writable({});
-  let ShowColumns = setting(key, 'ShowColumns', {});
-  let _pageindex = setting(key, 'pageindex', 0);
-  let _selectedDataIds = setting(key, 'selectedDataIds', {});
+
+  let sortKeys;
+  updateSortKeys();
+  let ShowColumns = setting(key, "ShowColumns", {});
+  let _pageindex = setting(key, "pageindex", 0);
+  let pagesize = setting(key, "pagesize", 10);
+
+  
+  let _selectedDataIds = setting(key, "selectedDataIds", {});
   if(Object.keys($_selectedDataIds).length > 0) {
     multiselect = true;
   }
@@ -56,7 +73,21 @@
 
   let selectedDataIds;
 
+  function updateSortKeys() {
+    let sortDefault = [{id: "_created", order: "desc"}];
+    if(collectionname == "dbusage") {
+      sortDefault = [];
+    } else if(collectionname == "cvr") {
+      sortDefault = [{id: "sidstOpdateret", order: "desc"}];
+    }
+    sortKeys = setting(key, "sortKeys", sortDefault);
+  }
+
   function updateShowColumns(viewModel) {
+    for(let y = 0; y < $sortKeys.length; y++) {
+        const key = $sortKeys[y].id;
+        $ShowColumns[key] = true;
+      }
     const ids = viewModel.flatColumns.map((col) => col.id)
     for(let i = 0; i < ids.length; i++) {
       const id = ids[i];
@@ -78,6 +109,7 @@
         $ShowColumns[id] = true;
       }
     }
+    viewModel.pluginStates.hide.hiddenColumnIds.set(Object.entries($ShowColumns).filter(([, hide]) => !hide).map(([id]) => id));
   }
   
   function parseJson(txt, reviver, context) {
@@ -116,10 +148,9 @@
     }
     function safeEval(jsStr) {
     try {
-        return Function('"use strict";return (' + jsStr + ')')();
+        return Function(`"use strict";return (` + jsStr + `)`)();
     } catch (e) {
         $error = e.message
-        // console.error("Failed to parse string", e);
         return null;
     }
 }
@@ -140,7 +171,6 @@
                 q = safeEval($searchstring);
               } catch (error2) {
                 $error = e.message;
-                // console.error("Error parsing query", e);
                 return null;
               }
             }
@@ -154,17 +184,17 @@
     return q;
   }
 
-  const items = writable([{_id: "12", name: "test"}]);
-  let initialPageSize = 5;
+  // const items = writable([{_id: "12", name: "test"}]);
+  const items = writable([]);
   function reCreateTable() {
     let table = createTable(items, {
     page: addPagination({
       initialPageIndex: $_pageindex,
-      initialPageSize,
+      initialPageSize: $pagesize,
       serverItemCount,
       serverSide: true
     }),
-    sort: addSortBy(),
+    sort: addSortBy({serverSide: true, initialSortKeys: $sortKeys, disableMultiSort: false }),
     hide: addHiddenColumns(),
     select: addSelectedRows(),
   });
@@ -185,55 +215,74 @@
       return createRender(DataTableCheckbox, {
         checked: isSelected,
       });
-    },
-    plugins: {
-      sort: {
-        disable: false,
-      }
-    },
-  }));
-  columns.push(table.column({
-    // @ts-ignore
-    accessor: "name",
-    header: "Name",
-    plugins: {
-      sort: {
-        disable: false,
-      },
-    },
-  }));
-  var keys = Object.keys($items[0]);
-  for(let i = 0; i < keys.length; i++) {
-    const key = keys[i];
-    if(key == "_created" || key == "_modified") {
-    } else if(key.startsWith("_") || key == "name") {
-      continue;
     }
+  }));
+  if($items.length > 0) {
     columns.push(table.column({
-        // @ts-ignore
-        accessor: key,
-        header: key,
-        plugins: {
-          sort: {
-            disable: false,
-          },
-        },
+      accessor: (item) => item.name,
+      header: "name"
+    }));
+    var keys = Object.keys($items[0]);
+    var keys2 = Object.keys($ShowColumns);
+    // keep the columns in the same order as the keys
+    for(let i = 0; i < keys2.length; i++) {
+      const key = keys2[i];
+      // if(keys.indexOf(key) == -1) continue; // if enabled, show no even if not present on first item
+      if(key == "") continue;
+      if(key == "_created" || key == "_modified") {
+      } else if(key.startsWith("_") || key == "name") {
+        continue;
+      }
+      try {
+        if(columns.find(x=> x.id == key) != null) continue;
+        columns.push(table.column({
+          accessor: (item) => item[key],
+          header: key
+        }));
+      } catch (error3) {        
+      }
+    }
+    // add any new columns
+    for(let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      if(keys2.indexOf(key) != -1) continue;
+      if(key == "_created" || key == "_modified") {
+      } else if(key.startsWith("_") || key == "name") {
+        continue;
+      }
+      if(columns.find(x=> x.id == key) != null) continue;
+      columns.push(table.column({
+        accessor: (item) => item[key],
+        header: key
       }));
+    }
+    // force adding columns that we are sorting by
+    for(let y = 0; y < $sortKeys.length; y++) {
+      const key = $sortKeys[y].id;
+      if(keys.indexOf(key.id) == -1) {
+        if(columns.find(x=> x.id == key) != null) continue;
+        columns.push(table.column({
+          accessor: (item) => item[key],
+          header: key
+        }));
+      }
+    }
   }
   columns.push(table.column({
       accessor: ({ _id }) => _id,
       header: "",
       cell: ({ value }) => {
         return createRender(DataTableActions, { id: value });
-      },
-      plugins: {
-        sort: {
-          disable: true,
-        }
-      },
+      }
     }));
     let viewModel = table.createViewModel(table.createColumns(columns), { rowDataId: ({ _id }) => _id  });
 
+    if(unsubscribe5) unsubscribe4();
+    unsubscribe5 = viewModel.pluginStates.sort.sortKeys.subscribe((value) => {
+      sortKeys.set(value);
+    });
+
+    
     selectedDataIds = viewModel.pluginStates.select.selectedDataIds;
     $selectedDataIds = $_selectedDataIds;
     if(unsubscribe4) unsubscribe4();
@@ -241,12 +290,13 @@
       _selectedDataIds.set(value);
       selecteditems = Object.keys(value);
     });
+    
     updateShowColumns(viewModel);
+
 
     return viewModel;
   }
   let viewModel = reCreateTable();
-
   let { hasNextPage, hasPreviousPage, pageIndex } = viewModel.pluginStates.page;
 
 
@@ -266,9 +316,11 @@
     $searchstring = $psearchstring;
 
     currentcollectionname = collectionname;
-    ShowColumns = setting(key, 'ShowColumns', {})
-    _pageindex = setting(key, 'pageindex', 0);
-    _selectedDataIds = setting(key, 'selectedDataIds', {});
+    ShowColumns = setting(key, "ShowColumns", {})
+    _pageindex = setting(key, "pageindex", 0);
+    pagesize = setting(key, "pagesize", 10);
+    updateSortKeys();
+    _selectedDataIds = setting(key, "selectedDataIds", {});
 
     $pageIndex = $_pageindex;
     $serverItemCount = -1;
@@ -290,6 +342,7 @@
   $: viewModel.pluginStates.hide.hiddenColumnIds.set(Object.entries($ShowColumns)
     .filter(([, hide]) => !hide)
     .map(([id]) => id));
+    
  
   const nonhidableCols = ["_id", ""];
 
@@ -301,6 +354,12 @@
       if($isSignedin == false) return;
       loading = true;
       try {
+        let orderby = {};
+        for(let i = 0; i < $sortKeys.length; i++) {
+          const sortKey = $sortKeys[i];
+          orderby[sortKey.id] = (sortKey.order == "desc" ? -1 : 1);
+        }
+        console.log(collectionname, "orderby", JSON.stringify(orderby))
         $currentquery = createQuery();
         if($currentquery == null) {
           loading = false;
@@ -308,12 +367,13 @@
         }
 
         if(explain == true) {
-          $explainquery = await $client.Query({collectionname, top: initialPageSize, skip: $pageIndex * initialPageSize, query: $currentquery, explain: true})
+          $explainquery = await $client.Query({collectionname, top: $pagesize, skip: $pageIndex * $pagesize, query: $currentquery, orderby, explain: true})
         }
 
-        $items = await $client.Query({collectionname, top: initialPageSize, skip: $pageIndex * initialPageSize, query: $currentquery})
+        $items = await $client.Query({collectionname, top: $pagesize, skip: $pageIndex * $pagesize, query: $currentquery, orderby})
         if($items.length > 0) {
           viewModel = reCreateTable();
+
         }
         let filteredresults = [];
         for(let i = 0; i < $items.length; i++) {
@@ -324,23 +384,20 @@
         }
       } catch (e) {
         $error = e.message;
-        // console.error("Error getting data", e);
       }
       loading = false;
       if($serverItemCount == -1) {
         $serverItemCount = await $client.Count({collectionname, query: $currentquery})
         if($pageIndex > 0) {
-          // console.debug($pageIndex * initialPageSize, ($pageIndex * initialPageSize) - initialPageSize, $serverItemCount)
-          if(($pageIndex * initialPageSize) - initialPageSize >= $serverItemCount) {
-            // console.debug("Resetting page index")
+          if(($pageIndex * $pagesize) - $pagesize >= $serverItemCount) {
             _pageindex.set(0);
+            console.log("count force reload", collectionname);
             GetData();
           }
         }
       }
     } catch (e) {
       $error = e.message;
-      // console.error("Error getting data", e.message);
     }
   }
   function onSearchQuery(value) {
@@ -348,7 +405,6 @@
     GetData();
   };
 
-  import { onMount } from 'svelte';
   onMount(() => {
     const unsubscribe = searchstring.subscribe(GetData);
     const unsubscribe2 = isSignedin.subscribe((value) => {
@@ -360,27 +416,31 @@
       _pageindex.set(value);
       GetData();
     });
+    // const unsubscribe5 = sortKeys.subscribe((value) => {
+    //   GetData();
+    // });
+
+    const unsubscribe6 = sortKeys.subscribe((value) => {
+      GetData()
+    });
+
 
     return () => {
       unsubscribe();
       unsubscribe2();
       unsubscribe3();
       if(unsubscribe4) unsubscribe4();
+      if(unsubscribe5) unsubscribe5();
+      unsubscribe6();
     };
   });
 
   GetData();
-  const cmdK = ['⌘', 'k']
-  </script>
-<!-- <div>
-  <div class="flex items-center py-4">
-    <div>
-    </div>
-    <div>
-      collectionname:{collectionname} key: {key}
-    </div>
-  </div>
-</div> -->
+
+</script>
+{#if $error != null && $error != ""}
+<SuperDebug data={$error} />
+{/if}
 <div class="rounded-md border">
   <Table.Root {...$tableAttrs}>
     <Table.Header class="table-head">
@@ -393,23 +453,20 @@
                 let:attrs
                 props={cell.props()}
                 let:props
+                sort={viewModel.pluginStates.sort.sortKeys}
+                let:sort
+
               >
-              {#if cell.id === "name"}
-                <Table.Head {...attrs} style="width: *;">
-                  <Button variant="ghost" on:click={props.sort.toggle}>
-                    <Render of={cell.render()} />
-                    <ArrowUpDown class="ml-2 h-4 w-4" />
-                  </Button>
-                </Table.Head>
-                {:else if cell.id === ""}
-                <Table.Head {...attrs} style="width: 35px;">
-                  <DropdownMenu.Root>
-                    <DropdownMenu.Trigger asChild let:builder>
-                      <Button variant="outline" class="ml-auto" builders={[builder]}>
-                        Columns <ChevronDown class="ml-2 h-4 w-4" />
-                      </Button>
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Content>
+              {#if cell.id === ""}
+              <Table.Head {...attrs} style="width: 35px;">
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild let:builder>
+                    <Button variant="outline" class="ml-auto" builders={[builder]}>
+                      Columns <ChevronDown class="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Content>
+                    <ScrollArea class="max-h-[36rem] min-w-[12rem] rounded-md border">
                       {#each viewModel.flatColumns as col}
                         {#if !nonhidableCols.includes(col.id)}
                           <DropdownMenu.CheckboxItem bind:checked={$ShowColumns[col.id]}>
@@ -417,20 +474,50 @@
                           </DropdownMenu.CheckboxItem>
                         {/if}
                       {/each}
-                    </DropdownMenu.Content>
-                  </DropdownMenu.Root>
+                    </ScrollArea>
+                  </DropdownMenu.Content>
+                </DropdownMenu.Root>
+              </Table.Head>
+              {:else if cell.id === "name"}
+                <Table.Head {...attrs}  style="width: *;"> <!-- style="width: *;"-->
+                  <Button variant="ghost" on:click={props.sort.toggle}>
+                    <Render of={cell.render()} />
+                    {#if props.sort.order == "asc"}
+                      <ArrowUp class="ml-2 h-4 w-4" />
+                    {:else if props.sort.order == "desc"}
+                      <ArrowDown class="ml-2 h-4 w-4" />
+                    {/if}
+                    <!-- <ArrowUpDown class="ml-2 h-4 w-4" /> -->
+                  </Button>
+                </Table.Head>
+                {:else if cell.id === "_created" || cell.id === "_modified"}
+                <Table.Head {...attrs}  style="width: 210px;"> <!-- style="width: *;"-->
+                  <Button variant="ghost" on:click={props.sort.toggle}>
+                    <Render of={cell.render()} />
+                    {#if props.sort.order == "asc"}
+                      <ArrowUp class="ml-2 h-4 w-4" />
+                    {:else if props.sort.order == "desc"}
+                      <ArrowDown class="ml-2 h-4 w-4" />
+                    {/if}
+                    <!-- <ArrowUpDown class="ml-2 h-4 w-4" /> -->
+                  </Button>
                 </Table.Head>
                 {:else if cell.id === "id" || cell.id === "_id"}
                   <Table.Head {...attrs} style="width: 35px;">
                     <Render of={cell.render()} /> 
                   </Table.Head>
                 {:else}
-                <Table.Head {...attrs}>
-                    <Button variant="ghost" on:click={props.sort.toggle}>
-                      <Render of={cell.render()} />
-                      <ArrowUpDown class={"ml-2 h-4 w-4"} />
-                    </Button>
-                  </Table.Head>
+                <Table.Head {...attrs}  style="width: {100 / nonhidableCols.length}%;">
+                  <Button variant="ghost"  on:click={props.sort.toggle}>
+                    <Render of={cell.render()} />
+                    {#if props.sort.order == "asc"}
+                      <ArrowUp class="ml-2 h-4 w-4" />
+                    {:else if props.sort.order == "desc"}
+                      <ArrowDown class="ml-2 h-4 w-4" />
+                    {/if}
+                    <!-- <ArrowUpDown class={"ml-2 h-4 w-4"} /> -->
+                  </Button>
+                </Table.Head>
                 {/if}
               </Subscribe>
             {/each}
@@ -458,7 +545,7 @@
 <!-- <div class="flex items-center justify-end space-x-4 py-4"> -->
 <div class="flex items-center space-x-4 py-4">
   <div class="flex-1 text-sm text-muted-foreground">
-    Page {$pageIndex + 1} of {Math.ceil($serverItemCount / initialPageSize)}
+    Page {$pageIndex + 1} of {Math.ceil($serverItemCount / $pagesize)}
     {#if Object.keys($selectedDataIds).length > 0}
       ( 
         {Object.keys($selectedDataIds).length} of{" "}
@@ -472,7 +559,7 @@
   class="lg:hidden"
   variant="outline"
   size="sm"
-  data-shortcut={'Control+a,Meta+a' }
+  data-shortcut={"Control+a,Meta+a" }
   on:click={() => {
     if(multiselect == false) {
       multiselect = true;
@@ -511,10 +598,31 @@
     }
   }}>Select all</Button
 >
+  <DropdownMenu.Root >
+    <DropdownMenu.Trigger asChild let:builder>
+      <Button variant="outline" class="ml-auto" builders={[builder]}>
+        {$pagesize} <ChevronDown class="ml-2 h-4 w-4" />
+      </Button>
+    </DropdownMenu.Trigger>
+    <DropdownMenu.Content>
+      {#each [5,10,15,25,50,100] as col}
+      <DropdownMenu.Item on:click={() => { $pagesize = col; _pageindex.set(0); GetData()}}>
+        <span>{col}</span>
+      </DropdownMenu.Item>
+      {/each}
+    </DropdownMenu.Content>
+  </DropdownMenu.Root>
+  <Button
+  variant="outline"
+  size="sm"
+  hidden={!showInsert}
+  data-shortcut={"Insert" }
+  on:click={() =>  dispatch('insert', { collectionname: collectionname })}>Insert</Button
+  >
   <Button
     variant="outline"
     size="sm"
-    data-shortcut={'ArrowLeft' }
+    data-shortcut={"ArrowLeft" }
     on:click={() => ($pageIndex = $pageIndex - 1)}
     disabled={(!$hasPreviousPage && $serverItemCount > -1) || ($pageIndex == 0)}>Previous</Button
   >
@@ -522,21 +630,22 @@
     variant="outline"
     size="sm"
     disabled={!$hasNextPage && $serverItemCount > -1}
-    data-shortcut={'ArrowRight' }
+    data-shortcut={"ArrowRight" }
     on:click={() => ($pageIndex = $pageIndex + 1)}>Next</Button
   >
+  
   <Button
     hidden
     variant="outline"
     size="sm"
-    data-shortcut={'Alt+r,Meta+r' }
+    data-shortcut={"Alt+r,Meta+r" }
     on:click={GetData}>Reload</Button
   >
   <Button
   hidden
   variant="outline"
   size="sm"
-  data-shortcut={'Control+u,Meta+u' }
+  data-shortcut={"Control+u,Meta+u" }
   on:click={() => {
     selectedDataIds.clear();
     multiselect = false;
@@ -544,9 +653,7 @@
     }}>Unselect all</Button
   >
 </div>
-{#if $error != null && $error != ""}
-<SuperDebug data={$error} />
-{/if}{#if $currentquery != null && showquery == true}
+{#if $currentquery != null && showquery == true}
 <SuperDebug data={$currentquery} theme="vscode" />
 {/if}
 {#if $explainquery !== null}
