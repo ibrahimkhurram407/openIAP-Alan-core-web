@@ -27,6 +27,25 @@
   const dispatch = createEventDispatcher();
 
 
+  const fixedColumnsSizes = {
+    _id: 35,
+    name: "*",
+    _created: 210,
+    _modified: 210,
+    lastseen: 210,
+    lastrun: 210,
+    nextrun: 210,
+    state: 100,
+    priority: 50,
+    dbusage: 100,
+    validated: 100,
+    maxretries: 50,
+    retries: 50,
+    remoteip: 100,
+    type: 150,
+    os: 50,
+    stripeprice: 100,
+  }
   export let collectionname = "entities";
   let currentcollectionname = collectionname;
   export let query = {};
@@ -437,6 +456,9 @@
 
   GetData();
 
+ function visibleColumnsCount() {
+    return Object.values($ShowColumns).filter((x) => x).length;
+ }
 </script>
 {#if $error != null && $error != ""}
 <SuperDebug data={$error} />
@@ -490,8 +512,8 @@
                     <!-- <ArrowUpDown class="ml-2 h-4 w-4" /> -->
                   </Button>
                 </Table.Head>
-                {:else if cell.id === "_created" || cell.id === "_modified"}
-                <Table.Head {...attrs}  style="width: 210px;"> <!-- style="width: *;"-->
+                {:else if fixedColumnsSizes[cell.id] != null}
+                <Table.Head {...attrs}  style="width: {fixedColumnsSizes[cell.id]}px;">
                   <Button variant="ghost" on:click={props.sort.toggle}>
                     <Render of={cell.render()} />
                     {#if props.sort.order == "asc"}
@@ -507,7 +529,7 @@
                     <Render of={cell.render()} /> 
                   </Table.Head>
                 {:else}
-                <Table.Head {...attrs}  style="width: {100 / nonhidableCols.length}%;">
+                <Table.Head {...attrs}  style="width: {100 / visibleColumnsCount()}%;">
                   <Button variant="ghost"  on:click={props.sort.toggle}>
                     <Render of={cell.render()} />
                     {#if props.sort.order == "asc"}
