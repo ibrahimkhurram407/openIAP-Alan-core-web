@@ -39,6 +39,7 @@
     if($collections.length > 0 && value >= 0 && value < $collections.length) {
       $collectionname = $collections[value].name;
       scrollToItem(value);
+      goto(base + `/entities/${$collectionname}`, { replaceState: true });
     }
   }
 
