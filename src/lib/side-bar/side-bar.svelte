@@ -170,7 +170,7 @@
 		$categories = $localItems.filter(x => x.sidebar && x.enabled).map(x => x.category).filter((value, index, self) => self.indexOf(value) === index);
 	}
 	loadItems();
-	import { config, eventStore, isAuthenticated, isSignedin, searchQuery } from "$lib/stores.js";
+	import { config, eventStore, isAuthenticated, searchQuery } from "$lib/stores.js";
 	function onSearchSelect(data) {
 		if(data.name != "search:select") return;
 		if(data.item == null) return;

@@ -1,55 +1,58 @@
 <script>
-  // import SuperDebug from "sveltekit-superforms";
+  import { onMount } from "svelte";
 	import { base } from "$app/paths";
 	import { goto } from "$app/navigation";
   import SuperDebug, { superForm, setMessage, setError } from "sveltekit-superforms";
   import { zod } from "sveltekit-superforms/adapters";
-  import * as Form from "$lib/components/ui/form";
-  import { _Schema } from "./+page.js";
-  import Field from './Field.svelte';
+  import { z } from "zod";
+  import * as Card from "$lib/components/ui/card";
+  
+  import { Entity } from "$lib/entity";
   import { client } from "$lib/stores";
-  export let data;
+
+  // new Date(1978, 3, 5 )
+  let data2 = {name: "New item2", 
+    today: "2024-04-16T09:50:22.137Z", 
+    birth: '1978-03-05T02:00:00.000Z'
+  };
+  let data = writable(data2)
+  let schema = z.object({
+	name: z.string().min(5),
+	}).passthrough();
+  let errormessage = writable(null);
+
   import { page } from "$app/stores";
   import { setting } from "$lib/pstore";
+    import { writable } from "svelte/store";
 
   const collectionname = setting("entities", "collection", "entities");
   if($page.params.collection != null && $page.params.collection != "") {
     $collectionname = $page.params.collection;
   }
-
-  const sform = superForm(
-    data.form,
-    {
-      SPA: true,
-      validators: zod(_Schema),
-      async onUpdate({ form }) {
-        // if (form.data.email.includes('spam')) {
-        //   setError(form, 'email', 'Suspicious email address.');
-        // } else 
-        if (form.valid) {
-          try {
-            await $client.InsertOne({ collectionname: $collectionname, item: form.data });
-            goto(base + `/entities/${$collectionname}`);
-          } catch (error) {
-            setError(form, error.message);
-          }          
-        }
-      }
+  async function onSubmit(e) {
+    try {
+      await $client.InsertOne({ collectionname: $collectionname, item: e.detail.data });
+  		goto(base + `/entities/${$collectionname}`);
+    } catch (error) {
+      $errormessage = error.message;
     }
-  );
-  const { form, errors, message, constraints, enhance } = sform
+  }
+</script>
+{#if $errormessage != null && $errormessage != ""}
+<Card.Root class="ml-2 mr-5 text-red-800">
+  <Card.Header>
+    <Card.Title>{$errormessage}</Card.Title>
+  </Card.Header>
+</Card.Root>
+{/if}
+<Card.Root class="gap-1.5 ml-2 mr-5">
+  <Card.Header>
+    <Card.Title>{$data.name}</Card.Title>
+  </Card.Header>
+  <Card.Content>
+    <Entity bind:value={$data} on:submit={onSubmit}></Entity>
+  </Card.Content>
+</Card.Root>
+<hr>
 
-  console.log('data', data);
-  console.log('form', $form);
-
-  var keys = Object.keys($form);
-  // @testing: let us know when the form values have changed (the storeFE object has updated)
-  </script>
-  {#if $message}<h3>{$message}</h3>{/if}
-  <form method="POST" use:enhance>
-  {#each keys as key}
-  <Field form={sform} name={key} bind:item={$form[key]}></Field>
-  {/each}
-  <Form.Button>Submit</Form.Button>
-  <SuperDebug data={form} />
-</form>
+<!-- <SuperDebug data={$data} /> -->

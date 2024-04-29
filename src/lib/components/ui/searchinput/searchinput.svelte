@@ -12,7 +12,10 @@
 	onMount(() => {
 		if(Ref.dataset && Ref.dataset.shortcut) {
 			install(Ref, Ref.dataset.shortcut)
-		}		
+		}
+		var randomString = Math.random().toString(36).substring(2, 15);
+		Ref.setAttribute('autocomplete', randomString);
+
 	});
 	onDestroy(() => {
 		if(Ref.dataset && Ref.dataset.shortcut) {
@@ -53,7 +56,7 @@
 	{...$$restProps}
 />
 
-  </div> 
+</div> 
 
 <!-- [Violation] Added non-passive event listener to a scroll-blocking "wheel" event. Consider marking event handler as "passive" to make the page more responsive.  -->
 <!-- on:wheel -->

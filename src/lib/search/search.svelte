@@ -4,7 +4,7 @@
 	import * as Dialog from "$lib/components/ui/dialog";
 	import * as Avatar from "$lib/components/ui/avatar";
 	import { Input } from "$lib/components/ui/input";
-	import { Button } from "$lib/components/ui/button";
+	import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
 	import { SearchInput } from "$lib/components/ui/searchinput";
 	import { page } from "$app/stores";
 	import { isSignedin, client, collections, searchQuery } from "$lib/stores.js";
@@ -148,16 +148,16 @@
 <div class="search-container">
 <Dialog.Root bind:open={hasFocus} >
 	<Dialog.Trigger>
-		<Button variant="ghost" class="text-muted-foreground" 
+		<HotkeyButton variant="ghost" class="text-muted-foreground" 
 		data-shortcut={"Control+k,Meta+k,Shift+?"}>
 		<Search />
-	</Button>
-</Dialog.Trigger>
-<Dialog.Content CloseButton={false}>
+		</HotkeyButton>
+	</Dialog.Trigger>
+	<Dialog.Content CloseButton={false}>
 	<Dialog.Header >
 	<Dialog.Description >
 	<div class="flex items-center border-b px-3">
-	<SearchInput  bind:value={$searchQuery} type="search" placeholder="Search..." name="search"
+	<SearchInput  bind:value={$searchQuery} placeholder="Search..."
 	data-shortcut={"Control+k,Meta+k,Shift+?"} on:focus={handleFocus} on:focusin={handleFocus}
 	on:keyup={e => {
 		if(e.key === "ArrowDown") {

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { base } from "$app/paths";
 	import { goto } from "$app/navigation";
-  import { Entities } from '$lib/entities';
-  import { writable } from 'svelte/store';
+  import { Entities } from "$lib/entities";
+  import { writable } from "svelte/store";
   import { SearchInput } from "$lib/components/ui/searchinput";
   const collectionname = "users";
   const query = {_type: "user"}
@@ -12,7 +12,7 @@
 <SearchInput placeholder="Search users using text or json query" name="search"
     dense filled rounded clearable
     bind:value={$searchstring}
-    data-shortcut={'Control+f,Meta+f'}
+    data-shortcut={"Control+f,Meta+f"}
     on:keyup={e => { 
       if(e.key == "Escape") {
         $searchstring = "";

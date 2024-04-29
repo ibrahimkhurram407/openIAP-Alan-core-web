@@ -13,6 +13,8 @@
   import * as Table from "$lib/components/ui/table";
   import DataTableActions from "./data-table-actions.svelte";
   import { Button } from "$lib/components/ui/button";
+  import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
+  
   import { Input } from "$lib/components/ui/input";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import DataTableCheckbox from "./data-table-checkbox.svelte";
@@ -378,7 +380,6 @@
           const sortKey = $sortKeys[i];
           orderby[sortKey.id] = (sortKey.order == "desc" ? -1 : 1);
         }
-        console.log(collectionname, "orderby", JSON.stringify(orderby))
         $currentquery = createQuery();
         if($currentquery == null) {
           loading = false;
@@ -410,7 +411,6 @@
         if($pageIndex > 0) {
           if(($pageIndex * $pagesize) - $pagesize >= $serverItemCount) {
             _pageindex.set(0);
-            console.log("count force reload", collectionname);
             GetData();
           }
         }
@@ -553,9 +553,15 @@
           <Table.Row {...rowAttrs}>
             {#each row.cells as cell (cell.id)}
               <Subscribe attrs={cell.attrs()} let:attrs>
-                <Table.Cell {...attrs}>
-                    <Render of={cell.render()} />
+                {#if cell.id === "name" && multiselect == false}
+                <Table.Cell {...attrs} on:click={()=> dispatch('click', { row, collectionname })}>
+                  <Render of={cell.render()} />
                 </Table.Cell>
+                {:else}
+                <Table.Cell {...attrs}>
+                  <Render of={cell.render()} />
+                </Table.Cell>
+                {/if}
               </Subscribe>
             {/each}
           </Table.Row>
@@ -577,10 +583,8 @@
     {/if}
     in {collectionname}
   </div>
-  <Button
-  class="lg:hidden"
-  variant="outline"
-  size="sm"
+  <HotkeyButton
+  hidden
   data-shortcut={"Control+a,Meta+a" }
   on:click={() => {
     if(multiselect == false) {
@@ -618,8 +622,7 @@
     } else {
       lastselectedDataIds = -1;
     }
-  }}>Select all</Button
->
+  }}>Select all</HotkeyButton>
   <DropdownMenu.Root >
     <DropdownMenu.Trigger asChild let:builder>
       <Button variant="outline" class="ml-auto" builders={[builder]}>
@@ -634,46 +637,36 @@
       {/each}
     </DropdownMenu.Content>
   </DropdownMenu.Root>
-  <Button
+  <HotkeyButton
   variant="outline"
   size="sm"
   hidden={!showInsert}
   data-shortcut={"Insert" }
-  on:click={() =>  dispatch('insert', { collectionname: collectionname })}>Insert</Button
-  >
-  <Button
+  on:click={() =>  dispatch("insert", { collectionname: collectionname })}>Insert</HotkeyButton>
+  <HotkeyButton
     variant="outline"
     size="sm"
     data-shortcut={"ArrowLeft" }
     on:click={() => ($pageIndex = $pageIndex - 1)}
-    disabled={(!$hasPreviousPage && $serverItemCount > -1) || ($pageIndex == 0)}>Previous</Button
-  >
-  <Button
+    disabled={(!$hasPreviousPage && $serverItemCount > -1) || ($pageIndex == 0)}>Previous</HotkeyButton>
+  <HotkeyButton
     variant="outline"
     size="sm"
     disabled={!$hasNextPage && $serverItemCount > -1}
     data-shortcut={"ArrowRight" }
-    on:click={() => ($pageIndex = $pageIndex + 1)}>Next</Button
-  >
-  
-  <Button
+    on:click={() => ($pageIndex = $pageIndex + 1)}>Next</HotkeyButton>
+  <HotkeyButton
     hidden
-    variant="outline"
-    size="sm"
     data-shortcut={"Alt+r,Meta+r" }
-    on:click={GetData}>Reload</Button
-  >
-  <Button
+    on:click={GetData}>Reload</HotkeyButton>
+  <HotkeyButton
   hidden
-  variant="outline"
-  size="sm"
   data-shortcut={"Control+u,Meta+u" }
   on:click={() => {
     selectedDataIds.clear();
     multiselect = false;
     $ShowColumns["_id"] = false;
-    }}>Unselect all</Button
-  >
+    }}>Unselect all</HotkeyButton>
 </div>
 {#if $currentquery != null && showquery == true}
 <SuperDebug data={$currentquery} theme="vscode" />

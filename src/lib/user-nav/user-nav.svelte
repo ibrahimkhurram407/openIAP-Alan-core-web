@@ -3,7 +3,8 @@
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import * as Avatar from "$lib/components/ui/avatar";
 	import { goto } from "$app/navigation";
-    import { Button } from "$lib/components/ui/button";
+    import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
+	import { Button } from "$lib/components/ui/button";
 	import User from "lucide-svelte/icons/user";
 
 	import { signOut, signIn } from "$lib/auth";
@@ -16,9 +17,9 @@
 	}
 </script>
 {#if $isAuthenticated == true}
-<Button hidden data-shortcut={"Control+p,Meta+p" } on:click={() => goto(base + `/users/${$user.profile.sub}`) }>Profile</Button>
-<Button hidden data-shortcut={"Control+b,Meta+b" } on:click={() => goto(base + `/customers/billing`) }>Billing</Button>
-<Button hidden data-shortcut={"Control+s,Meta+s" } on:click={() => goto(base + `/users/settings`) }>Settings</Button>
+<HotkeyButton hidden data-shortcut={"Control+p,Meta+p" } on:click={() => goto(base + `/users/${$user.profile.sub}`) }>Profile</HotkeyButton>
+<HotkeyButton hidden data-shortcut={"Control+b,Meta+b" } on:click={() => goto(base + `/customers/billing`) }>Billing</HotkeyButton>
+<HotkeyButton hidden data-shortcut={"Control+s,Meta+s" } on:click={() => goto(base + `/users/settings`) }>Settings</HotkeyButton>
 <DropdownMenu.Root>
 	<DropdownMenu.Trigger asChild let:builder>
 		<Button variant="ghost" builders={[builder]} class="relative h-8 w-8 rounded-full">

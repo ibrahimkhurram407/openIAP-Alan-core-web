@@ -1,16 +1,29 @@
 <script>
 	import { cn } from "$lib/utils.js";
+	import autosize from 'svelte-autosize';
+
 	let className = undefined;
-	export let value = undefined;
+	let errormessage = "";
+	export let value = {};
 	export { className as class };
 	export let readonly = undefined;
-	let json = JSON.stringify(value);
-	$: value = JSON.parse(json)
+	let json = JSON.stringify(value, null, 2);
+	$: {
+		try {
+			errormessage = "";
+			value = JSON.parse(json)	
+		} catch (error) {
+			errormessage = error.message;
+		}		
+	}
 </script>
 
+<div class="ml-2 mr-5 text-red-800">{errormessage}</div>
+test: {value?.name}
 <textarea
+	use:autosize
 	class={cn(
-		"flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+		"flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
 		className
 	)}
 	bind:value={json}

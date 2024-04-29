@@ -6,12 +6,12 @@ jsconfig.settings.doDumpMesssages = false;
 
 export const baseurl = writable("");
 baseurl.set(window.location.origin);
-if(window.location.origin.includes("5173")) {
+if(window.location.origin.includes(":517")) {
     baseurl.set("https://home.openiap.io");
 }
 export const wsurl = writable("");
 wsurl.set(window.location.origin.replace("https://", "wss://").replace("http://", "ws://") + "/ws/v2");
-if(window.location.origin.includes("5173")) {
+if(window.location.origin.includes(":517")) {
     wsurl.set("wss://home.openiap.io/ws/v2")
 }
 

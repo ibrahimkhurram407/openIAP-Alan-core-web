@@ -4,6 +4,7 @@
 	import { ModeWatcher } from "mode-watcher";
 	import { page } from "$app/stores";
 	import { base } from "$app/paths";
+	import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
 	import { Button } from "$lib/components/ui/button";
 	import { toggleMode } from "mode-watcher";
 	import Sun from "lucide-svelte/icons/sun";
@@ -55,7 +56,7 @@
 	import { SideBar } from "$lib/side-bar";
 </script>
 <ModeWatcher />
-<Button hidden on:click={($isAuthenticated ? signOut : signIn)} data-shortcut={"Control+q,Meta+q" }>Sign In/Out</Button>
+<HotkeyButton hidden on:click={($isAuthenticated ? signOut : signIn)} data-shortcut={"Control+q,Meta+q" }>Sign In/Out</HotkeyButton>
 {#if $page.url.pathname != base + "/login"}
 <div class="app">
 	<div class="border-b">

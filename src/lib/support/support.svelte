@@ -10,7 +10,8 @@
 	}
 </script>
 <Button variant="ghost" class="relative rounded-full" on:click={openSupportPage}>
-	<Heart />
+	<!-- Heart in the color red -->
+	<Heart color="darkred" />
 </Button>
 <Button variant="ghost" class="relative rounded-full" on:click={openGithubPage}>
 	<Github />

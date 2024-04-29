@@ -6,16 +6,15 @@
 	export let readonly = undefined;
 	let Ref;
 	import { onMount } from "svelte";
-	import { onDestroy } from "svelte";
 	import { install, uninstall } from "@github/hotkey";
 	onMount(() => {
 		if(Ref.dataset && Ref.dataset.shortcut) {
 			install(Ref, Ref.dataset.shortcut)
-		}		
-	});
-	onDestroy(() => {
-		if(Ref.dataset && Ref.dataset.shortcut) {
-			uninstall(Ref)
+		}
+		return () => {
+			if(Ref.dataset && Ref.dataset.shortcut) {
+				uninstall(Ref)
+			}
 		}
 	});
 </script>

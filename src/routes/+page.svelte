@@ -2,6 +2,9 @@
     import { signIn } from "$lib/auth";
 	import { isAuthenticated, user } from "$lib/stores";
 	import { Button } from "$lib/components/ui/button";
+    import { EntitySelector } from "$lib/entityselector";
+    import { ACE } from "$lib/ace";
+	import { ACL } from "$lib/acl";
 
 </script>
 <div class="px-4 pt-4">
@@ -12,3 +15,6 @@
 	<Button on:click={signIn} class="ml-2">Sign In / ⌘Q </Button> 
 	{/if}
 </div>
+
+
+<ACL />

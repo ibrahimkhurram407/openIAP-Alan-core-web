@@ -6,7 +6,8 @@
   import { writable } from "svelte/store";
   import { SearchInput } from "$lib/components/ui/searchinput";
   import { ScrollArea } from "$lib/components/ui/scroll-area/index.js";
-	import { Button } from "$lib/components/ui/button";
+	import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
+  import { Button } from "$lib/components/ui/button";
   import { page } from "$app/stores";
   import { Entities } from "$lib/entities";
 
@@ -124,6 +125,9 @@
   GetData();
   let explain = false;
   let showquery = false;
+
+  function onClick({id, row}) {
+  }
   
 </script>
 <div class="grid grid-cols-[1fr,min-content,min-content,0px] gap-2 mb-1">
@@ -189,6 +193,10 @@
       <div class="content lg:border-l">
         <Entities key={"entities_" + $collectionname} searchstring={searchstring} collectionname={$collectionname} {query} 
         explain={explain} showquery={showquery} bind:selecteditems={selecteditems} 
+          on:click={(e)=> {
+            const id = e.detail.row.dataId;
+            goto(base + `/entities/${e.detail.collectionname}/${id}`);
+          }} 
           on:insert={e => {
             goto(base + `/entities/${e.detail.collectionname}/new`);
           }}
@@ -198,19 +206,13 @@
   </div>
 </div>
 
-<Button
+<HotkeyButton
 hidden
-variant="outline"
-size="sm"
 data-shortcut={"ArrowUp" }
 on:click={() => ($collectionindex = $collectionindex - 1)}
-disabled={$collectionindex <= 0}>Previous</Button
->
-<Button
+disabled={$collectionindex <= 0}>Previous</HotkeyButton>
+<HotkeyButton
 hidden
-variant="outline"
-size="sm"
 data-shortcut={"ArrowDown" }
 on:click={() => ($collectionindex = $collectionindex + 1)}
-disabled={$collectionindex >= ($collections.length-1)}>Next</Button
->
+disabled={$collectionindex >= ($collections.length-1)}>Next</HotkeyButton>
