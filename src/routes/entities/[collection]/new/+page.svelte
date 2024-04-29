@@ -1,7 +1,7 @@
 <script>
   import { base } from "$app/paths";
   import { goto } from "$app/navigation";
-  import { z } from "zod";
+  import SuperDebug from "sveltekit-superforms";
   import * as Card from "$lib/components/ui/card";
   import { ACL } from "$lib/acl/index.js";
 
@@ -11,9 +11,7 @@
   // new Date(1978, 3, 5 )
   let data2 = {
     name: "New item2",
-    today: "2024-04-16T09:50:22.137Z",
     birth: "1978-03-05T02:00:00.000Z",
-    blah: new Date(1978, 3, 5 ),
     _type: "test",
     settings: {
       users: false,
@@ -22,7 +20,8 @@
     }
   };
   // let data = writable(data2);
-  let data = data2;
+  /** @type {any} */
+  let data = {...data2};
   let errormessage = writable(null);
 
   import { page } from "$app/stores";
@@ -35,11 +34,13 @@
   }
   async function onSubmit(e) {
     try {
-      await $client.InsertOne({
-        collectionname: $collectionname,
-        item: e.detail.data,
-      });
-      goto(base + `/entities/${$collectionname}`);
+      console.log("Inserting", e.detail.data)
+      data = {...data2}
+      // await $client.InsertOne({
+      //   collectionname: $collectionname,
+      //   item: e.detail.data,
+      // });
+      // goto(base + `/entities/${$collectionname}`);
     } catch (error) {
       $errormessage = error.message;
     }
@@ -63,3 +64,4 @@
   </Card.Content>
 </Card.Root>
 <hr />
+<SuperDebug data={data} />

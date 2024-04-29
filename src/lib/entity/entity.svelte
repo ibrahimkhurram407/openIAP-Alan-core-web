@@ -44,7 +44,7 @@
     e.preventDefault();
     vform = await superValidate(value, zod(_Schema));
     if (vform.valid) {
-      // dispatch("submit", { data: value });
+      dispatch("submit", { data: value });
     } else {
       message.set(JSON.stringify(vform.errors));
       // setError(vform, "name", "Suspicious email address.");
@@ -117,7 +117,6 @@
       _Schema = z.object(base);
     }
     if (value != null) {
-      await new Promise((r) => setTimeout(r, 100));
       vform = await superValidate(value, zod(_Schema));
     }
   }

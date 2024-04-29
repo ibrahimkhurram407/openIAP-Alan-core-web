@@ -1,12 +1,10 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
-  import { tick } from "svelte";
   import SuperDebug from "sveltekit-superforms";
 	import { client, getStoreValue, isSignedin,collections } from "$lib/stores";
   import { createTable , Render, Subscribe, createRender } from "svelte-headless-table";
   import { addPagination, addSortBy, addHiddenColumns, addSelectedRows } from "svelte-headless-table/plugins";
   import { ScrollArea } from "$lib/components/ui/scroll-area/index.js";
-  import ArrowUpDown from "lucide-svelte/icons/arrow-up-down";
   import ArrowUp from "lucide-svelte/icons/arrow-up";
   import ArrowDown from "lucide-svelte/icons/arrow-down";
   import ChevronDown from "lucide-svelte/icons/chevron-down";
@@ -15,12 +13,10 @@
   import { Button } from "$lib/components/ui/button";
   import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
   
-  import { Input } from "$lib/components/ui/input";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import DataTableCheckbox from "./data-table-checkbox.svelte";
   import { writable, type Writable } from "svelte/store";
   import { setting, deleteAllSettings, deleteSettings } from "$lib/pstore";
-    import { set } from "zod";
   // https://www.shadcn-svelte.com/docs/components/data-table
   // https://github.com/bryanmylee/svelte-headless-table/discussions/56
 
