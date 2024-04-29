@@ -12,11 +12,14 @@
     { value: 16, label: "invoke" },
     { value: 65535, label: "fullcontrol" },
   ];
-  export let value = {
-    name: "macuser",
-    _id: "5e0c8a75ea7ae0004e415e27",
-    rights: 2,
-  };
+  export let value = null;
+  // {
+  //   name: "macuser",
+  //   _id: "5e0c8a75ea7ae0004e415e27",
+  //   rights: 2,
+  // };
+  let className = undefined;
+  export { className as class };
   let entity;
   function isBitSet(value, bit) {
     return (value & bit) === bit;
@@ -34,13 +37,12 @@
   }
 </script>
 
-<div class="flex flex-wrap ml-1 space-x-3 rounded-md border">
+<div class={cn("flex flex-wrap", className)}>
   <EntitySelector bind:value={entity} />
   {#each items as item}
-    <div class="flex flex-row items-start space-x-3">
+    <div class="">
       <Button
-        variant="ghost"
-        class="w-[100px] justify-between"
+        class="w-[120px]"
         on:click={() => {
           value.rights = toogleBit(value.rights, item.value);
         }}
@@ -55,4 +57,5 @@
       </Button>
     </div>
   {/each}
+  <slot />
 </div>

@@ -169,13 +169,6 @@
 <div class={cn("grid", className)} {...$$restProps}>
 	<div class="gap-6">
 		{#if $showLocalForm}
-		<!-- <form method="post" action="/local">
-			<input type="text" name="username">
-			<input type="password" name="password">
-			<button type="submit">signin</button>
-
-		</form> -->
-
 		<form method="post" action="/local">
 			<div class="grid gap-2">
 				<div class="grid gap-1">

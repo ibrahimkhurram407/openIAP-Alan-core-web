@@ -2,9 +2,6 @@
   import { onMount } from "svelte";
 	import { base } from "$app/paths";
 	import { goto } from "$app/navigation";
-  import SuperDebug, { superForm, setMessage, setError } from "sveltekit-superforms";
-  import { zod } from "sveltekit-superforms/adapters";
-  import { z } from "zod";
   import * as Card from "$lib/components/ui/card";
   
   import { Entity } from "$lib/entity";
@@ -70,5 +67,3 @@
   </Card.Content>
 </Card.Root>
 <hr>
-
-<!-- <SuperDebug data={$data} /> -->

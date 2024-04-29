@@ -2,20 +2,14 @@
 	import { base } from "$app/paths";
 	import { goto } from "$app/navigation";
 	import * as Dialog from "$lib/components/ui/dialog";
-	import * as Avatar from "$lib/components/ui/avatar";
-	import { Input } from "$lib/components/ui/input";
 	import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
 	import { SearchInput } from "$lib/components/ui/searchinput";
-	import { page } from "$app/stores";
 	import { isSignedin, client, collections, searchQuery } from "$lib/stores.js";
+	import { cn } from "$lib/utils.js";
+	let className = undefined;
+	export { className as class };
 
-    import { setting } from "$lib/pstore";
 	let hasFocus = false
-
-	// const _searchQuery = setting("layout", "search", "");
-	// if($_searchQuery != null && $_searchQuery != "") {
-	// 	$searchQuery = $_searchQuery;
-	// }
 	let items = writable([]);
 	let selectedIndex = 0;
 	import { eventStore } from "$lib/stores.js";
@@ -52,9 +46,6 @@
     
 	onMount(() => {
 		eventStore.addListener(onSearchSelect);
-		// const unsubscribe = page.subscribe(value => {
-		// 	$items = $items.filter(item => item.source == "sidebar");
-		// });
 		const unsubscribe2 = searchQuery.subscribe(async (value) => {
 			if(value == null || value == "") {
 				$items = $items.filter(item => item.source != "customers");
@@ -125,17 +116,12 @@
 	function handleFocus(event) {
 		event.target.select();  // This will select all text in the input
 	}
-
-	import Home from "lucide-svelte/icons/home";
-	
 	import Search from "lucide-svelte/icons/search";
 	import Library from "lucide-svelte/icons/library";
 	import Cog from "lucide-svelte/icons/cog";
 	import Factory from "lucide-svelte/icons/factory";
 	import Database from "lucide-svelte/icons/database";
 	
-	// https://lucide.dev/guide/packages/lucide-svelte
-	// 
 	function icon(item) {
 		var source = item.source.toString();
 		if(source == "sidebar") return Library;
@@ -145,7 +131,7 @@
 	}
 
 </script>
-<div class="search-container">
+<div  class={cn("search-container", className)}>
 <Dialog.Root bind:open={hasFocus} >
 	<Dialog.Trigger>
 		<HotkeyButton variant="ghost" class="text-muted-foreground" 
@@ -201,7 +187,6 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <Dialog.Close class="text-left px-2 py-1 flex items-center text-sm item {index === selectedIndex ? "bg-muted/80" : ""}" on:click={() => selectItem(index)}>
 	<svelte:component this={icon(item)} class="mr-2 h-4 w-4 flex-shrink-0" />
-	<!--  -->
 {item.name}
 </Dialog.Close>
 {/each}

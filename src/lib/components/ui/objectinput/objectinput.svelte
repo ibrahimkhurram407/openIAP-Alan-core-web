@@ -19,7 +19,6 @@
 </script>
 
 <div class="ml-2 mr-5 text-red-800">{errormessage}</div>
-test: {value?.name}
 <textarea
 	use:autosize
 	class={cn(

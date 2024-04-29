@@ -501,7 +501,7 @@
                 </DropdownMenu.Root>
               </Table.Head>
               {:else if cell.id === "name"}
-                <Table.Head {...attrs}  style="width: *;"> <!-- style="width: *;"-->
+                <Table.Head {...attrs}  style="width: *;">
                   <Button variant="ghost" on:click={props.sort.toggle}>
                     <Render of={cell.render()} />
                     {#if props.sort.order == "asc"}
@@ -509,7 +509,6 @@
                     {:else if props.sort.order == "desc"}
                       <ArrowDown class="ml-2 h-4 w-4" />
                     {/if}
-                    <!-- <ArrowUpDown class="ml-2 h-4 w-4" /> -->
                   </Button>
                 </Table.Head>
                 {:else if fixedColumnsSizes[cell.id] != null}
@@ -521,7 +520,6 @@
                     {:else if props.sort.order == "desc"}
                       <ArrowDown class="ml-2 h-4 w-4" />
                     {/if}
-                    <!-- <ArrowUpDown class="ml-2 h-4 w-4" /> -->
                   </Button>
                 </Table.Head>
                 {:else if cell.id === "id" || cell.id === "_id"}
@@ -537,7 +535,6 @@
                     {:else if props.sort.order == "desc"}
                       <ArrowDown class="ml-2 h-4 w-4" />
                     {/if}
-                    <!-- <ArrowUpDown class={"ml-2 h-4 w-4"} /> -->
                   </Button>
                 </Table.Head>
                 {/if}
@@ -570,7 +567,6 @@
     </Table.Body>
   </Table.Root>
 </div>
-<!-- <div class="flex items-center justify-end space-x-4 py-4"> -->
 <div class="flex items-center space-x-4 py-4">
   <div class="flex-1 text-sm text-muted-foreground">
     Page {$pageIndex + 1} of {Math.ceil($serverItemCount / $pagesize)}
@@ -590,13 +586,8 @@
     if(multiselect == false) {
       multiselect = true;
       $ShowColumns["_id"] = multiselect;
-      // return;
     }
     const selectcount = Object.keys($selectedDataIds).length;
-    // if(selectcount == 0) {
-    //   const { allPageRowsSelected } = pluginStates.select;
-    //   allPageRowsSelected.set(true)
-    // } else 
     if(selectcount <= $serverItemCount) {
       for(let i = 0; i < $rows.length; i++) {
         const row = $rows[i];

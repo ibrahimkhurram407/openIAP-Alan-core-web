@@ -81,7 +81,6 @@
 	</div>
 	<div class="border-t">
 		<div class="bg-background">
-			<!-- grid lg:grid-cols-[16rem,1fr] ml-2 -->
 			<div class="grid grid-cols-[min-content,1fr] ml-1">
 				<SideBar />
 				<div class="content lg:border-l">

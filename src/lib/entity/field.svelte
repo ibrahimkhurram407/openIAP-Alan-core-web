@@ -78,7 +78,6 @@
         $dtvalue = $item ? parseAbsolute($item, 'UTC') : undefined;
     }
 </script>
-<!--  flex w-full max-w-sm flex-col gap-1.5 -->
 <div>
     {#if $_type == "hidden"}
     <input hidden value={$item} name={name} />
@@ -88,7 +87,6 @@
           <Form.Label>{name}</Form.Label>
           <Checkbox  {...attrs} id="{name}" bind:checked={$item} />
         </Form.Control>
-        <!-- <Form.Description>This is your public display name.</Form.Description> -->
         <Form.FieldErrors />
     </Form.Field>
     {:else if $_type == "date"}
@@ -127,14 +125,19 @@
         </Form.Control>
     </Form.Field>
     {:else if $_type == "object"}
-    <ObjectInput bind:value={$item} />
+    <Form.Field form={form} name={name}>
+        <Form.Control let:attrs>
+          <Form.Label>{name}</Form.Label>
+          <ObjectInput bind:value={$item} />
+        </Form.Control>
+        <Form.FieldErrors />
+    </Form.Field>
     {:else}
     <Form.Field form={form} name={name}>
         <Form.Control let:attrs>
           <Form.Label>{name}</Form.Label>
           <Input {...attrs} id={name} bind:value={$item} type={$_type} />
         </Form.Control>
-        <!-- <Form.Description>This is your public display name.</Form.Description> -->
         <Form.FieldErrors />
     </Form.Field>
     {/if}

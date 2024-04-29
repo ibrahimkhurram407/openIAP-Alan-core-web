@@ -4,8 +4,6 @@
   const dispatch = createEventDispatcher();
 
   import { onMount } from "svelte";
-  import { base } from "$app/paths";
-  import { goto } from "$app/navigation";
   import SuperDebug, {
     superForm,
     superValidate,
@@ -16,7 +14,6 @@
   import Field from "./field.svelte";
   import { ObjectInput } from "$lib/components/ui/objectinput";
   import * as Card from "$lib/components/ui/card";
-  import { client, getStoreValue } from "$lib/stores";
   import { writable } from "svelte/store";
 
   /** @type {any}*/
@@ -27,17 +24,14 @@
   import { setting } from "$lib/pstore";
   import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
   import { Button } from "$lib/components/ui/button";  
-  import { Item } from "$lib/components/ui/dropdown-menu";
   const collectionname = setting("entities", "collection", "entities");
   if ($page.params.collection != null && $page.params.collection != "") {
     $collectionname = $page.params.collection;
   }
 
   let sform = writable(null);
-  let showjson = writable(true);
+  let showjson = writable(false);
   let json = null;
-  /** @type {any} */
-  // let enhance = null;
   let Ref;
 
   let message = writable("");
@@ -80,16 +74,15 @@
     sform.set(_sform);
     const _keys = Object.keys(value).sort();
     let _newkeys = _keys.filter(
-      (key) => !key.startsWith("_") || key == "_type",
+      (key) => !key.startsWith("_"),
     );
     if ($showhidden == true) {
       _newkeys = _keys;
     }
-    // $keys = ["name", "_type", ..._keys.filter((key => !key.startsWith("_") || key == "_type") && (key != "name" && key != "_type")));
     // make sure name is first, and _type is second and everything else after that
     _newkeys = [
-      "name",
-      "_type",
+      ..._newkeys.filter((key) => key == "name"),
+      ..._newkeys.filter((key) => key == "_type"),
       ..._newkeys.filter((key) => key != "name" && key != "_type"),
     ];
     keys.set(_newkeys);

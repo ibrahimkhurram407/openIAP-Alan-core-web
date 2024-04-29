@@ -28,8 +28,6 @@
 	<div class="flex absolute inset-y-0 items-center text-gray-500 dark:text-gray-400 start-0 ps-2.5 pointer-events-none">
 	  <Search class="shrink-0 w-5 h-5" />
 	</div> 
-	<!-- flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 -->
-	<!-- w-full disabled:cursor-not-allowed disabled:opacity-50 rtl:text-right p-2.5 ps-10 focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-500 dark:focus:ring-primary-500 bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 border-gray-300 dark:border-gray-600 text-sm rounded-lg flex gap-2 items-center -->
 	<input
 	class={cn(
 		"flex w-full text-sm disabled:cursor-not-allowed disabled:opacity-50 items-center rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-500 dark:focus:ring-primary-500 bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 h-10 px-3 py-2 ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none gap-2 rtl:text-right p-2.5 ps-10",

@@ -157,28 +157,10 @@
 </div>
 <div class="border-t">
   <div class="bg-background">
-    <!-- grid lg:grid-cols-[16rem,1fr] ml-2 -->
     <div class="grid grid-cols-[min-content,1fr] ml-1">
-      <!-- h-72 w-48 rounded-md border -->
-      <!-- h-screen w-48 rounded-md border -->
-      <!-- class="h-svh rounded-md border" -->
-      <!-- h-96 min-w-[12rem] rounded-md border -->
-      <!-- h-96 min-w-[12rem] rounded-md border -->
       <ScrollArea class="max-h-[36rem] min-w-[12rem] rounded-md border">
-        <!--  class="p-4" -->
         <div>
-          <!-- <h4 class="mb-4 text-sm font-medium leading-none">Collections</h4> -->
           {#each $collections as item, index}
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <!-- <div class="flex items-center text-sm item {$collectionname == item.name ? "outline bg-sky-50" : ""}" role="button" tabindex="0" 
-          id={"item-" + index} 
-          on:click={() => { collectionname.set(item.name); $collectionindex = $collections.findIndex(x => x.name == $collectionname); }}>
-            <Avatar.Root class="mr-2 h-4 w-4 flex-shrink-0">
-              <Avatar.Image src="{icon(item)}" alt="@shadcn" />
-              <Avatar.Fallback />
-            </Avatar.Root>
-            {item.name}
-          </div> -->
           <Button class="justify-start w-full"
           variant={$collectionname == item.name ? "secondary" : "ghost"} 
           id={"item-" + index} 
