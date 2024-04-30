@@ -38,6 +38,7 @@
 </script>
 <Card.Root class={cn("flex flex-wrap " + (hidden ? "hidden" : ""), className)} >
   <Card.Content>
+{#if value != null && Array.isArray(value)}
     {#each value as item}
     <ACE bind:value={item} class="ml-1 m-1.5">
       <Button
@@ -48,6 +49,7 @@
       >
     </ACE>
   {/each}
+{/if}
   <div class="flex flex-wrap ml-1 m-1.5">
     <EntitySelector bind:value={entity} />
     <Button>Add</Button>

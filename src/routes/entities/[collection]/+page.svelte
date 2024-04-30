@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { base } from "$app/paths";
 	import { goto } from "$app/navigation";
+  import SuperDebug from "sveltekit-superforms";
   import { client, isSignedin, collections } from "$lib/stores";
-  import { setting } from "$lib/pstore";
+  import { setting, deleteSetting } from "$lib/pstore";
   import { writable } from "svelte/store";
   import { SearchInput } from "$lib/components/ui/searchinput";
   import { ScrollArea } from "$lib/components/ui/scroll-area/index.js";
@@ -34,11 +35,12 @@
   }
   const collectionindex = writable(0);
   let query = {}
+  let selectedDataIds = setting("entities_" + $collectionname, "selectedDataIds", {});
 
-  let selecteditems = [];
   function onCollectionindex(value) {
     if($collections.length > 0 && value >= 0 && value < $collections.length) {
       $collectionname = $collections[value].name;
+      selectedDataIds = setting("entities_" + $collectionname, "selectedDataIds", {});
       scrollToItem(value);
       goto(base + `/entities/${$collectionname}`, { replaceState: true });
     }
@@ -155,8 +157,8 @@
 <Toggle class=" ml-1" bind:pressed={showquery} dense filled rounded variant="outline" >query</Toggle>
 <Toggle class=" ml-1" bind:pressed={explain} dense filled rounded variant="outline" >explain</Toggle>
 </div>
-<div class="border-t">
-  <div class="bg-background">
+<div class="">
+  <div class="">
     <div class="grid grid-cols-[min-content,1fr] ml-1">
       <ScrollArea class="max-h-[36rem] min-w-[12rem] rounded-md border">
         <div>
@@ -172,15 +174,22 @@
         </div>
       </ScrollArea>
 
-      <div class="content lg:border-l">
+      <div class="">
         <Entities key={"entities_" + $collectionname} searchstring={searchstring} collectionname={$collectionname} {query} 
-        explain={explain} showquery={showquery} bind:selecteditems={selecteditems} 
+        explain={explain} showquery={showquery}
           on:click={(e)=> {
             const id = e.detail.row.dataId;
             goto(base + `/entities/${e.detail.collectionname}/${id}`);
           }} 
           on:insert={e => {
             goto(base + `/entities/${e.detail.collectionname}/new`);
+          }}
+          on:delete={async e => {
+            console.log("delete", e.detail.items, "from", e.detail.collectionname)
+            const query = {"_id": {"$in": e.detail.items}};
+            await $client.DeleteMany({collectionname: e.detail.collectionname, query})
+            deleteSetting("entities_" + $collectionname, "selectedDataIds");
+            goto(base + `/entities/${e.detail.collectionname}/refresh`);
           }}
         />
       </div>
@@ -198,3 +207,5 @@ hidden
 data-shortcut={"ArrowDown" }
 on:click={() => ($collectionindex = $collectionindex + 1)}
 disabled={$collectionindex >= ($collections.length-1)}>Next</HotkeyButton>
+
+<!-- <SuperDebug data={$selectedDataIds} /> -->
