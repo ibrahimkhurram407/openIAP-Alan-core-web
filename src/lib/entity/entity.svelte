@@ -16,7 +16,7 @@
   /** @type {any}*/
   export let value = null;
   export let schema = null;
-  export let keys = writable([]);
+  export let keys = [];
   import { page } from "$app/stores";
   import { setting } from "$lib/pstore";
   import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
@@ -26,24 +26,24 @@
     $collectionname = $page.params.collection;
   }
 
-  let sform = writable(null);
-  let showjson = writable(false);
+  let sform = null;
+  let showjson = false;
   let json = null;
   let Ref;
 
-  let message = writable("");
+  let message = "";
 
-  let showhidden = writable(false);
+  let showhidden = false;
   let vform;
 
   async function onsubmit(e) {
-    message.set("");
+    message = "";
     e.preventDefault();
     vform = await superValidate(value, zod(_Schema));
     if (vform.valid) {
       dispatch("submit", { data: value });
     } else {
-      message.set(JSON.stringify(vform.errors));
+      message = JSON.stringify(vform.errors);
       // setError(vform, "name", "Suspicious email address.");
       // setMessage(vform, "Please correct the errors below.");
     }
@@ -56,7 +56,12 @@
       // Additional fields as required
     })
     .passthrough();
+
+  let once = false;
   async function generateForm() {
+    console.log("generateForm");
+    // if(once == true) return;
+    // once = true;
     let _sform = superForm(
       { ...vform },
       {
@@ -68,7 +73,7 @@
         validators: zod(_Schema),
       },
     );
-    sform.set(_sform);
+    sform = _sform;
   }
   async function generateSchema(value, schema) {
     if (schema != null && value != null) {
@@ -103,7 +108,7 @@
       vform = await superValidate(value, zod(_Schema));
       const _keys = Object.keys(value).sort();
       let _newkeys = _keys.filter((key) => !key.startsWith("_"));
-      if ($showhidden == true) {
+      if (showhidden == true) {
         _newkeys = _keys;
       }
       // make sure name is first, and _type is second and everything else after that
@@ -112,7 +117,8 @@
         ..._newkeys.filter((key) => key == "_type"),
         ..._newkeys.filter((key) => key != "name" && key != "_type"),
       ];
-      keys.set(_newkeys);
+      console.log("showhidden", showhidden, _newkeys);
+      keys = _newkeys;
     }
   }
 
@@ -122,7 +128,7 @@
       json = JSON.stringify(value, null, 2);
     } catch (error) {}
   }
-  $: if ($showhidden == true) {
+  $: if (showhidden == true || showhidden == false) {
     generateSchema(value, schema);
   }
   onMount(() => {
@@ -133,39 +139,31 @@
     generateForm();
   }
 
-  $: if (_Schema != null) {
-    // const vform = await superValidate(userData, zod(_Schema));
-  }
-
-  // const { form, errors, message, constraints, enhance } = sform
-  $: {
-    // value = $form;
-  }
 </script>
 
-{#if !$showjson}
+{#if !showjson}
   <form bind:this={Ref} method="POST" on:submit={onsubmit}>
-    {#each $keys as key}
-      <Field form={$sform} name={key} bind:value={value[key]}></Field>
+    {#each keys as key}
+      <Field form={sform} name={key} bind:value={value[key]}></Field>
     {/each}
     <div class="flex items-center space-x-4 py-4">
       <Form.Button>Submit</Form.Button>
       <HotkeyButton
-        on:click={() => ($showhidden = !$showhidden)}
+        on:click={() => (showhidden = !showhidden)}
         data-shortcut={"Control+h,Meta+h"}>Show hidden</HotkeyButton
       >
       <HotkeyButton
-        on:click={() => ($showjson = !$showjson)}
+        on:click={() => (showjson = !showjson)}
         data-shortcut={"Control+j,Meta+j"}>Toogle JSON</HotkeyButton
       >
     </div>
   </form>
 {/if}
-{#if $showjson}
-  {#if $message != null && $message != ""}
+{#if showjson}
+  {#if message != null && message != ""}
     <Card.Root class="ml-2 mr-5 text-red-800">
       <Card.Header>
-        <Card.Title>{$message}</Card.Title>
+        <Card.Title>{message}</Card.Title>
       </Card.Header>
     </Card.Root>
   {/if}
@@ -173,7 +171,7 @@
   <div class="flex items-center space-x-4 py-4">
     <Button on:click={onsubmit}>Save</Button>
     <HotkeyButton
-      on:click={() => ($showjson = !$showjson)}
+      on:click={() => (showjson = !showjson)}
       data-shortcut={"Control+j,Meta+j"}>Toogle JSON</HotkeyButton
     >
   </div>

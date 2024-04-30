@@ -73,10 +73,11 @@
         }
         return item
     }
-    $: $item = value;
-    $: if ($_type == "date") {
-        $dtvalue = $item ? parseAbsolute($item, 'UTC') : undefined;
-    }
+    $item = value;
+    // $: $item = value;
+    // $: if ($_type == "date") {
+    //     $dtvalue = $item ? parseAbsolute($item, 'UTC') : undefined;
+    // }
 </script>
 <div>
     {#if $_type == "hidden"}
