@@ -2,22 +2,24 @@
   import { base } from "$app/paths";
   import { goto } from "$app/navigation";
   import SuperDebug from "sveltekit-superforms";
+  import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
   import * as Card from "$lib/components/ui/card";
   import { ACL } from "$lib/acl/index.js";
+  import Button from "$lib/components/ui/button/button.svelte";
 
   import { Entity } from "$lib/entity";
   import { client } from "$lib/stores";
 
   // new Date(1978, 3, 5 )
   let data2 = {
-    name: "New item2",
-    birth: "1978-03-05T02:00:00.000Z",
+    name: "New item",
     _type: "test",
-    settings: {
-      users: false,
-      theme: "dark",
-      autologin: true
-    }
+    // birth: "1978-03-05T02:00:00.000Z",
+    // settings: {
+    //   users: false,
+    //   theme: "dark",
+    //   autologin: true
+    // }
   };
   // let data = writable(data2);
   /** @type {any} */
@@ -36,15 +38,17 @@
     try {
       console.log("Inserting", e.detail.data)
       data = {...data2}
-      // await $client.InsertOne({
-      //   collectionname: $collectionname,
-      //   item: e.detail.data,
-      // });
-      // goto(base + `/entities/${$collectionname}`);
+      await $client.InsertOne({
+        collectionname: $collectionname,
+        item: e.detail.data,
+      });
+      goto(base + `/entities/${$collectionname}`);
     } catch (error) {
       $errormessage = error.message;
     }
   }
+  let showacl = false;
+  let showdebug = false;
 </script>
 
 {#if $errormessage != null && $errormessage != ""}
@@ -54,14 +58,19 @@
     </Card.Header>
   </Card.Root>
 {/if}
-<ACL bind:value={data._acl} />
+{#if data != null}
+<ACL bind:value={data._acl} hidden={!showacl} class="gap-1.5 ml-2 mr-5" />
+{/if}
 <Card.Root class="gap-1.5 ml-2 mr-5">
-  <Card.Header>
+  <!-- <Card.Header>
     <Card.Title>{data.name}</Card.Title>
-  </Card.Header>
+  </Card.Header> -->
   <Card.Content>
-    <Entity bind:value={data} on:submit={onSubmit}></Entity>
+    <Entity bind:value={data} on:submit={onSubmit}><Button on:click={()=> showacl = !showacl} >Access Control List</Button></Entity>
   </Card.Content>
 </Card.Root>
 <hr />
+<HotkeyButton hidden data-shortcut={"Control+d,Meta+d" } on:click={() => showdebug = !showdebug }>Toggle debug</HotkeyButton>
+{#if data != null && showdebug == true}
 <SuperDebug data={data} />
+{/if}

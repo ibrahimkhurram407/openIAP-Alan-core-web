@@ -56,11 +56,7 @@
     })
     .passthrough();
 
-  let once = false;
   async function generateForm() {
-    console.log("generateForm");
-    // if(once == true) return;
-    // once = true;
     let _sform = superForm(
       { ...vform },
       {
@@ -116,7 +112,6 @@
         ..._newkeys.filter((key) => key == "_type"),
         ..._newkeys.filter((key) => key != "name" && key != "_type"),
       ];
-      console.log("showhidden", showhidden, _newkeys);
       keys = _newkeys;
     }
   }
@@ -139,7 +134,6 @@
   }
 
 </script>
-
 {#if !showjson}
   <form bind:this={Ref} method="POST" on:submit={onsubmit}>
     {#each keys as key}
@@ -149,12 +143,13 @@
       <Form.Button>Submit</Form.Button>
       <HotkeyButton
         on:click={() => (showhidden = !showhidden)}
-        data-shortcut={"Control+h,Meta+h"}>Show hidden</HotkeyButton
+        data-shortcut={"Control+h,Meta+h"}>{showhidden ? "Hide private" : "Show private"}</HotkeyButton
       >
       <HotkeyButton
         on:click={() => (showjson = !showjson)}
         data-shortcut={"Control+j,Meta+j"}>Toogle JSON</HotkeyButton
       >
+      <slot />
     </div>
   </form>
 {/if}
@@ -173,5 +168,6 @@
       on:click={() => (showjson = !showjson)}
       data-shortcut={"Control+j,Meta+j"}>Toogle JSON</HotkeyButton
     >
+    <slot />
   </div>
 {/if}

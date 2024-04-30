@@ -1,5 +1,4 @@
 <script lang="ts">
-  import SuperDebug from "sveltekit-superforms";
   import Check from "lucide-svelte/icons/check";
   import { Button } from "$lib/components/ui/button/index.js";
   import { cn } from "$lib/utils.js";
@@ -13,14 +12,9 @@
     { value: 65535, label: "fullcontrol" },
   ];
   export let value = null;
-  // {
-  //   name: "macuser",
-  //   _id: "5e0c8a75ea7ae0004e415e27",
-  //   rights: 2,
-  // };
   let className = undefined;
   export { className as class };
-  let entity;
+  // let entity;
   function isBitSet(value, bit) {
     return (value & bit) === bit;
   }
@@ -29,16 +23,10 @@
     if (bit == 65535) return 0;
     return value ^ bit;
   }
-  $: if (entity != null) {
-    value._id = entity._id;
-    value.name = entity.name;
-  } else if (value != null && value._id != "") {
-    entity = value;
-  }
 </script>
 
 <div class={cn("flex flex-wrap", className)}>
-  <EntitySelector bind:value={entity} />
+  <EntitySelector bind:value={value} />
   {#each items as item}
     <div class="">
       <Button

@@ -1,6 +1,6 @@
 <script>
 	import { cn } from "$lib/utils.js";
-	import autosize from 'svelte-autosize';
+	import autosize from "svelte-autosize";
 
 	let className = undefined;
 	let errormessage = "";
@@ -8,13 +8,24 @@
 	export { className as class };
 	export let readonly = undefined;
 	let json = JSON.stringify(value, null, 2);
+	let intermediateJson = json;
+
 	$: {
-		try {
-			errormessage = "";
-			value = JSON.parse(json)	
-		} catch (error) {
-			errormessage = error.message;
-		}		
+		const testjson = JSON.stringify(value, null, 2);
+		if (testjson !== json) {
+			// External changes detected
+			json = testjson;
+			intermediateJson = json;
+		} else if (intermediateJson !== json) {
+			// Internal changes detected
+			try {
+				value = JSON.parse(intermediateJson);
+				json = testjson;  // Sync `json` after successful parse
+				errormessage = "";
+			} catch (error) {
+				errormessage = error.message;
+			}
+		}
 	}
 </script>
 
@@ -23,10 +34,10 @@
 <textarea
 	class={cn(
 		"flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-		className
+		className,
 	)}
 	use:autosize
-	bind:value={json}
+	bind:value={intermediateJson}
 	{readonly}
 	on:blur
 	on:change

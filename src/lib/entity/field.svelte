@@ -1,9 +1,6 @@
 <script>
-    import { Label } from "$lib/components/ui/label";
     import { Input } from "$lib/components/ui/input";
-    import { Textarea } from "$lib/components/ui/textarea";
     import { ObjectInput } from "$lib/components/ui/objectinput";
-    import { writable } from 'svelte/store';
     
     import { Checkbox } from "$lib/components/ui/checkbox";
     import * as Form from "$lib/components/ui/form";
@@ -12,47 +9,38 @@
     import CalendarIcon from "lucide-svelte/icons/calendar";
     import { buttonVariants } from "$lib/components/ui/button";
     import { cn } from "$lib/utils.js";
-    import {
-		DateFormatter,
-		getLocalTimeZone,
-		parseAbsolute,
-        today
-	} from "@internationalized/date";
+    import { DateFormatter, parseAbsolute } from "@internationalized/date";
 
-    // import TextArea from "./TextArea.svelte";
     /** @type {any} */
     export let value;
     export let name = "";
     export let form;
-    let item = writable(null);
-    /** @type {any}*/
     let _type = "hidden";
     let dtvalue = null;
 
-
-    item.subscribe(item => {
-        if(item == null || name == null || form == null){
+    $: if(value != null) {
+        if(value == null || name == null || form == null){
             _type = "hidden";
-        } else if(typeof item == "boolean"){
+        } else if(typeof value == "boolean"){
             _type = "checkbox";
-        } else if(item.length == 24 && item.indexOf("T") == 10 && item.indexOf("Z") == 23){
+        } else if(value.length == 24 && value.indexOf("T") == 10 && value.indexOf("Z") == 23){
             // @ts-ignore
             _type = "date";
-            dtvalue = item ? parseAbsolute(item, 'UTC') : undefined;
-        } else if(typeof item == "string"){
-            if(item.indexOf("\n") > -1 || item.length > 50 || item.indexOf("{") > -1 || item.indexOf("[") > -1){
+            dtvalue = value ? parseAbsolute(value, 'UTC') : undefined;
+        } else if(typeof value == "string"){
+            if(value.indexOf("\n") > -1 || value.length > 50 || value.indexOf("{") > -1 || value.indexOf("[") > -1){
                 _type = "textarea";
             } else {
                 _type = "text";
             }
-        } else if(typeof item == "number"){
+        } else if(typeof value == "number"){
             _type = "number";
-        //} else if(item instanceof Date ){
-        } else if(typeof item == "object"){
+        //} else if(value instanceof Date ){
+        } else if(typeof value == "object"){
             _type = "object";
         }
-        if(item != null) value = item;
-    });
+        // if(value != null) value = value;
+    };
 
     let locale = "en-US";
     if(navigator.languages){
@@ -60,7 +48,7 @@
     }
     const df = new DateFormatter(locale, {
         dateStyle: "long",
-        // timeStyle: "short"
+        timeStyle: "short"
     });
     function formatDateObject(item) {
         try {
@@ -73,20 +61,16 @@
         }
         return item
     }
-    $item = value;
-    // $: $item = value;
-    $: if (_type == "date") {
-        dtvalue = $item ? parseAbsolute($item, 'UTC') : undefined;
-    }
+    // item = value;
 </script>
 <div>
     {#if _type == "hidden"}
-    <input hidden value={$item} name={name} />
+    <input hidden value={value} name={name} />
     {:else if _type == "checkbox"}
     <Form.Field form={form} name={name}>
         <Form.Control let:attrs>
           <Form.Label>{name}</Form.Label>
-          <Checkbox  {...attrs} id="{name}" bind:checked={$item} />
+          <Checkbox  {...attrs} id="{name}" bind:checked={value} />
         </Form.Control>
         <Form.FieldErrors />
     </Form.Field>
@@ -112,24 +96,25 @@
                 initialFocus
                 onValueChange={(v) => {
                     if (v) {
-                        $item = v.toAbsoluteString();
-                        dtvalue = v.toAbsoluteString()
+                        value = v.toAbsoluteString();
+                        // dtvalue = v.toAbsoluteString()
+                        dtvalue = value ? parseAbsolute(value, 'UTC') : undefined;
                     } else {
-                        $item = "";
+                        value = "";
                     }
                 }}
             />
             </Popover.Content>
         </Popover.Root>
         <Form.FieldErrors />
-        <input hidden value={$item} name={attrs.name} />
+        <input hidden value={value} name={attrs.name} />
         </Form.Control>
     </Form.Field>
     {:else if _type == "object"}
     <Form.Field form={form} name={name}>
         <Form.Control let:attrs>
           <Form.Label>{name}</Form.Label>
-          <ObjectInput bind:value={$item} />
+          <ObjectInput bind:value={value} name={attrs.name} />
         </Form.Control>
         <Form.FieldErrors />
     </Form.Field>
@@ -137,7 +122,7 @@
     <Form.Field form={form} name={name}>
         <Form.Control let:attrs>
           <Form.Label>{name}</Form.Label>
-          <Input {...attrs} id={name} bind:value={$item} type={_type} />
+          <Input {...attrs} id={name} bind:value={value} type={_type} />
         </Form.Control>
         <Form.FieldErrors />
     </Form.Field>
