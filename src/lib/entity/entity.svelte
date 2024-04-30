@@ -4,10 +4,7 @@
   const dispatch = createEventDispatcher();
 
   import { onMount } from "svelte";
-  import SuperDebug, {
-    superForm,
-    superValidate,
-  } from "sveltekit-superforms";
+  import SuperDebug, { superForm, superValidate } from "sveltekit-superforms";
   import { zod } from "sveltekit-superforms/adapters";
   import { z } from "zod";
   import * as Form from "$lib/components/ui/form";
@@ -23,7 +20,7 @@
   import { page } from "$app/stores";
   import { setting } from "$lib/pstore";
   import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
-  import { Button } from "$lib/components/ui/button";  
+  import { Button } from "$lib/components/ui/button";
   const collectionname = setting("entities", "collection", "entities");
   if ($page.params.collection != null && $page.params.collection != "") {
     $collectionname = $page.params.collection;
@@ -72,20 +69,6 @@
       },
     );
     sform.set(_sform);
-    const _keys = Object.keys(value).sort();
-    let _newkeys = _keys.filter(
-      (key) => !key.startsWith("_"),
-    );
-    if ($showhidden == true) {
-      _newkeys = _keys;
-    }
-    // make sure name is first, and _type is second and everything else after that
-    _newkeys = [
-      ..._newkeys.filter((key) => key == "name"),
-      ..._newkeys.filter((key) => key == "_type"),
-      ..._newkeys.filter((key) => key != "name" && key != "_type"),
-    ];
-    keys.set(_newkeys);
   }
   async function generateSchema(value, schema) {
     if (schema != null && value != null) {
@@ -118,6 +101,18 @@
     }
     if (value != null) {
       vform = await superValidate(value, zod(_Schema));
+      const _keys = Object.keys(value).sort();
+      let _newkeys = _keys.filter((key) => !key.startsWith("_"));
+      if ($showhidden == true) {
+        _newkeys = _keys;
+      }
+      // make sure name is first, and _type is second and everything else after that
+      _newkeys = [
+        ..._newkeys.filter((key) => key == "name"),
+        ..._newkeys.filter((key) => key == "_type"),
+        ..._newkeys.filter((key) => key != "name" && key != "_type"),
+      ];
+      keys.set(_newkeys);
     }
   }
 
@@ -125,8 +120,7 @@
     generateSchema(value, schema);
     try {
       json = JSON.stringify(value, null, 2);
-    } catch (error) {
-    }
+    } catch (error) {}
   }
   $: if ($showhidden == true) {
     generateSchema(value, schema);
@@ -150,38 +144,37 @@
 </script>
 
 {#if !$showjson}
-<form bind:this={Ref} method="POST" on:submit={onsubmit}>
-  {#each $keys as key}
-    <Field form={$sform} name={key} bind:value={value[key]}></Field>
-  {/each}
+  <form bind:this={Ref} method="POST" on:submit={onsubmit}>
+    {#each $keys as key}
+      <Field form={$sform} name={key} bind:value={value[key]}></Field>
+    {/each}
+    <div class="flex items-center space-x-4 py-4">
+      <Form.Button>Submit</Form.Button>
+      <HotkeyButton
+        on:click={() => ($showhidden = !$showhidden)}
+        data-shortcut={"Control+h,Meta+h"}>Show hidden</HotkeyButton
+      >
+      <HotkeyButton
+        on:click={() => ($showjson = !$showjson)}
+        data-shortcut={"Control+j,Meta+j"}>Toogle JSON</HotkeyButton
+      >
+    </div>
+  </form>
+{/if}
+{#if $showjson}
+  {#if $message != null && $message != ""}
+    <Card.Root class="ml-2 mr-5 text-red-800">
+      <Card.Header>
+        <Card.Title>{$message}</Card.Title>
+      </Card.Header>
+    </Card.Root>
+  {/if}
+  <ObjectInput bind:value />
   <div class="flex items-center space-x-4 py-4">
-    <Form.Button>Submit</Form.Button>
-    <HotkeyButton
-      on:click={() => ($showhidden = !$showhidden)}
-      data-shortcut={"Control+h,Meta+h"}>Show hidden</HotkeyButton
-    >
+    <Button on:click={onsubmit}>Save</Button>
     <HotkeyButton
       on:click={() => ($showjson = !$showjson)}
       data-shortcut={"Control+j,Meta+j"}>Toogle JSON</HotkeyButton
-    >
-
-  </div>
-</form>
-{/if}
-{#if $showjson}
-{#if $message != null && $message != ""}
-<Card.Root class="ml-2 mr-5 text-red-800">
-  <Card.Header>
-    <Card.Title>{$message}</Card.Title>
-  </Card.Header>
-</Card.Root>
-{/if}
-<ObjectInput bind:value={value} />
-  <div class="flex items-center space-x-4 py-4">
-    <Button on:click={onsubmit} >Save</Button>
-    <HotkeyButton
-    on:click={() => ($showjson = !$showjson)}
-    data-shortcut={"Control+j,Meta+j"}>Toogle JSON</HotkeyButton
     >
   </div>
 {/if}
