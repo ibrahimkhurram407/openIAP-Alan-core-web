@@ -11,7 +11,6 @@
   import Field from "./field.svelte";
   import { ObjectInput } from "$lib/components/ui/objectinput";
   import * as Card from "$lib/components/ui/card";
-  import { writable } from "svelte/store";
 
   /** @type {any}*/
   export let value = null;

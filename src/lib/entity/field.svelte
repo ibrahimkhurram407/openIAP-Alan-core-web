@@ -26,30 +26,30 @@
     export let form;
     let item = writable(null);
     /** @type {any}*/
-    let _type = writable("hidden");
-    let dtvalue = writable(null);
+    let _type = "hidden";
+    let dtvalue = null;
 
 
     item.subscribe(item => {
         if(item == null || name == null || form == null){
-            $_type = "hidden";
+            _type = "hidden";
         } else if(typeof item == "boolean"){
-            $_type = "checkbox";
+            _type = "checkbox";
         } else if(item.length == 24 && item.indexOf("T") == 10 && item.indexOf("Z") == 23){
             // @ts-ignore
-            $_type = "date";
-            $dtvalue = item ? parseAbsolute(item, 'UTC') : undefined;
+            _type = "date";
+            dtvalue = item ? parseAbsolute(item, 'UTC') : undefined;
         } else if(typeof item == "string"){
             if(item.indexOf("\n") > -1 || item.length > 50 || item.indexOf("{") > -1 || item.indexOf("[") > -1){
-                $_type = "textarea";
+                _type = "textarea";
             } else {
-                $_type = "text";
+                _type = "text";
             }
         } else if(typeof item == "number"){
-            $_type = "number";
+            _type = "number";
         //} else if(item instanceof Date ){
         } else if(typeof item == "object"){
-            $_type = "object";
+            _type = "object";
         }
         if(item != null) value = item;
     });
@@ -75,14 +75,14 @@
     }
     $item = value;
     // $: $item = value;
-    // $: if ($_type == "date") {
-    //     $dtvalue = $item ? parseAbsolute($item, 'UTC') : undefined;
-    // }
+    $: if (_type == "date") {
+        dtvalue = $item ? parseAbsolute($item, 'UTC') : undefined;
+    }
 </script>
 <div>
-    {#if $_type == "hidden"}
+    {#if _type == "hidden"}
     <input hidden value={$item} name={name} />
-    {:else if $_type == "checkbox"}
+    {:else if _type == "checkbox"}
     <Form.Field form={form} name={name}>
         <Form.Control let:attrs>
           <Form.Label>{name}</Form.Label>
@@ -90,7 +90,7 @@
         </Form.Control>
         <Form.FieldErrors />
     </Form.Field>
-    {:else if $_type == "date"}
+    {:else if _type == "date"}
     <Form.Field {form} name="dob" class="flex flex-col">
         <Form.Control let:attrs>
         <Form.Label>{name}</Form.Label>
@@ -100,20 +100,20 @@
             class={cn(
                 buttonVariants({ variant: "outline" }),
                 "w-[280px] justify-start pl-4 text-left font-normal",
-                !$dtvalue && "text-muted-foreground"
+                !dtvalue && "text-muted-foreground"
             )}
             >
-            {$dtvalue ? formatDateObject($dtvalue) : "Pick a date"}
+            {dtvalue ? formatDateObject(dtvalue) : "Pick a date"}
             <CalendarIcon class="ml-auto h-4 w-4 opacity-50" />
             </Popover.Trigger>
             <Popover.Content class="w-auto p-0" side="top">
             <Calendar
-                value={$dtvalue}
+                value={dtvalue}
                 initialFocus
                 onValueChange={(v) => {
                     if (v) {
                         $item = v.toAbsoluteString();
-                        $dtvalue = v.toAbsoluteString()
+                        dtvalue = v.toAbsoluteString()
                     } else {
                         $item = "";
                     }
@@ -125,7 +125,7 @@
         <input hidden value={$item} name={attrs.name} />
         </Form.Control>
     </Form.Field>
-    {:else if $_type == "object"}
+    {:else if _type == "object"}
     <Form.Field form={form} name={name}>
         <Form.Control let:attrs>
           <Form.Label>{name}</Form.Label>
@@ -137,7 +137,7 @@
     <Form.Field form={form} name={name}>
         <Form.Control let:attrs>
           <Form.Label>{name}</Form.Label>
-          <Input {...attrs} id={name} bind:value={$item} type={$_type} />
+          <Input {...attrs} id={name} bind:value={$item} type={_type} />
         </Form.Control>
         <Form.FieldErrors />
     </Form.Field>
