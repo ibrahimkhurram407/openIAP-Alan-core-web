@@ -132,6 +132,7 @@
   }
   
 </script>
+
 <div class="grid grid-cols-[1fr,min-content,min-content,0px] gap-2 mb-1">
   <SearchInput placeholder="Search {$collectionname} collection using text or json query" name="search"
   class="px-2 ml-1"

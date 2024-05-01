@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
   import SuperDebug from "sveltekit-superforms";
-  import { client, getStoreValue, isSignedin, collections } from "$lib/stores";
+  import { client, isSignedin } from "$lib/stores";
   import {
     createTable,
     Render,
@@ -10,7 +10,6 @@
   } from "svelte-headless-table";
   import {
     addPagination,
-    addSortBy,
     addHiddenColumns,
     addSelectedRows,
   } from "svelte-headless-table/plugins";
@@ -32,7 +31,6 @@
   import DataTableCheckbox from "./data-table-checkbox.svelte";
   import { writable, type Writable } from "svelte/store";
   import { setting, deleteAllSettings, deleteSettings } from "$lib/pstore";
-  import { plugin } from "postcss";
   // https://www.shadcn-svelte.com/docs/components/data-table
   // https://github.com/bryanmylee/svelte-headless-table/discussions/56
 
@@ -307,7 +305,6 @@
       // keep the columns in the same order as the keys
       for (let i = 0; i < keys2.length; i++) {
         const key = keys2[i];
-        // if(keys.indexOf(key) == -1) continue; // if enabled, show no even if not present on first item
         if (key == "") continue;
         if (key == "_created" || key == "_modified") {
         } else if (key.startsWith("_") || key == "name") {
@@ -365,9 +362,7 @@
 
     selectedDataIds = viewModel.pluginStates.select.selectedDataIds;
     if (unsubscribe4) unsubscribe4();
-    // $selectedDataIds = $_selectedDataIds;
     unsubscribe4 = selectedDataIds.subscribe((value) => {
-      // console.log("selectedDataIds", JSON.stringify(value));
       _selectedDataIds.set(value);
     });
 
@@ -749,7 +744,6 @@
         </ScrollArea>
       </DropdownMenu.Content>
     </DropdownMenu.Root>
-
     <HotkeyButton
       variant="outline"
       size="sm"

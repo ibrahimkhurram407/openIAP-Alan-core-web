@@ -36,6 +36,7 @@
     }
   }
 </script>
+
 <Card.Root class={cn("flex flex-wrap " + (hidden ? "hidden" : ""), className)} >
   <Card.Content>
 {#if value != null && Array.isArray(value)}

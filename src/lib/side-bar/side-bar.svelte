@@ -3,7 +3,6 @@
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { cn } from "$lib/utils.js";
-
   import { Button } from "$lib/components/ui/button";
   import Booka from "lucide-svelte/icons/book-a";
   import Squarelibrary from "lucide-svelte/icons/square-library";
@@ -192,7 +191,6 @@
   }
   function onSearchQuery(value) {
     let filteredresults = [];
-    // if(value != null && value != "")
     for (let i = 0; i < $localItems.length; i++) {
       if ($localItems[i].name.toLowerCase().includes(value.toLowerCase())) {
         var item = { ...$localItems[i] };

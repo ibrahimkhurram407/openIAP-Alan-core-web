@@ -4,6 +4,7 @@
 	import { Button } from "$lib/components/ui/button";
 	
 </script>
+
 <div class="px-4 pt-4">
 	{#if $isAuthenticated}
 	Hi {$user.profile.name}

@@ -4,36 +4,38 @@
   import Check from "lucide-svelte/icons/check";
   import ChevronsUpDown from "lucide-svelte/icons/chevrons-up-down";
   import Usersround from "lucide-svelte/icons/users-round";
-	import User from "lucide-svelte/icons/user";
+  import User from "lucide-svelte/icons/user";
   import { tick } from "svelte";
   import * as Command from "$lib/components/ui/command/index.js";
   import * as Popover from "$lib/components/ui/popover/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import { cn } from "$lib/utils.js";
-
-  let items = [];
   export let query = {};
   export let collectionname = "users";
   export let value = null;
+  let items = [];
   let open = false;
 
   async function loadData() {
-    if($isSignedin == false) return;
+    if ($isSignedin == false) return;
     let results = [];
-    if(value != null && value._id != "") {
+    if (value != null && value._id != "") {
       const result = await $client.Query<any>({
         collectionname,
-        query: {_id : value._id},
+        query: { _id: value._id },
         projection: { name: 1, email: 1, _type: 1 },
         top: 1,
       });
-      if(result.length > 0) {
+      if (result.length > 0) {
         results.push(result[0]);
       }
     }
-    let subquery = {...query};
-    if(q != null && q != "") {
-      subquery["$or"] = [{ name: { $regex: q, $options: "i" } }, { email: { $regex: q, $options: "i" } }]
+    let subquery = { ...query };
+    if (q != null && q != "") {
+      subquery["$or"] = [
+        { name: { $regex: q, $options: "i" } },
+        { email: { $regex: q, $options: "i" } },
+      ];
     }
     // if(results.length > 0) {
     //   // why the fuck is this not working ???
@@ -45,37 +47,33 @@
       projection: { name: 1, email: 1, _type: 1 },
       top: 10,
     });
-    if(result.length > 0) {
-      if(results.length > 0) {
-        results = results.concat(result.filter(x => x._id != results[0]._id));
+    if (result.length > 0) {
+      if (results.length > 0) {
+        results = results.concat(result.filter((x) => x._id != results[0]._id));
       } else {
         results = results.concat(result);
       }
-      
     }
-    items = results
-    // items = results.map((x) => ({ value: x._id, _type: x._type, droplabel: `(${x._type}) ${x.name} ${x.email}`, label: `${x.name}` }));
+    items = results;
   }
   onMount(() => {
-    const unsubscribe = isSignedin.subscribe(async (value) => {      
+    const unsubscribe = isSignedin.subscribe(async (value) => {
       loadData();
     });
     return () => {
       unsubscribe();
     };
   });
-
   let q = "";
   let lastid = null;
   $: label = value?.name ?? "Select a entity...";
   $: if (q != "") loadData();
   $: {
-    if(value != null && value._id != lastid) {
+    if (value != null && value._id != lastid) {
       lastid = value._id;
-      loadData() 
+      loadData();
     }
   }
-
   function closeAndFocusTrigger(triggerId: string) {
     open = false;
     tick().then(() => {
@@ -106,7 +104,7 @@
           <Command.Item
             value={item._id}
             onSelect={(currentValue) => {
-              value = items.find(x => x._id == currentValue);
+              value = items.find((x) => x._id == currentValue);
               loadData(); // reorder to move selected item to top
               closeAndFocusTrigger(ids.trigger);
             }}
@@ -118,12 +116,12 @@
               )}
             />
             {#if item._type == "role"}
-            <Usersround class={cn("mr-2 h-4 w-4")} />
+              <Usersround class={cn("mr-2 h-4 w-4")} />
             {:else if item._type == "user"}
-            <User class={cn("mr-2 h-4 w-4")} />
+              <User class={cn("mr-2 h-4 w-4")} />
             {:else}
-            <Usersround class={cn("mr-2 h-4 w-4", "text-transparent")} />
-            {/if}            
+              <Usersround class={cn("mr-2 h-4 w-4", "text-transparent")} />
+            {/if}
             {`(${item._type}) ${item.name} ${item.email}`}
           </Command.Item>
         {/each}
@@ -131,4 +129,3 @@
     </Command.Root>
   </Popover.Content>
 </Popover.Root>
-

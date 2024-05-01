@@ -1,5 +1,4 @@
 <script>
-	// import { Button as ButtonPrimitive } from "bits-ui";
 	import * as Button from "$lib/components/ui/button/index.js";
 	export let hidden = false;
 	let Ref;
@@ -19,6 +18,7 @@
 
 	});
 </script>
+
 <div bind:this={Ref} style:display={!hidden == true ? "block" : "none"}>
 <Button.Root on:click on:keydown {...$$restProps}>
 	<slot />

@@ -9,6 +9,7 @@
 		window.open("https://github.com/openiap", "_blank");
 	}
 </script>
+
 <Button variant="ghost" class="relative rounded-full" on:click={openSupportPage} tabindex="-1">
 	<Heart color="darkred" />
 </Button>

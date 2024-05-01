@@ -11,10 +11,6 @@ const settings = {
     post_logout_redirect_uri: window.location.origin + base + "/",
     userStore: new WebStorageStateStore({ store: window.localStorage })
 };
-// console.debug("baseurl", getStoreValue(baseurl));
-// console.debug("wsurl", getStoreValue(wsurl));
-// console.debug("settings", settings);
-
 export const userManager = new UserManager(settings);
 export const signIn = () => {
     isAuthenticated.set(false);
@@ -57,14 +53,12 @@ export async function loadConfig() {
     }
 }
 let isAuthenticatedtimer = true;
-// console.time("isAuthenticated");
 export const getUser = async () => {
     try {
         const result = await userManager.getUser();
         if(result != null) {
             if(isAuthenticatedtimer) {
                 isAuthenticatedtimer = false;
-                // console.timeEnd("isAuthenticated");
             }                
             isAuthenticated.set(true);
             loadConfig();

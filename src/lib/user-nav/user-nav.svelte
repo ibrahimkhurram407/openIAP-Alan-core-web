@@ -16,6 +16,7 @@
 		pictureurl = $user.profile.picture;
 	}
 </script>
+
 {#if $isAuthenticated == true}
 <HotkeyButton hidden data-shortcut={"Control+p,Meta+p" } on:click={() => goto(base + `/users/${$user.profile.sub}`) }>Profile</HotkeyButton>
 <HotkeyButton hidden data-shortcut={"Control+b,Meta+b" } on:click={() => goto(base + `/customers/billing`) }>Billing</HotkeyButton>

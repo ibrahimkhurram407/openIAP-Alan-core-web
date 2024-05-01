@@ -6,8 +6,8 @@
 	let className: string | undefined | null = undefined;
 	export { className as class };
 </script>
+
 <nav class={cn("flex items-center space-x-4 lg:space-x-6", className)}>
-	<!-- text-sm font-medium transition-colors hover:text-primary -->
 	<a href="{base}/" class="flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
 		tabindex="-1">
 		<img src="{base}/openiap.png" alt="Logo" class="h-6 mr-4" /> {$config.majorversion || ""}

@@ -1,17 +1,14 @@
 <script>
-  // import SuperDebug from "sveltekit-superforms";
   import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
-
   import { onMount } from "svelte";
-  import SuperDebug, { superForm, superValidate } from "sveltekit-superforms";
+  import { superForm, superValidate } from "sveltekit-superforms";
   import { zod } from "sveltekit-superforms/adapters";
   import { z } from "zod";
   import * as Form from "$lib/components/ui/form";
   import Field from "./field.svelte";
   import { ObjectInput } from "$lib/components/ui/objectinput";
   import * as Card from "$lib/components/ui/card";
-
   /** @type {any}*/
   export let value = null;
   export let schema = null;
@@ -24,17 +21,13 @@
   if ($page.params.collection != null && $page.params.collection != "") {
     $collectionname = $page.params.collection;
   }
-
   let sform = null;
   let showjson = false;
   let json = null;
   let Ref;
-
   let message = "";
-
   let showhidden = false;
   let vform;
-
   async function onsubmit(e) {
     message = "";
     e.preventDefault();
@@ -44,15 +37,11 @@
     } else {
       message = JSON.stringify(vform.errors);
       // setError(vform, "name", "Suspicious email address.");
-      // setMessage(vform, "Please correct the errors below.");
     }
   }
-
-  // Define the schema directly here
   let _Schema = z
     .object({
       name: z.string().min(2),
-      // Additional fields as required
     })
     .passthrough();
 
@@ -115,7 +104,6 @@
       keys = _newkeys;
     }
   }
-
   $: if (schema != null || value != null) {
     generateSchema(value, schema);
     try {
@@ -132,8 +120,8 @@
   $: if (vform != null) {
     generateForm();
   }
-
 </script>
+
 {#if message != null && message != ""}
 <Card.Root class="ml-2 mr-5 text-red-800">
   <Card.Header>

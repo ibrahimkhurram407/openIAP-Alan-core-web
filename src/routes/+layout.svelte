@@ -17,7 +17,6 @@
 	import { goto } from "$app/navigation";
 	
 	let isSignedinTimer = true;
-	// console.time("isSignedin");
     onMount(async () => {
 		if (window.location.search.includes("code=")) {
             await userManager.signinRedirectCallback();
@@ -26,26 +25,20 @@
 		try {
 			user.set(await getUser());
 			if (!$user) {
-				// goto(base + `/login`);
 				return;
-				// signIn(); auto signin ?
 			} else {
 				$client.jwt = $user.access_token;
 				await $client.connect(true);
 				$client.onDisconnected = async (client, error) => {
-					// console.debug("User.Disconnected", $user.profile);
 					isSignedin.set(false);
 				};
-				// console.debug("User.SignedIn", $user.profile);
 				if(isSignedinTimer) {
 					isSignedinTimer = false;
-					// console.timeEnd("isSignedin");
 				}					
 				isSignedin.set(true);
 			}
 		} catch (error) {
 			isSignedin.set(false);
-			// console.error("Error signing in", error);
 			signIn();
 		}
     });
@@ -55,6 +48,7 @@
 	import { UserNav } from "$lib/user-nav";
 	import { SideBar } from "$lib/side-bar";
 </script>
+
 <ModeWatcher />
 <HotkeyButton hidden on:click={($isAuthenticated ? signOut : signIn)} data-shortcut={"Control+q,Meta+q" }>Sign In/Out</HotkeyButton>
 {#if $page.url.pathname != base + "/login"}
