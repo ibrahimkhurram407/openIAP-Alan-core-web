@@ -558,6 +558,7 @@
                   {#if cell.id === "name"}
                     <Table.Head {...attrs} style="width: *;">
                       <Button
+                      tabindex="-1"
                         variant="ghost"
                         on:click={(e) => toggleSort(e, cell.id)}
                       >
@@ -575,6 +576,7 @@
                       style="width: {fixedColumnsSizes[cell.id]}px;"
                     >
                       <Button
+                      tabindex="-1"
                         variant="ghost"
                         on:click={(e) => toggleSort(e, cell.id)}
                       >
@@ -599,6 +601,7 @@
                       style="width: {100 / visibleColumnsCount()}%;"
                     >
                       <Button
+                        tabindex="-1"
                         variant="ghost"
                         on:click={(e) => toggleSort(e, cell.id)}
                       >
@@ -624,7 +627,7 @@
               {#each row.cells as cell (cell.id)}
                 <Subscribe attrs={cell.attrs()} let:attrs>
                   {#if cell.id === "name" && multiselect == false}
-                    <Table.Cell
+                    <Table.Cell 
                       {...attrs}
                       on:click={() =>
                         dispatch("click", { row, collectionname })}

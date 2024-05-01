@@ -65,7 +65,7 @@
 			<div class="ml-auto flex items-center space-x-2">
 				<Search />
 				
-				<Button on:click={toggleMode} variant="ghost" size="icon">
+				<Button on:click={toggleMode} variant="ghost" size="icon" tabindex="-1">
 					<Sun
 					  class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
 					/>

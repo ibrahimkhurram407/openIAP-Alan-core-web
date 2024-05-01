@@ -9,9 +9,9 @@
 		window.open("https://github.com/openiap", "_blank");
 	}
 </script>
-<Button variant="ghost" class="relative rounded-full" on:click={openSupportPage}>
+<Button variant="ghost" class="relative rounded-full" on:click={openSupportPage} tabindex="-1">
 	<Heart color="darkred" />
 </Button>
-<Button variant="ghost" class="relative rounded-full" on:click={openGithubPage}>
+<Button variant="ghost" class="relative rounded-full" on:click={openGithubPage} tabindex="-1">
 	<Github />
 </Button>

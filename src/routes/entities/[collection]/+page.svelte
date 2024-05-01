@@ -154,8 +154,8 @@
   data-shortcut2={"Control+f,Meta+f"}
   type="search"> 
 </SearchInput>
-<Toggle class=" ml-1" bind:pressed={showquery} dense filled rounded variant="outline" >query</Toggle>
-<Toggle class=" ml-1" bind:pressed={explain} dense filled rounded variant="outline" >explain</Toggle>
+<Toggle class=" ml-1" bind:pressed={showquery} dense filled rounded variant="outline" tabindex="-1">query</Toggle>
+<Toggle class=" ml-1" bind:pressed={explain} dense filled rounded variant="outline" tabindex="-1">explain</Toggle>
 </div>
 <div class="">
   <div class="">
@@ -167,6 +167,7 @@
         <div  class="mx-2">
           {#each $collections as item, index}
           <Button class="justify-start w-full"
+          tabindex="-1"
           variant={$collectionname == item.name ? "secondary" : "ghost"} 
           id={"item-" + index} 
           on:click={() => { collectionname.set(item.name); $collectionindex = $collections.findIndex(x => x.name == $collectionname); }}>

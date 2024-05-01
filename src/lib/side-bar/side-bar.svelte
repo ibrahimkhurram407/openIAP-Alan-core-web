@@ -242,16 +242,14 @@
     {/if}
     {#each $localItems.filter((x) => x.sidebar && x.enabled && x.category == category) as item}
       <Button
+        tabindex="-1"
         variant={$page.url.pathname.startsWith(item.href)
           ? "secondary"
           : "ghost"}
         class="justify-start w-12 lg:w-full"
         on:click={() => goto(item.href)}
       >
-        <svelte:component
-          this={item.icon}
-          class="mr-2 h-4 w-4 flex-shrink-0"
-        />
+        <svelte:component this={item.icon} class="mr-2 h-4 w-4 flex-shrink-0" />
         <div class="hidden lg:block">
           {item.name}
         </div>
