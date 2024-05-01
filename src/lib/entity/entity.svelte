@@ -134,6 +134,13 @@
   }
 
 </script>
+{#if message != null && message != ""}
+<Card.Root class="ml-2 mr-5 text-red-800">
+  <Card.Header>
+    <Card.Title>{message}</Card.Title>
+  </Card.Header>
+</Card.Root>
+{/if}
 {#if !showjson}
   <form bind:this={Ref} method="POST" on:submit={onsubmit}>
     {#each keys as key}
@@ -154,13 +161,6 @@
   </form>
 {/if}
 {#if showjson}
-  {#if message != null && message != ""}
-    <Card.Root class="ml-2 mr-5 text-red-800">
-      <Card.Header>
-        <Card.Title>{message}</Card.Title>
-      </Card.Header>
-    </Card.Root>
-  {/if}
   <ObjectInput bind:value />
   <div class="flex items-center space-x-4 py-4">
     <Button on:click={onsubmit}>Save</Button>

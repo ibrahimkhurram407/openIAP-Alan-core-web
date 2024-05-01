@@ -62,9 +62,10 @@
 {/if}
 <Card.Root class="gap-1.5 ml-2 mr-5">
   <!-- <Card.Header>
-    <Card.Title>{data.name}</Card.Title>
+    <Card.Title></Card.Title>
   </Card.Header> -->
   <Card.Content>
+    <br />
     <Entity bind:value={data} on:submit={onSubmit}><Button on:click={()=> showacl = !showacl} >Access Control List</Button></Entity>
   </Card.Content>
 </Card.Root>
