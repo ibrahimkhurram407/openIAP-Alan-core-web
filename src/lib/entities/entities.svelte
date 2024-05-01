@@ -20,6 +20,8 @@
   import ChevronDown from "lucide-svelte/icons/chevron-down";
   import * as Table from "$lib/components/ui/table";
   import DataTableActions from "./data-table-actions.svelte";
+  import DataTableTimesince from "./data-table-timesince.svelte";
+
   import { Button } from "$lib/components/ui/button";
   import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
   import { cn } from "$lib/utils.js";
@@ -30,6 +32,7 @@
   import DataTableCheckbox from "./data-table-checkbox.svelte";
   import { writable, type Writable } from "svelte/store";
   import { setting, deleteAllSettings, deleteSettings } from "$lib/pstore";
+  import { plugin } from "postcss";
   // https://www.shadcn-svelte.com/docs/components/data-table
   // https://github.com/bryanmylee/svelte-headless-table/discussions/56
 
@@ -40,11 +43,11 @@
   const fixedColumnsSizes = {
     _id: 35,
     name: "*",
-    _created: 210,
-    _modified: 210,
-    lastseen: 210,
-    lastrun: 210,
-    nextrun: 210,
+    _created: 150,
+    _modified: 150,
+    lastseen: 150,
+    lastrun: 150,
+    nextrun: 150,
     state: 100,
     priority: 50,
     dbusage: 100,
@@ -66,15 +69,16 @@
   export let explain = false;
   export let showInsert = true;
   export let showDelete = true;
+  export let multiSort = false;
 
   let explainquery = writable(null);
 
   // deleteAllSettings
   // deleteSettings(key)
   let unsubscribe4;
-  let unsubscribe5;
+  //let unsubscribe5;
 
-  export let defaultcolumns = ["_id", "", "name"];
+  export let defaultcolumns = ["_id", "", "name", "_created", "_modified"];
 
   const currentquery = writable({});
 
@@ -85,7 +89,7 @@
   let pagesize = setting(key, "pagesize", 10);
 
   let _selectedDataIds = setting(key, "selectedDataIds", {});
-  multiselect = (Object.keys($_selectedDataIds).length > 0);  
+  multiselect = Object.keys($_selectedDataIds).length > 0;
   let psearchstring = setting(key, "searchstring", "");
   if ($psearchstring != "") {
     $searchstring = $psearchstring;
@@ -98,12 +102,13 @@
   let selectedDataIds;
 
   function updateSortKeys() {
-    let sortDefault = [{ id: "_created", order: "desc" }];
-    if (collectionname == "dbusage") {
-      sortDefault = [];
-    } else if (collectionname == "cvr") {
-      sortDefault = [{ id: "sidstOpdateret", order: "desc" }];
-    }
+    // let sortDefault = [{ id: "_created", order: "desc" }];
+    // if (collectionname == "dbusage") {
+    //   sortDefault = [];
+    // } else if (collectionname == "cvr") {
+    //   sortDefault = [{ id: "sidstOpdateret", order: "desc" }];
+    // }
+    let sortDefault = [];
     sortKeys = setting(key, "sortKeys", sortDefault);
   }
 
@@ -211,9 +216,74 @@
 
   // const items = writable([{_id: "12", name: "test"}]);
   const items = writable([]);
+  function addColumn(table, columns, id, sample) {
+    if (id == "_id") {
+      return columns.push(
+        table.column({
+          id: "_id",
+          accessor: ({ _id }) => _id,
+          header: (_, { pluginStates }) => {
+            const { allPageRowsSelected } = pluginStates.select;
+            return createRender(DataTableCheckbox, {
+              checked: allPageRowsSelected,
+            });
+          },
+          cell: ({ row }, { pluginStates }) => {
+            const { getRowState } = pluginStates.select;
+            const { isSelected } = getRowState(row);
+
+            return createRender(DataTableCheckbox, {
+              checked: isSelected,
+              row,
+            });
+          },
+        }),
+      );
+    }
+    if (id == "") {
+      return columns.push(
+        table.column({
+          accessor: ({ _id }) => _id,
+          header: "",
+          cell: ({ value }) => {
+            return createRender(DataTableActions, { id: value });
+          },
+        }),
+      );
+    }
+    try {
+      const dt = Date.parse(sample);
+      if (dt != null && isNaN(dt) == false) {
+        fixedColumnsSizes[id] = 150;
+        return columns.push(
+          table.column({
+            accessor: (cell) => cell[id],
+            header: id,
+            cell: ({ value }) => {
+              return createRender(DataTableTimesince, { value });
+            },
+          }),
+        );
+      }
+    } catch (e) {}
+    if (id == "name") {
+      return columns.push(
+        table.column({
+          accessor: (item) => item.name,
+          header: "name",
+        }),
+      );
+    }
+    columns.push(
+      table.column({
+        accessor: (item) => item[id],
+        header: id,
+      }),
+    );
+  }
   function reCreateTable() {
     _selectedDataIds = setting(key, "selectedDataIds", {});
-    multiselect = (Object.keys($_selectedDataIds).length > 0);
+    multiselect = Object.keys($_selectedDataIds).length > 0;
 
     let table = createTable(items, {
       page: addPagination({
@@ -222,44 +292,16 @@
         serverItemCount,
         serverSide: true,
       }),
-      sort: addSortBy({
-        serverSide: true,
-        initialSortKeys: $sortKeys,
-        disableMultiSort: false,
-      }),
       hide: addHiddenColumns(),
       select: addSelectedRows({
         initialSelectedDataIds: $_selectedDataIds,
       }),
     });
     let columns = [];
-    columns.push(
-      table.column({
-        id: "_id",
-        accessor: ({ _id }) => _id,
-        header: (_, { pluginStates }) => {
-          const { allPageRowsSelected } = pluginStates.select;
-          return createRender(DataTableCheckbox, {
-            checked: allPageRowsSelected,
-          });
-        },
-        cell: ({ row }, { pluginStates }) => {
-          const { getRowState } = pluginStates.select;
-          const { isSelected } = getRowState(row);
+    addColumn(table, columns, "_id", "");
 
-          return createRender(DataTableCheckbox, {
-            checked: isSelected,
-          });
-        },
-      }),
-    );
     if ($items.length > 0) {
-      columns.push(
-        table.column({
-          accessor: (item) => item.name,
-          header: "name",
-        }),
-      );
+      addColumn(table, columns, "name", "");
       var keys = Object.keys($items[0]);
       var keys2 = Object.keys($ShowColumns);
       // keep the columns in the same order as the keys
@@ -273,12 +315,8 @@
         }
         try {
           if (columns.find((x) => x.id == key) != null) continue;
-          columns.push(
-            table.column({
-              accessor: (item) => item[key],
-              header: key,
-            }),
-          );
+          var value = $items[0][key];
+          addColumn(table, columns, key, value);
         } catch (error3) {}
       }
       // add any new columns
@@ -290,47 +328,46 @@
           continue;
         }
         if (columns.find((x) => x.id == key) != null) continue;
-        columns.push(
-          table.column({
-            accessor: (item) => item[key],
-            header: key,
-          }),
-        );
+        var value = $items[0][key];
+        addColumn(table, columns, key, value);
       }
       // force adding columns that we are sorting by
       for (let y = 0; y < $sortKeys.length; y++) {
         const key = $sortKeys[y].id;
         if (keys.indexOf(key.id) == -1) {
           if (columns.find((x) => x.id == key) != null) continue;
-          columns.push(
-            table.column({
-              accessor: (item) => item[key],
-              header: key,
-            }),
-          );
+          var value = $items[0][key];
+          addColumn(table, columns, key, value);
         }
       }
     }
-    // columns.push(table.column({
-    //     accessor: ({ _id }) => _id,
-    //     header: "",
-    //     cell: ({ value }) => {
-    //       return createRender(DataTableActions, { id: value });
-    //     }
-    //   }));
+
+    columns = columns.sort((a, b) => {
+      return a.id.localeCompare(b.id);
+    });
+    columns = [
+      ...columns.filter((x) => x.id == "_id"),
+      ...columns.filter((x) => x.id == "name"),
+      ...columns.filter((x) => x.id == "_type"),
+      ...columns.filter(
+        (x) =>
+          x.id != "_id" &&
+          x.id != "name" &&
+          x.id != "_type" &&
+          x.id != "_created" &&
+          x.id != "_modified",
+      ),
+      ...columns.filter((x) => x.id == "_created" || x.id == "_modified"),
+    ];
     let viewModel = table.createViewModel(table.createColumns(columns), {
       rowDataId: ({ _id }) => _id,
-    });
-
-    if (unsubscribe5) unsubscribe4();
-    unsubscribe5 = viewModel.pluginStates.sort.sortKeys.subscribe((value) => {
-      sortKeys.set(value);
     });
 
     selectedDataIds = viewModel.pluginStates.select.selectedDataIds;
     if (unsubscribe4) unsubscribe4();
     // $selectedDataIds = $_selectedDataIds;
     unsubscribe4 = selectedDataIds.subscribe((value) => {
+      // console.log("selectedDataIds", JSON.stringify(value));
       _selectedDataIds.set(value);
     });
 
@@ -355,10 +392,6 @@
   $: if (collectionname != currentcollectionname) {
     psearchstring = setting(key, "searchstring", "");
     $searchstring = $psearchstring;
-
-    // console.log("collectionname", collectionname, "multiselect", multiselect);
-    // multiselect = (Object.keys($_selectedDataIds).length > 0);
-    // console.log("collectionname", collectionname, "multiselect", multiselect);
 
     currentcollectionname = collectionname;
     ShowColumns = setting(key, "ShowColumns", {});
@@ -402,13 +435,11 @@
           const sortKey = $sortKeys[i];
           orderby[sortKey.id] = sortKey.order == "desc" ? -1 : 1;
         }
-        console.log("orderby", JSON.stringify(orderby));
         $currentquery = createQuery();
         if ($currentquery == null) {
           loading = false;
           return;
         }
-
         if (explain == true) {
           $explainquery = await $client.Query({
             collectionname,
@@ -457,11 +488,6 @@
       $error = e.message;
     }
   };
-  function onSearchQuery(value) {
-    $serverItemCount = -1;
-    GetData();
-  }
-
   onMount(() => {
     const unsubscribe = searchstring.subscribe(GetData);
     const unsubscribe2 = isSignedin.subscribe((value) => {
@@ -473,21 +499,12 @@
       _pageindex.set(value);
       GetData();
     });
-    // const unsubscribe5 = sortKeys.subscribe((value) => {
-    //   GetData();
-    // });
-
-    const unsubscribe6 = sortKeys.subscribe((value) => {
-      GetData();
-    });
 
     return () => {
       unsubscribe();
       unsubscribe2();
       unsubscribe3();
       if (unsubscribe4) unsubscribe4();
-      if (unsubscribe5) unsubscribe5();
-      unsubscribe6();
     };
   });
 
@@ -496,9 +513,32 @@
   function visibleColumnsCount() {
     return Object.values($ShowColumns).filter((x) => x).length;
   }
+  function sortby(key) {
+    var exists = $sortKeys.find((x) => x.id == key);
+    if (exists == null) return null;
+    return exists.order;
+  }
+  function toggleSort(e, id) {
+    e.preventDefault();
+    e.stopPropagation();
+    const sortKey = $sortKeys.find((x) => x.id == id);
+    if (sortKey == null) {
+      if (!multiSort) $sortKeys = [{ id, order: "asc" }];
+      if (multiSort) $sortKeys = $sortKeys.concat([{ id, order: "asc" }]);
+    } else {
+      if (sortKey.order == "asc") {
+        sortKey.order = "desc";
+        $sortKeys = $sortKeys; // update store
+      } else {
+        if (!multiSort) $sortKeys = [];
+        if (multiSort) $sortKeys = $sortKeys.filter((x) => x.id != id);
+      }
+    }
+    GetData();
+  }
 </script>
 
-<div class={cn("rounded-md border", className)}>
+<div class={cn("", className)}>
   {#if $error != null && $error != ""}
     <SuperDebug data={$error} />
   {/if}
@@ -514,16 +554,17 @@
                   let:attrs
                   props={cell.props()}
                   let:props
-                  sort={viewModel.pluginStates.sort.sortKeys}
-                  let:sort
                 >
                   {#if cell.id === "name"}
                     <Table.Head {...attrs} style="width: *;">
-                      <Button variant="ghost" on:click={props.sort.toggle}>
+                      <Button
+                        variant="ghost"
+                        on:click={(e) => toggleSort(e, cell.id)}
+                      >
                         <Render of={cell.render()} />
-                        {#if props.sort.order == "asc"}
+                        {#if sortby(cell.id) == "asc"}
                           <ArrowUp class="ml-2 h-4 w-4" />
-                        {:else if props.sort.order == "desc"}
+                        {:else if sortby(cell.id) == "desc"}
                           <ArrowDown class="ml-2 h-4 w-4" />
                         {/if}
                       </Button>
@@ -533,11 +574,14 @@
                       {...attrs}
                       style="width: {fixedColumnsSizes[cell.id]}px;"
                     >
-                      <Button variant="ghost" on:click={props.sort.toggle}>
+                      <Button
+                        variant="ghost"
+                        on:click={(e) => toggleSort(e, cell.id)}
+                      >
                         <Render of={cell.render()} />
-                        {#if props.sort.order == "asc"}
+                        {#if sortby(cell.id) == "asc"}
                           <ArrowUp class="ml-2 h-4 w-4" />
-                        {:else if props.sort.order == "desc"}
+                        {:else if sortby(cell.id) == "desc"}
                           <ArrowDown class="ml-2 h-4 w-4" />
                         {/if}
                       </Button>
@@ -554,11 +598,14 @@
                       {...attrs}
                       style="width: {100 / visibleColumnsCount()}%;"
                     >
-                      <Button variant="ghost" on:click={props.sort.toggle}>
+                      <Button
+                        variant="ghost"
+                        on:click={(e) => toggleSort(e, cell.id)}
+                      >
                         <Render of={cell.render()} />
-                        {#if props.sort.order == "asc"}
+                        {#if sortby(cell.id) == "asc"}
                           <ArrowUp class="ml-2 h-4 w-4" />
-                        {:else if props.sort.order == "desc"}
+                        {:else if sortby(cell.id) == "desc"}
                           <ArrowDown class="ml-2 h-4 w-4" />
                         {/if}
                       </Button>
@@ -590,8 +637,6 @@
                       on:click={() => {
                         // @ts-ignore
                         const id = row.dataId;
-                        console.log("click", row);
-
                         $selectedDataIds[id] = !$selectedDataIds[id];
                         if ($selectedDataIds[id] == false) {
                           delete $selectedDataIds[id];
@@ -726,13 +771,13 @@
       size="sm"
       data-shortcut={"ArrowLeft"}
       on:click={() => ($pageIndex = $pageIndex - 1)}
-      disabled={(!$hasPreviousPage && $serverItemCount > -1) || $pageIndex == 0}
-      >Previous</HotkeyButton
+      disabled={$pageIndex == 0}>Previous</HotkeyButton
     >
     <HotkeyButton
       variant="outline"
       size="sm"
-      disabled={!$hasNextPage && $serverItemCount > -1}
+      disabled={$serverItemCount > -1 &&
+        !($pageIndex + 1 < Math.ceil($serverItemCount / $pagesize))}
       data-shortcut={"ArrowRight"}
       on:click={() => ($pageIndex = $pageIndex + 1)}>Next</HotkeyButton
     >

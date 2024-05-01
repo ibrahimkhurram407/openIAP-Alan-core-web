@@ -36,7 +36,6 @@
   }
   async function onSubmit(e) {
     try {
-      console.log("Inserting", e.detail.data)
       data = {...data2}
       await $client.InsertOne({
         collectionname: $collectionname,

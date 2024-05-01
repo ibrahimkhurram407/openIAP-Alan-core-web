@@ -9,7 +9,7 @@ export function deleteSetting(page, key) {
     storeCache[fullKey] = null;
 }
 export function deleteSettings(page) {
-    for(let i = 0; i < localStorage.length; i++) {
+    for(let i = localStorage.length-1; i >= 0; i--) {
         const key = localStorage.key(i);
         if(key.startsWith("store_" + page)) {
             localStorage.removeItem(key);
@@ -17,9 +17,12 @@ export function deleteSettings(page) {
     }
 }
 export function deleteAllSettings() {
-    for(let i = 0; i < localStorage.length; i++) {
+    for(let i = localStorage.length-1; i >= 0; i--) {
         const key = localStorage.key(i);
         if(key.startsWith("store_")) {
+            if(storeCache[key]) {
+                storeCache[key].set(null);
+            }
             localStorage.removeItem(key);
         }
     }

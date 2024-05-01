@@ -71,7 +71,6 @@
   $: if (q != "") loadData();
   $: {
     if(value != null && value._id != lastid) {
-      console.log("loadData", value.name, lastid, value._id)
       lastid = value._id;
       loadData() 
     }

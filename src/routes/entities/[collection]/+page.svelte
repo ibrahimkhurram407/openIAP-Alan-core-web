@@ -151,7 +151,7 @@
       e.target.blur();
     }
   }}
-  data-shortcut={"Control+f,Meta+f"}
+  data-shortcut2={"Control+f,Meta+f"}
   type="search"> 
 </SearchInput>
 <Toggle class=" ml-1" bind:pressed={showquery} dense filled rounded variant="outline" >query</Toggle>
@@ -159,9 +159,12 @@
 </div>
 <div class="">
   <div class="">
+    <!-- fixed top-14 z-30 -ml-2 hidden h-[calc(100vh-3.5rem)] w-full shrink-0 md:sticky md:block -->
+    <!-- grid grid-cols-[min-content,1fr] ml-1 -->
     <div class="grid grid-cols-[min-content,1fr] ml-1">
-      <ScrollArea class="max-h-[36rem] min-w-[12rem] rounded-md border">
-        <div>
+      <!-- -->
+      <ScrollArea class="h-[calc(100vh-10rem)] w-full rounded-md border">
+        <div  class="mx-2">
           {#each $collections as item, index}
           <Button class="justify-start w-full"
           variant={$collectionname == item.name ? "secondary" : "ghost"} 
@@ -185,7 +188,6 @@
             goto(base + `/entities/${e.detail.collectionname}/new`);
           }}
           on:delete={async e => {
-            console.log("delete", e.detail.items, "from", e.detail.collectionname)
             const query = {"_id": {"$in": e.detail.items}};
             await $client.DeleteMany({collectionname: e.detail.collectionname, query})
             deleteSetting("entities_" + $collectionname, "selectedDataIds");

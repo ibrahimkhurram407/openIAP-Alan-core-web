@@ -3,6 +3,16 @@
     import type { Writable } from "svelte/store";
    
     export let checked: Writable<boolean>;
+    export let row: any = null;
+    let dataId = "";
+    $: if(row != null) {
+      dataId = row.dataId;
+
+    }
   </script>
-   
-  <Checkbox bind:checked={$checked} />
+  
+  <!-- <div class="flex items-center">
+    <Checkbox bind:checked={$checked} />
+    <span class="ml-2">{dataId}</span>
+</div> -->
+<Checkbox bind:checked={$checked} />

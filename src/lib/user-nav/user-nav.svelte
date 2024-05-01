@@ -50,7 +50,7 @@
 				Settings
 				<DropdownMenu.Shortcut>⌘S</DropdownMenu.Shortcut>
 			</DropdownMenu.Item>
-			<DropdownMenu.Item on:click={() => deleteAllSettings() }>Clear Custom Settings</DropdownMenu.Item>
+			<DropdownMenu.Item on:click={() => { deleteAllSettings(); window.location.href = "/"; } }>Clear Custom Settings</DropdownMenu.Item>
 		</DropdownMenu.Group>
 		<DropdownMenu.Separator />
 		<DropdownMenu.Item on:click={signOut} data-shortcut={"Control+q,Meta+q" } >

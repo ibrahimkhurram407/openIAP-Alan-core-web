@@ -24,8 +24,6 @@
 	let showMailCodeForm = writable(false);
 	let formioRender:Writable<any> = writable({});
 	let emailcode = writable("");
-	let username = "";
-	let password = "";
 
 	let className: string | undefined | null = undefined;
 	export { className as class };
@@ -167,7 +165,7 @@
 </script>
 
 <div class={cn("grid", className)} {...$$restProps}>
-	<div class="gap-6">
+	<div class="gap-6 space-y-2">
 		{#if $showLocalForm}
 		<form method="post" action="/local">
 			<div class="grid gap-2">

@@ -53,7 +53,6 @@
   async function onSubmit(e) {
     try {
       await $client.UpdateOne({ collectionname: $collectionname, item: e.detail.data });
-      console.log("updating", e.detail.data);
       goto(base + `/entities/${$collectionname}`);
       // loadData();
     } catch (error) {
