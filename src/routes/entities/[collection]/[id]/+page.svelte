@@ -11,12 +11,6 @@
   import { Entity } from "$lib/entity";
   import { client, isSignedin } from "$lib/stores";
 
-  // new Date(1978, 3, 5 )
-  let data2 = {
-    name: "New item2",
-    today: "2024-04-16T09:50:22.137Z",
-    birth: "1978-03-05T02:00:00.000Z",
-  };
   let data = writable();
   let errormessage = writable(null);
 
@@ -26,10 +20,12 @@
   const _id = $page.params.id;
 
   async function loadData() {
-    if($isSignedin == false) return;
+    if ($isSignedin == false) return;
     try {
-      $data = data2;
-      const results = await $client.Query({ collectionname: $collectionname, query: { _id } });
+      const results = await $client.Query({
+        collectionname: $collectionname,
+        query: { _id },
+      });
       if (results.length > 0) {
         $data = results[0];
       }
@@ -39,7 +35,9 @@
   }
 
   onMount(() => {
+    console.log("onMount");
     isSignedin.subscribe(async (value) => {
+      console.log("isSignedin", value);
       if (value == true) {
         loadData();
       }
@@ -52,7 +50,10 @@
   }
   async function onSubmit(e) {
     try {
-      await $client.UpdateOne({ collectionname: $collectionname, item: e.detail.data });
+      await $client.UpdateOne({
+        collectionname: $collectionname,
+        item: e.detail.data,
+      });
       goto(base + `/entities/${$collectionname}`);
       // loadData();
     } catch (error) {
@@ -61,6 +62,7 @@
   }
   let showacl = false;
   let showdebug = false;
+  let counter = 0;
 </script>
 
 {#if $errormessage != null && $errormessage != ""}
@@ -71,7 +73,7 @@
   </Card.Root>
 {/if}
 {#if $data != null}
-<ACL bind:value={$data._acl} hidden={!showacl} class="gap-1.5 ml-2 mr-5" />
+  <ACL bind:value={$data._acl} hidden={!showacl} class="gap-1.5 ml-2 mr-5" />
 {/if}
 <Card.Root class="gap-1.5 ml-2 mr-5">
   <!-- <Card.Header>
@@ -79,11 +81,25 @@
   </Card.Header> -->
   <Card.Content>
     <br />
-    <Entity bind:value={$data} on:submit={onSubmit}><Button on:click={()=> showacl = !showacl} >Access Control List</Button></Entity>
+    <Entity bind:value={$data} on:submit={onSubmit} key={counter.toString()}>
+      <HotkeyButton
+        data-shortcut={"Insert"}
+        on:click={() => {
+          let key = prompt("Enter key");
+          $data[key] = "";
+          counter++;
+        }}>Insert</HotkeyButton
+      >
+      <Button on:click={() => (showacl = !showacl)}>Access Control List</Button>
+    </Entity>
   </Card.Content>
 </Card.Root>
 <hr />
-<HotkeyButton hidden data-shortcut={"Control+d,Meta+d" } on:click={() => showdebug = !showdebug }>Toggle debug</HotkeyButton>
+<HotkeyButton
+  hidden
+  data-shortcut={"Control+d,Meta+d"}
+  on:click={() => (showdebug = !showdebug)}>Toggle debug</HotkeyButton
+>
 {#if data != null && showdebug == true}
-<SuperDebug data={data} />
+  <SuperDebug {data} />
 {/if}

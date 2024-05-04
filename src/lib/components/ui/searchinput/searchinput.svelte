@@ -1,8 +1,8 @@
 <script>
-	import { cn } from "$lib/utils.js";
-	let className = undefined;
 	import Search from "lucide-svelte/icons/search";
 	export let value = undefined;
+	import { cn } from "$lib/utils.js";
+	let className = undefined;
 	export { className as class };
 	export let readonly = undefined;
 	let Ref;
@@ -35,6 +35,17 @@
 	)}
 	bind:this={Ref}
 	bind:value
+	on:keyup={e => { 
+		if(e.key == "Escape") {
+		  value = "";
+		  // @ts-ignore
+		  e.target.blur();
+		} else if (e.key == "Enter") {
+		  // @ts-ignore
+		  e.target.blur();
+		}
+	  }}
+  
 	{readonly}
 	on:blur
 	on:change

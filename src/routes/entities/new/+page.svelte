@@ -9,20 +9,43 @@
 
   import { Entity } from "$lib/entity";
   import { client } from "$lib/stores";
+  import { z } from "zod";
 
-  // new Date(1978, 3, 5 )
   let data2 = {
-    name: "New item",
-    _type: "test",
+    name: "collectionname",
     birth: "1988-07-12T02:00:00.000Z",
     age: 42,
-    enabled: true,
-    settings: {
-      admin: false,
-      theme: "dark",
-      autologin: true
+    options: { 
+      timeseries: { 
+        timeField: "_created", 
+        metaField: "", 
+        granularity: "" 
+      },
+      expireAfterSeconds: 86400
     }
   };
+  let schema = z
+    .object({
+      name: z.string().min(2),
+      granularity: z.enum(["second", "minute", "hour"]),
+      expireAfterSeconds: z.coerce.number().int().min(0).optional(),
+      })
+    .passthrough();
+    schema = null;
+  // let schema = z
+  //   .object({
+  //     name: z.string().min(2),
+  //     options: z.object({
+  //       timeseries: z.object({
+  //         timeField: z.string().min(2),
+  //         metaField: z.string().min(2).optional(),
+  //         granularity: z.enum(["", "second", "minute", "hour"]),
+  //       }).optional(),
+  //       expireAfterSeconds: z.number().int().min(0).optional(),
+  //     }).optional(),
+  //   })
+  //   .passthrough();
+
   // let data = writable(data2);
   /** @type {any} */
   let data = { ...data2 };
@@ -48,7 +71,6 @@
       $errormessage = error.message;
     }
   }
-  let showacl = false;
   let showdebug = false;
 </script>
 
@@ -59,25 +81,13 @@
     </Card.Header>
   </Card.Root>
 {/if}
-{#if data != null}
-  <ACL bind:value={data._acl} hidden={!showacl} class="gap-1.5 ml-2 mr-5" />
-{/if}
 <Card.Root class="gap-1.5 ml-2 mr-5">
   <!-- <Card.Header>
     <Card.Title></Card.Title>
   </Card.Header> -->
   <Card.Content>
     <br />
-    <Entity bind:value={data} on:submit={onSubmit}>
-      <HotkeyButton
-        data-shortcut={"Insert"}
-        on:click={() => {
-          let key = prompt("Enter key");
-          data[key] = "";
-        }}>Insert</HotkeyButton
-      >
-
-      <Button on:click={() => (showacl = !showacl)}>Access Control List</Button>
+    <Entity bind:value={data} on:submit={onSubmit} {schema} showtogglehidden={false} showtogglejson={false}>
     </Entity>
   </Card.Content>
 </Card.Root>

@@ -1,33 +1,46 @@
 <script lang="ts">
-	import { base } from "$app/paths";
-	import { goto } from "$app/navigation";
+  import { base } from "$app/paths";
+  import { goto } from "$app/navigation";
   import { Entities } from "$lib/entities";
-  import { writable } from "svelte/store";
+  import { setting, setSetting } from "$lib/pstore";
+  import { client } from "$lib/stores";
   import { SearchInput } from "$lib/components/ui/searchinput";
   const collectionname = "workitems";
-  let query = {};
-  const searchstring = writable("");
+  let query = { _type: "workitem" };
+  const key = `${query._type}s`;
+  let searchstring = setting(key, "searchstring", "");
+  let defaultcolumns = [
+    "name",
+    "state",
+    "retries",
+    "priority",
+    "wiq",
+    "lastrun",
+    "nextrun",
+  ];
 </script>
 
-<SearchInput placeholder="Search roles using text or json query" name="search"
-    dense filled rounded clearable
-    bind:value={$searchstring}
-    data-shortcut={"Control+f,Meta+f"}
-    on:keyup={e => { 
-      if(e.key == "Escape") {
-        $searchstring = "";
-        // @ts-ignore
-        e.target.blur();
-      } else if (e.key == "Enter") {
-        // @ts-ignore
-        e.target.blur();
-      }
-    }}
-    type="search"> 
-  </SearchInput>
-<Entities key="workitems" searchstring={searchstring}  {collectionname} {query} defaultcolumns={["name", "state", "retries", "priority", "wiq", "lastrun", "nextrun"]} 
-  on:insert={e => {
-    goto(base + `/workitems/new`);
+<SearchInput
+  placeholder="Search for {key} using text or json query"
+  bind:value={$searchstring}
+  data-shortcut={"Control+f,Meta+f"}
+></SearchInput>
+<Entities
+  {key}
+  bind:searchstring={$searchstring}
+  {collectionname}
+  {query}
+  {defaultcolumns}
+  on:insert={(e) => {
+    goto(base + `/${key}/new`);
+  }}
+  on:click={(e) => {
+    const id = e.detail.row.dataId;
+    goto(base + `/${key}/${id}`);
+  }}
+  on:delete={async (e) => {
+    const query = { _id: { $in: e.detail.items } };
+    await $client.DeleteMany({ collectionname, query });
+    setSetting(key, "selectedDataIds", {});
   }}
 />
-

@@ -1,33 +1,39 @@
-<script lang="ts">
-	import { base } from "$app/paths";
-	import { goto } from "$app/navigation";
-  import { Entities } from "$lib/entities";
-  import { writable } from "svelte/store";
-  import { SearchInput } from "$lib/components/ui/searchinput";
-  const collectionname = "agents";
-  let query = {_type: "agent"};
-  const searchstring = writable("");
-</script>
-
-<SearchInput placeholder="Search roles using text or json query" name="search"
-    dense filled rounded clearable
+  <script lang="ts">
+    import { base } from "$app/paths";
+    import { goto } from "$app/navigation";
+    import { Entities } from "$lib/entities";
+    import { setting, setSetting } from "$lib/pstore";
+    import { client } from "$lib/stores";
+    import { SearchInput } from "$lib/components/ui/searchinput";
+    const collectionname = "agents";
+    let query = { _type: "agent" };
+    const key = `${query._type}s`;
+    let searchstring = setting(key, "searchstring", "");
+    let defaultcolumns = ["name", "image", "os", "stripeprice"];
+  </script>
+  
+  <SearchInput
+    placeholder="Search for {key} using text or json query"
     bind:value={$searchstring}
     data-shortcut={"Control+f,Meta+f"}
-    on:keyup={e => { 
-      if(e.key == "Escape") {
-        $searchstring = "";
-        // @ts-ignore
-        e.target.blur();
-      } else if (e.key == "Enter") {
-        // @ts-ignore
-        e.target.blur();
-      }
+  ></SearchInput>
+  <Entities
+    {key}
+    bind:searchstring={$searchstring}
+    {collectionname}
+    {query}
+    {defaultcolumns}
+    on:insert={(e) => {
+      goto(base + `/${key}/new`);
     }}
-    type="search"> 
-  </SearchInput>
-<Entities key="agents" searchstring={searchstring}  {collectionname} {query} defaultcolumns={["name", "image", "os", "stripeprice"]}
-  on:insert={e => {
-    goto(base + `/customers/new`);
-  }}
-/>
-
+    on:click={(e) => {
+      const id = e.detail.row.dataId;
+      goto(base + `/${key}/${id}`);
+    }}
+    on:delete={async (e) => {
+      const query = { _id: { $in: e.detail.items } };
+      await $client.DeleteMany({ collectionname, query });
+      setSetting(key, "selectedDataIds", {});
+    }}
+  />
+  

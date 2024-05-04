@@ -1,29 +1,36 @@
 <script lang="ts">
+  import { base } from "$app/paths";
+  import { goto } from "$app/navigation";
   import { Entities } from "$lib/entities";
-  import { writable } from "svelte/store";
+  import { setting, setSetting } from "$lib/pstore";
   import { SearchInput } from "$lib/components/ui/searchinput";
   const collectionname = "audit";
   let query = {};
-  const searchstring = writable("");
+  const key = `auditlogs`;
+  let searchstring = setting(key, "searchstring", "");
+  let defaultcolumns = [    "name",
+      "type",
+      "remoteip",
+      "_type",
+      "_created"
+  ];
 </script>
 
-<SearchInput placeholder="Search roles using text or json query" name="search"
-    dense filled rounded clearable
-    bind:value={$searchstring}
-    data-shortcut={"Control+f,Meta+f"}
-    on:keyup={e => { 
-      if(e.key == "Escape") {
-        $searchstring = "";
-        // @ts-ignore
-        e.target.blur();
-      } else if (e.key == "Enter") {
-        // @ts-ignore
-        e.target.blur();
-      }
-    }}
-    type="search"> 
-  </SearchInput>
-<Entities showInsert={false} key="auditlogs" searchstring={searchstring}  {collectionname} {query} defaultcolumns={["name", "type", "imposter", "agent", "versin", "remoteip", "_created"]} />
-
-
-
+<SearchInput
+  placeholder="Search audit log using text or json query"
+  bind:value={$searchstring}
+  data-shortcut={"Control+f,Meta+f"}
+></SearchInput>
+<Entities
+  {key}
+  bind:searchstring={$searchstring}
+  {collectionname}
+  {query}
+  {defaultcolumns}
+  showInsert={false}
+  showDelete={false}  
+  on:click={(e) => {
+    const id = e.detail.row.dataId;
+    goto(base + `/${key}/${id}`);
+  }}
+/>

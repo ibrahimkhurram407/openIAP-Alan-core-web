@@ -61,7 +61,11 @@
   let currentcollectionname = collectionname;
   export let query = {};
   export let key: string;
-  export let searchstring: Writable<string> = writable("");
+  // export let searchstring: Writable<string> = writable("");
+  // export let searchstring = setting(key, "searchstring", "");
+  export let searchstring = "";
+  let currentsearchstring = searchstring;
+
   export let multiselect = false;
   export let showquery = false;
   export let explain = false;
@@ -74,7 +78,7 @@
   // deleteAllSettings
   // deleteSettings(key)
   let unsubscribe4;
-  //let unsubscribe5;
+  let unsubscribe5;
 
   export let defaultcolumns = ["_id", "", "name", "_created", "_modified"];
 
@@ -90,7 +94,7 @@
   multiselect = Object.keys($_selectedDataIds).length > 0;
   let psearchstring = setting(key, "searchstring", "");
   if ($psearchstring != "") {
-    $searchstring = $psearchstring;
+    searchstring = $psearchstring;
   }
 
   if (isNaN(parseInt($_pageindex))) {
@@ -153,6 +157,7 @@
         const errorMessage =
           "Cannot parse " + (isEmptyArray ? "an empty array" : String(txt));
         $error = errorMessage;
+        console.error(errorMessage);
         throw new TypeError(errorMessage);
       }
       const syntaxErr = e.message.match(/^Unexpected token.*position\s+(\d+)/i);
@@ -178,6 +183,7 @@
     try {
       return Function(`"use strict";return (` + jsStr + `)`)();
     } catch (e) {
+      console.error(e);
       $error = e.message;
       return null;
     }
@@ -185,19 +191,20 @@
   function createQuery() {
     let q = { ...query };
     psearchstring = setting(key, "searchstring", "");
-    $psearchstring = $searchstring;
+    $psearchstring = searchstring;
 
-    if ($searchstring == null || $searchstring == "") {
+    if (searchstring == null || searchstring == "") {
       return q;
     }
-    if ($searchstring.indexOf("{") == 0) {
-      if ($searchstring.lastIndexOf("}") == $searchstring.length - 1) {
+    if (searchstring.indexOf("{") == 0) {
+      if (searchstring.lastIndexOf("}") == searchstring.length - 1) {
         try {
-          q = parseJson($searchstring, null, null);
+          q = parseJson(searchstring, null, null);
         } catch (e) {
           try {
-            q = safeEval($searchstring);
+            q = safeEval(searchstring);
           } catch (error2) {
+            console.error(error2);
             $error = e.message;
             return null;
           }
@@ -207,7 +214,7 @@
       }
     } else {
       // q["name"] = new RegExp([searchstring.substring(1)].join(""), "i")
-      q["name"] = { $regex: $searchstring, $options: "i" };
+      q["name"] = { $regex: searchstring, $options: "i" };
     }
     return q;
   }
@@ -250,18 +257,20 @@
       );
     }
     try {
-      const dt = Date.parse(sample);
-      if (dt != null && isNaN(dt) == false) {
-        fixedColumnsSizes[id] = 150;
-        return columns.push(
-          table.column({
-            accessor: (cell) => cell[id],
-            header: id,
-            cell: ({ value }) => {
-              return createRender(DataTableTimesince, { value });
-            },
-          }),
-        );
+      if (sample != null && typeof sample != "number") {
+        const dt = Date.parse(sample);
+        if (dt != null && isNaN(dt) == false) {
+          fixedColumnsSizes[id] = 150;
+          return columns.push(
+            table.column({
+              accessor: (cell) => cell[id],
+              header: id,
+              cell: ({ value }) => {
+                return createRender(DataTableTimesince, { value });
+              },
+            }),
+          );
+        }
       }
     } catch (e) {}
     if (id == "name") {
@@ -363,7 +372,19 @@
     selectedDataIds = viewModel.pluginStates.select.selectedDataIds;
     if (unsubscribe4) unsubscribe4();
     unsubscribe4 = selectedDataIds.subscribe((value) => {
+      if(value == null) return;
+      var newvalue = JSON.stringify(value);
+      var current = JSON.stringify($_selectedDataIds);
+      if (newvalue == current) return;
       _selectedDataIds.set(value);
+    });
+    // if (unsubscribe5) unsubscribe5();
+    unsubscribe5 = _selectedDataIds.subscribe((value) => {
+      if(value == null) return;
+      var newvalue = JSON.stringify(value);
+      var current = JSON.stringify($selectedDataIds);
+      if (newvalue == current) return;
+      selectedDataIds.set(value);
     });
 
     updateShowColumns(viewModel);
@@ -386,7 +407,7 @@
   $: rows = viewModel.rows;
   $: if (collectionname != currentcollectionname) {
     psearchstring = setting(key, "searchstring", "");
-    $searchstring = $psearchstring;
+    searchstring = $psearchstring;
 
     currentcollectionname = collectionname;
     ShowColumns = setting(key, "ShowColumns", {});
@@ -395,6 +416,11 @@
     updateSortKeys();
 
     $pageIndex = $_pageindex;
+    $serverItemCount = -1;
+    GetData();
+  }
+  $: if (searchstring != currentsearchstring) {
+    currentsearchstring = searchstring;
     $serverItemCount = -1;
     GetData();
   }
@@ -464,6 +490,7 @@
           if (filteredresults.length == 3) break;
         }
       } catch (e) {
+        console.error(e);
         $error = e.message;
       }
       loading = false;
@@ -480,11 +507,12 @@
         }
       }
     } catch (e) {
+      console.error(e);
       $error = e.message;
     }
   };
   onMount(() => {
-    const unsubscribe = searchstring.subscribe(GetData);
+    // const unsubscribe = searchstring.subscribe(GetData);
     const unsubscribe2 = isSignedin.subscribe((value) => {
       if (value) {
         GetData();
@@ -496,7 +524,7 @@
     });
 
     return () => {
-      unsubscribe();
+      // unsubscribe();
       unsubscribe2();
       unsubscribe3();
       if (unsubscribe4) unsubscribe4();
@@ -553,7 +581,7 @@
                   {#if cell.id === "name"}
                     <Table.Head {...attrs} style="width: *;">
                       <Button
-                      tabindex="-1"
+                        tabindex="-1"
                         variant="ghost"
                         on:click={(e) => toggleSort(e, cell.id)}
                       >
@@ -571,7 +599,7 @@
                       style="width: {fixedColumnsSizes[cell.id]}px;"
                     >
                       <Button
-                      tabindex="-1"
+                        tabindex="-1"
                         variant="ghost"
                         on:click={(e) => toggleSort(e, cell.id)}
                       >
@@ -593,7 +621,7 @@
                   {:else}
                     <Table.Head
                       {...attrs}
-                      style="width: {100 / visibleColumnsCount()}%;"
+                      style="width: {50 / visibleColumnsCount()}%;"
                     >
                       <Button
                         tabindex="-1"
@@ -622,7 +650,7 @@
               {#each row.cells as cell (cell.id)}
                 <Subscribe attrs={cell.attrs()} let:attrs>
                   {#if cell.id === "name" && multiselect == false}
-                    <Table.Cell 
+                    <Table.Cell
                       {...attrs}
                       on:click={() =>
                         dispatch("click", { row, collectionname })}

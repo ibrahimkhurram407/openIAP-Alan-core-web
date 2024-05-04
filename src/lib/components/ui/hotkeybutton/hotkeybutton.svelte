@@ -18,7 +18,6 @@
 
 	});
 </script>
-
 <div bind:this={Ref} style:display={!hidden == true ? "block" : "none"}>
 <Button.Root on:click on:keydown {...$$restProps}>
 	<slot />
