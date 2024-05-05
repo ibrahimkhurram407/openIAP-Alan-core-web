@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from "svelte";
+  import { onMount, createEventDispatcher, tick } from "svelte";
   import SuperDebug from "sveltekit-superforms";
   import { client, isSignedin } from "$lib/stores";
   import {
@@ -72,6 +72,7 @@
   export let showInsert = true;
   export let showDelete = true;
   export let multiSort = false;
+  export let magickey = 0;
 
   let explainquery = writable(null);
 
@@ -372,7 +373,7 @@
     selectedDataIds = viewModel.pluginStates.select.selectedDataIds;
     if (unsubscribe4) unsubscribe4();
     unsubscribe4 = selectedDataIds.subscribe((value) => {
-      if(value == null) return;
+      if (value == null) return;
       var newvalue = JSON.stringify(value);
       var current = JSON.stringify($_selectedDataIds);
       if (newvalue == current) return;
@@ -380,7 +381,7 @@
     });
     // if (unsubscribe5) unsubscribe5();
     unsubscribe5 = _selectedDataIds.subscribe((value) => {
-      if(value == null) return;
+      if (value == null) return;
       var newvalue = JSON.stringify(value);
       var current = JSON.stringify($selectedDataIds);
       if (newvalue == current) return;
@@ -440,6 +441,10 @@
       .filter(([, hide]) => !hide)
       .map(([id]) => id),
   );
+  let _magickey = magickey;
+  $: if(magickey != _magickey) {
+    GetData();
+  }
 
   const nonhidableCols = ["_id", ""];
 
@@ -785,11 +790,12 @@
       size="sm"
       hidden={!showDelete}
       data-shortcut={"Delete"}
-      on:click={() =>
+      on:click={() => {
         dispatch("delete", {
           collectionname: collectionname,
           items: Object.keys($selectedDataIds),
-        })}>Delete</HotkeyButton
+        });
+      }}>Delete</HotkeyButton
     >
     <HotkeyButton
       variant="outline"

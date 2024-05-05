@@ -5,7 +5,7 @@
   import { setting, setSetting } from "$lib/pstore";
   import { client } from "$lib/stores";
   import { SearchInput } from "$lib/components/ui/searchinput";
-  const collectionname = "user";
+  const collectionname = "users";
   let query = { _type: "user" };
   const key = `${query._type}s`;
   let searchstring = setting(key, "searchstring", "");

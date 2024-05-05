@@ -35,9 +35,7 @@
   }
 
   onMount(() => {
-    console.log("onMount");
     isSignedin.subscribe(async (value) => {
-      console.log("isSignedin", value);
       if (value == true) {
         loadData();
       }

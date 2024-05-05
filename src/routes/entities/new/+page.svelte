@@ -5,7 +5,6 @@
   import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
   import * as Card from "$lib/components/ui/card";
   import { ACL } from "$lib/acl/index.js";
-  import Button from "$lib/components/ui/button/button.svelte";
 
   import { Entity } from "$lib/entity";
   import { client } from "$lib/stores";
@@ -13,38 +12,36 @@
 
   let data2 = {
     name: "collectionname",
-    birth: "1988-07-12T02:00:00.000Z",
-    age: 42,
     options: { 
       timeseries: { 
-        timeField: "_created", 
+        timeField: "", 
         metaField: "", 
         granularity: "" 
       },
-      expireAfterSeconds: 86400
+      expireAfterSeconds: null
     }
   };
-  let schema = z
-    .object({
-      name: z.string().min(2),
-      granularity: z.enum(["second", "minute", "hour"]),
-      expireAfterSeconds: z.coerce.number().int().min(0).optional(),
-      })
-    .passthrough();
-    schema = null;
   // let schema = z
   //   .object({
   //     name: z.string().min(2),
-  //     options: z.object({
-  //       timeseries: z.object({
-  //         timeField: z.string().min(2),
-  //         metaField: z.string().min(2).optional(),
-  //         granularity: z.enum(["", "second", "minute", "hour"]),
-  //       }).optional(),
-  //       expireAfterSeconds: z.number().int().min(0).optional(),
-  //     }).optional(),
-  //   })
+  //     granularity: z.enum(["second", "minute", "hour"]),
+  //     expireAfterSeconds: z.coerce.number().int().min(0).optional(),
+  //     })
   //   .passthrough();
+  //   schema = null;
+  let schema = z
+    .object({
+      name: z.string().min(2),
+      options: z.object({
+        timeseries: z.object({
+          timeField: z.string().optional(),
+          metaField: z.string().optional(),
+          granularity: z.enum(["", "second", "minute", "hour"]),
+        }).optional(),
+        expireAfterSeconds: z.coerce.number().int().min(0).optional(),
+      }).optional(),
+    })
+    .passthrough();
 
   // let data = writable(data2);
   /** @type {any} */
@@ -61,17 +58,17 @@
   }
   async function onSubmit(e) {
     try {
-      data = { ...data2 };
-      await $client.InsertOne({
-        collectionname: $collectionname,
-        item: e.detail.data,
-      });
-      goto(base + `/entities/${$collectionname}`);
+      const data2 = {"collectionname": data.name, expireAfterSeconds: data.expireAfterSeconds, timeseries: data.options.timeseries}
+      isLoading = true;
+      await $client.CreateCollection(data2)
+      goto(base + `/entities/${data.name}`);
     } catch (error) {
       $errormessage = error.message;
     }
+    isLoading = false;
   }
   let showdebug = false;
+  let isLoading = false;
 </script>
 
 {#if $errormessage != null && $errormessage != ""}
@@ -87,7 +84,7 @@
   </Card.Header> -->
   <Card.Content>
     <br />
-    <Entity bind:value={data} on:submit={onSubmit} {schema} showtogglehidden={false} showtogglejson={false}>
+    <Entity bind:value={data} on:submit={onSubmit} {schema} showtogglehidden={false} showtogglejson={false} {isLoading}>
     </Entity>
   </Card.Content>
 </Card.Root>
@@ -100,3 +97,6 @@
 {#if data != null && showdebug == true}
   <SuperDebug {data} />
 {/if}
+
+
+

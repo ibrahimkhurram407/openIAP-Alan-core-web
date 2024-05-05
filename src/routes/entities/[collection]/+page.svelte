@@ -2,6 +2,7 @@
   import { base } from "$app/paths";
   import { goto } from "$app/navigation";
   import SuperDebug from "sveltekit-superforms";
+  import * as ContextMenu from "$lib/components/ui/context-menu";
   import { client, isSignedin, collections } from "$lib/stores";
   import { setting, setSetting } from "$lib/pstore";
   import { writable } from "svelte/store";
@@ -15,6 +16,7 @@
   import Database from "lucide-svelte/icons/database";
   import Fileclock from "lucide-svelte/icons/file-clock";
   import Folder from "lucide-svelte/icons/folder";
+  import X from "lucide-svelte/icons/x";
   // https://muonw.github.io/muonw-powertable/examples/example8
 
   // https://melt-ui.com/
@@ -137,10 +139,10 @@
     };
   });
   GetData();
+  let rightclickcollectionname = "";
   let explain = false;
   let showquery = false;
-
-  function onClick({ id, row }) {}
+  let magickey = 0;
 </script>
 
 <div class="grid grid-cols-[1fr,min-content,min-content,0px] gap-2 mb-1">
@@ -194,28 +196,63 @@
     <div class="grid grid-cols-[min-content,1fr] ml-1">
       <!-- -->
       <ScrollArea class="h-[calc(100vh-10rem)] w-full rounded-md border">
-        <div class="mx-2">
-          {#each $collections as item, index}
-            <Button
-              class="justify-start w-full"
-              tabindex="-1"
-              variant={$collectionname == item.name ? "secondary" : "ghost"}
-              id={"item-" + index}
-              on:click={() => {
-                collectionname.set(item.name);
-                $collectionindex = $collections.findIndex(
-                  (x) => x.name == $collectionname,
-                );
-              }}
-            >
-              <svelte:component
-                this={icon(item)}
-                class="mr-2 h-4 w-4 flex-shrink-0"
-              />
-              {item.name}
-            </Button>
-          {/each}
-        </div>
+        <ContextMenu.Root>
+          <ContextMenu.Trigger
+          >
+          <div class="mx-2">
+            {#each $collections as item, index}
+            <div class="flex items-center" 
+            role="button" tabindex="-1"
+            on:contextmenu|preventDefault={(event)=> {
+              rightclickcollectionname = item.name;
+            }}>
+              <Button
+                class="justify-start w-full"
+                tabindex="-1"
+                variant={$collectionname == item.name ? "secondary" : "ghost"}
+                id={"item-" + index}
+                on:click={() => {
+                  collectionname.set(item.name);
+                  $collectionindex = $collections.findIndex(
+                    (x) => x.name == $collectionname,
+                  );
+                }}
+              >
+                <svelte:component
+                  this={icon(item)}
+                  class="mr-2 h-4 w-4 flex-shrink-0"
+                />
+                {item.name}
+              </Button>
+            </div>
+            {/each}
+          </div>
+          </ContextMenu.Trigger>
+          <ContextMenu.Content class="w-64">
+            <ContextMenu.Item inset on:click={
+              () => {
+                goto(base + `/entities/new`);
+              }                          
+            }>
+              Add collection
+            </ContextMenu.Item>
+            <ContextMenu.Item inset on:click={
+              () => {
+                try {
+                  $client.DropCollection({ collectionname: rightclickcollectionname });
+                  $collections = $collections.filter((x) => x.name != rightclickcollectionname);
+                  magickey++;
+                  $collectionname = "entities";
+                } catch (error) {
+                  console.error("Error deleting collection", error);
+                }
+
+              }                          
+            }>
+              Delete
+            </ContextMenu.Item>
+          </ContextMenu.Content>
+        </ContextMenu.Root>
       </ScrollArea>
 
       <div class="">
@@ -226,6 +263,7 @@
           {query}
           {explain}
           {showquery}
+          {magickey}
           on:click={(e) => {
             const id = e.detail.row.dataId;
             goto(base + `/entities/${e.detail.collectionname}/${id}`);
@@ -234,13 +272,13 @@
             goto(base + `/entities/${e.detail.collectionname}/new`);
           }}
           on:delete={async (e) => {
-            console.log("delete", e.detail.items);
             const query = { _id: { $in: e.detail.items } };
             await $client.DeleteMany({
               collectionname: e.detail.collectionname,
               query,
             });
             setSetting("entities_" + $collectionname, "selectedDataIds", {});
+            magickey++;
           }}
         />
       </div>
@@ -262,3 +300,5 @@
 >
 
 <!-- <SuperDebug data={$selectedDataIds} /> -->
+
+

@@ -36,6 +36,9 @@
 					isSignedinTimer = false;
 				}					
 				isSignedin.set(true);
+				$client.onConnected = async (client) => {
+					isSignedin.set(true);
+				};
 			}
 		} catch (error) {
 			isSignedin.set(false);

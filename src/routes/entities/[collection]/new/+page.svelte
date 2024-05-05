@@ -14,14 +14,14 @@
   let data2 = {
     name: "New item",
     _type: "test",
-    birth: "1988-07-12T02:00:00.000Z",
-    age: 42,
-    enabled: true,
-    settings: {
-      admin: false,
-      theme: "dark",
-      autologin: true
-    }
+    // birth: "1988-07-12T02:00:00.000Z",
+    // age: 42,
+    // enabled: true,
+    // settings: {
+    //   admin: false,
+    //   theme: "dark",
+    //   autologin: true
+    // }
   };
   // let data = writable(data2);
   /** @type {any} */

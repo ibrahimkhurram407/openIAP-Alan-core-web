@@ -1,5 +1,6 @@
 <script>
-	import * as Button from "$lib/components/ui/button/index.js";
+	// import * as Button from "$lib/components/ui/button/index.js";
+	import { LoadingButton } from "$lib/components/ui/loadingbutton/index.js";
 	export let hidden = false;
 	let Ref;
 	import { onMount } from "svelte";
@@ -19,7 +20,7 @@
 	});
 </script>
 <div bind:this={Ref} style:display={!hidden == true ? "block" : "none"}>
-<Button.Root on:click on:keydown {...$$restProps}>
+<LoadingButton on:click on:keydown {...$$restProps}>
 	<slot />
-</Button.Root>
+</LoadingButton>
 </div>

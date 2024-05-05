@@ -16,7 +16,7 @@
   import { page } from "$app/stores";
   import { setting } from "$lib/pstore";
   import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
-  import { Button } from "$lib/components/ui/button";
+  import { LoadingButton } from "$lib/components/ui/loadingbutton/index.js";
   const collectionname = setting("entities", "collection", "entities");
   if ($page.params.collection != null && $page.params.collection != "") {
     $collectionname = $page.params.collection;
@@ -27,10 +27,11 @@
   let Ref;
   let message = "";
   let showhidden = false;
-  let loading = false;
+  let _keyloading = false;
   export let submitlabel = "Save";
   export let showtogglehidden = true;
   export let showtogglejson = true;
+  export let isLoading = false;
   export let key = ""; // force updating schema by updating key
   let vform;
   async function onsubmit(e) {
@@ -62,42 +63,44 @@
   }
   function generateZodvalue(_value) {
     if (typeof _value === "string") {
-        const dt = Date.parse(_value);
-        if (dt != null && isNaN(dt) == false) {
-          try {
-            parseAbsolute(value, "UTC");
-            return z.coerce.date();
-          } catch (error) {
-            return  z.string();
-          }
-        } else {
-          return  z.string();
+      const dt = Date.parse(_value);
+      if (dt != null && isNaN(dt) == false) {
+        try {
+          parseAbsolute(_value, "UTC");
+          return z.coerce.date();
+        } catch (error) {
+          return z.string();
         }
-        // base[key] = z.string();
-      } else if (typeof _value === "number") {
-        return  z.coerce.number();
-      } else if (typeof _value === "bigint") {
-        return  z.coerce.bigint();
-      } else if (typeof _value === "boolean") {
-        return  z.boolean();
-      } else if (_value instanceof Date) {
-        return  z.date();
       } else {
-        if (Array.isArray(_value)) {
-          //return z.any();
-          if(typeof _value[0] === "object") {
-            return  z.array(z.any());
-          } else {
-            return z.array(generateZodvalue(_value));
-          }
-        } else {
-          //return z.any();
-          return generateZod(_value);
-        }
+        return z.string();
       }
+      // base[key] = z.string();
+    } else if (typeof _value === "number") {
+      return z.coerce.number();
+    } else if (typeof _value === "bigint") {
+      return z.coerce.bigint();
+    } else if (typeof _value === "boolean") {
+      return z.boolean();
+    } else if (_value instanceof Date) {
+      return z.date();
+    } else {
+      if (Array.isArray(_value) && _value.length > 0) {
+        if (typeof _value[0] === "object") {
+          return z.array(z.any());
+        } else {
+          return z.array(generateZodvalue(_value[0]));
+        }
+        //base[key] = z.any();
+        // base[key] = z.array(generateZod(_value[0]));
+      } else if (Array.isArray(_value)) {
+        return z.any();
+      } else {
+        // base[key] = z.any();
+        return generateZod(_value);
+      }
+    }
   }
   function generateZod(value) {
-    console.log("generateZod", value);
     if (value == null) return z.any();
     /** @type {any} */
     const base = {};
@@ -107,47 +110,11 @@
       const _value = value[key];
       if (key == "name" || key == "_type") {
         base[key] = z.string().min(2);
-      } else if (typeof _value === "string") {
-        const dt = Date.parse(_value);
-        if (dt != null && isNaN(dt) == false) {
-          try {
-            parseAbsolute(_value, "UTC");
-            base[key] = z.coerce.date();
-          } catch (error) {
-            console.error("Error in parseAbsolute", _value, error);
-            base[key] = z.string();
-          }
-        } else {
-          base[key] = z.string();
-        }
-        // base[key] = z.string();
-      } else if (typeof _value === "number") {
-        base[key] = z.coerce.number();
-      } else if (typeof _value === "bigint") {
-        base[key] = z.coerce.bigint();
-      } else if (typeof _value === "boolean") {
-        base[key] = z.boolean();
-      } else if (_value instanceof Date) {
-        base[key] = z.date();
       } else {
-        if (Array.isArray(_value) && _value.length > 0) {
-          if(typeof _value[0] === "object") {
-            base[key] = z.array(z.any());
-          } else {
-            base[key] = z.array(generateZodvalue(_value[0]));
-          }
-          //base[key] = z.any();
-          // base[key] = z.array(generateZod(_value[0]));
-        } else if (Array.isArray(_value)) {
-          base[key] = z.any();
-        } else {
-          // base[key] = z.any();
-          base[key] = generateZod(_value);
-        }
+        base[key] = generateZodvalue(_value);
       }
     }
     // _Schema = z.object(base); // .passthrough();
-    // console.log("generateSchema", base);
     return z.object(base);
   }
   async function generateSchema(value, schema) {
@@ -191,11 +158,11 @@
   }
   let _key = key;
   $: if (_key != key) {
-    loading = true;
+    _keyloading = true;
     generateSchema(value, schema);
     _key = key;
     tick().then(() => {
-      loading = false;
+      _keyloading = false;
     });
   }
   $: if (vform != null) {
@@ -210,25 +177,28 @@
     </Card.Header>
   </Card.Root>
 {/if}
-{#if !showjson && loading == false}
+{#if !showjson && _keyloading == false}
   <form bind:this={Ref} method="POST" on:submit={onsubmit}>
     {#each keys as key}
       <Field
         form={sform}
         name={key}
         shape={_Schema.shape[key]}
+        {isLoading}
         bind:value={value[key]}
       ></Field>
     {/each}
     <div class="flex items-center space-x-4 py-4">
-      <Form.Button>{submitlabel}</Form.Button>
+      <LoadingButton type="submit" {isLoading} on:click={onsubmit}>{submitlabel}</LoadingButton>
       <HotkeyButton
+        {isLoading}
         hidden={!showtogglehidden}
         on:click={() => (showhidden = !showhidden)}
         data-shortcut={"Control+h,Meta+h"}
         >{showhidden ? "Hide private" : "Show private"}</HotkeyButton
       >
       <HotkeyButton
+        {isLoading}
         hidden={!showtogglejson}
         on:click={() => (showjson = !showjson)}
         data-shortcut={"Control+j,Meta+j"}>Toogle JSON</HotkeyButton
@@ -238,10 +208,11 @@
   </form>
 {/if}
 {#if showjson}
-  <ObjectInput bind:value />
+  <ObjectInput bind:value disabled={isLoading} />
   <div class="flex items-center space-x-4 py-4">
-    <Button on:click={onsubmit}>{submitlabel}</Button>
+    <LoadingButton type="submit" {isLoading} on:click={onsubmit}>{submitlabel}</LoadingButton>
     <HotkeyButton
+      {isLoading}
       hidden={!showtogglejson}
       on:click={() => (showjson = !showjson)}
       data-shortcut={"Control+j,Meta+j"}>Toogle JSON</HotkeyButton

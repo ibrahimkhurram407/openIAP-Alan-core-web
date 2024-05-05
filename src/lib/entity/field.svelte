@@ -14,13 +14,14 @@
   import { cn } from "$lib/utils.js";
   import { DateFormatter, parseAbsolute } from "@internationalized/date";
   import { z } from "zod";
-  import Button from "$lib/components/ui/button/button.svelte";
+  import { LoadingButton } from "$lib/components/ui/loadingbutton/index.js";
 	let className = undefined;
 	export { className as class };
   /** @type {any} */
   export let value;
   export let name = "";
   export let form;
+  export let isLoading = false;
   // export let type;
   export let shape;
   let dtvalue = null;
@@ -32,7 +33,7 @@
     // Standard Zod types
     if (zodObject instanceof z.ZodString) {
       return "text";
-    } else if (zodObject instanceof z.ZodNumber) {
+    } else if (zodObject instanceof z.ZodNumber ||zodObject instanceof z.ZodBigInt ) {
       return "number";
     } else if (zodObject instanceof z.ZodBoolean) {
       return "checkbox";
@@ -47,8 +48,14 @@
     } else if (zodObject instanceof z.ZodArray) {
       return "array";
     }
-    console.log("Unknown type", zodObject, "for", name);
+    console.debug("Unknown type", zodObject, "for", name);
     return "any";
+  }
+  function getShape(zodObject) {
+    if (zodObject instanceof z.ZodOptional) {
+      return zodObject.unwrap();
+    }
+    return zodObject
   }
   let type = getType(shape);
   $: if (type == "date") {
@@ -56,7 +63,6 @@
       dtvalue = value ? parseAbsolute(value, "UTC") : undefined;
     } catch (error) {
       console.error("Error in parseAbsolute", value, error);
-      console.log(value);
     }
     // if (
     //     value.indexOf("\n") > -1 ||
@@ -95,7 +101,7 @@
   <Form.Field {form} {name} class={cn("", className)}>
     <Form.Control let:attrs>
       <Form.Label>{name}</Form.Label>
-      <Checkbox {...attrs} id={name} bind:checked={value} />
+      <Checkbox {...attrs} id={name} bind:checked={value} disabled={isLoading} />
     </Form.Control>
     <Form.FieldErrors />
   </Form.Field>
@@ -139,7 +145,7 @@
   <Form.Field {form} {name} class={cn("", className)}>
     <Form.Control let:attrs>
       <Form.Label>{name}</Form.Label>
-      <ObjectInput bind:value name={attrs.name} />
+      <ObjectInput bind:value name={attrs.name} disabled={isLoading} />
     </Form.Control>
     <Form.FieldErrors />
   </Form.Field>
@@ -151,14 +157,17 @@
       </h3>
       <div class="ml-2">
         {#each Object.keys(value) as subkey}
+        <!-- object
+        <pre>{JSON.stringify(getShape(shape)._cached.shape[subkey], null, 2)}</pre>       -->
           <!-- <Input id={name} bind:value={value[subkey]} type="text" /> -->
           <!-- {subkey}
     <pre>{JSON.stringify(shape._cached.shape[subkey], null, 2)}</pre> -->
 
           <Field
-            shape={shape._cached?.shape[subkey]}
+            shape={getShape(getShape(shape)._cached.shape[subkey])}
             {form}
             name={subkey}
+            {isLoading}
             bind:value={value[subkey]}
           ></Field>
         {/each}
@@ -168,7 +177,7 @@
     <Form.Field {form} {name} class={cn("", className)}>
       <Form.Control let:attrs>
         <Form.Label>{name}</Form.Label>
-        <ObjectInput bind:value name={attrs.name} />
+        <ObjectInput bind:value name={attrs.name} disabled={isLoading} />
       </Form.Control>
       <Form.FieldErrors />
     </Form.Field>
@@ -191,8 +200,7 @@
   <div class={cn("rounded-md border", className)}>
     <h3 class="text-lg font-semibold leading-none tracking-tight ml-1 mt-3">
       {name}
-      <Button
-      variant="ghost" class="mt-2 text-red-800"
+      <LoadingButton variant="ghost" class="mt-2 text-red-800" {isLoading}
       on:click={() => {
         if(getType(shape._def.type) == "object" || getType(shape._def.type) == "any") {
           value = [{}].concat(value)
@@ -202,17 +210,17 @@
       }}
     >
       <Plus class="h-4 w-4" />
-    </Button>
+    </LoadingButton>
     </h3>
     <div class="ml-2">
       {#each value as subvalue}
         <div class="flex">
-          <Button
+          <LoadingButton disabled={isLoading}
             variant="outline" class="mt-2 text-red-800"
             on:click={() => (value = value.filter((item) => item !== subvalue))}
           >
             <X class="h-4 w-4" />
-          </Button>
+          </LoadingButton>
           <Field shape={shape._def.type} {form} bind:value={subvalue} class="flex-grow"></Field>
         </div>
       {/each}
@@ -223,7 +231,7 @@
     <Form.Control let:attrs>
       <Form.Label>{name}</Form.Label>
       <!--  bind:value={value} -->
-      <Select.Root portal={null}>
+      <Select.Root portal={null} disabled={isLoading}>
         <Select.Trigger class="w-[180px]">
           <Select.Value placeholder="Select {name}" />
         </Select.Trigger>
@@ -239,7 +247,7 @@
             {/each}
           </Select.Group>
         </Select.Content>
-        <Select.Input name="favoriteFruit" />
+        <Select.Input name="Select one" />
       </Select.Root>
     </Form.Control>
     <Form.FieldErrors />
@@ -260,7 +268,8 @@
   <Form.Field {form} {name} class={cn("", className)}>
     <Form.Control let:attrs>
       <h3 class="text-lg font-semibold leading-none tracking-tight">
-        <input {...attrs} id={name} bind:value type="text" />
+        <!-- svelte-ignore a11y-autofocus -->
+        <input autofocus {...attrs} id={name} bind:value type="text" disabled={isLoading} />
       </h3>
     </Form.Control>
     <Form.FieldErrors />
@@ -269,7 +278,7 @@
   <Form.Field {form} {name} class={cn("", className)}>
     <Form.Control let:attrs>
       <Form.Label>{name}</Form.Label>
-      <Input {...attrs} id={name} bind:value {type} />
+      <Input {...attrs} id={name} bind:value {type} disabled={isLoading} />
     </Form.Control>
     <Form.FieldErrors />
   </Form.Field>

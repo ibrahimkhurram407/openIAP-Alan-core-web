@@ -1,6 +1,6 @@
 <script>
     import { signIn } from "$lib/auth";
-	import { isAuthenticated, user } from "$lib/stores";
+	import { isAuthenticated, isSignedin, user } from "$lib/stores";
 	import { Button } from "$lib/components/ui/button";
 	
 </script>
@@ -13,5 +13,3 @@
 	<Button on:click={signIn} class="ml-2">Sign In / ⌘Q </Button> 
 	{/if}
 </div>
-
-
