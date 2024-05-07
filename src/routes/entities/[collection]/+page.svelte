@@ -117,6 +117,7 @@
   }
   import { onMount, tick } from "svelte";
   import Toggle from "$lib/components/ui/toggle/toggle.svelte";
+    import Input from "$lib/components/ui/input/input.svelte";
   onMount(() => {
     eventStore.addListener(onSearchSelect);
     const unsubscribe2 = collectionindex.subscribe(onCollectionindex);
@@ -239,6 +240,8 @@
             <ContextMenu.Item inset on:click={
               () => {
                 try {
+                  const response = prompt("Are you sure you want to delete the collection " + rightclickcollectionname + "? Type 'delete' to confirm.");
+                  if (response != "delete") return;
                   $client.DropCollection({ collectionname: rightclickcollectionname });
                   $collections = $collections.filter((x) => x.name != rightclickcollectionname);
                   magickey++;

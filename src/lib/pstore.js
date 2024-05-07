@@ -88,18 +88,14 @@ export function setting(page, key, defaultValue) {
     } catch (error) {
       jsonsuccess = false;
     }
-    // if(key == "ShowColumns") debugger;
     if (value == null || value == "") {
-      // deleteSetting(page, key);
       localStorage.removeItem("store_" + fullKey);
     } else if (jsonsuccess && json1 == json2) {
-      // deleteSetting(page, key);
       localStorage.removeItem("store_" + fullKey);
     } else {
       if (value instanceof Object) {
         var keys = Object.keys(value);
         if (keys.length == 0) {
-          // deleteSetting(page, key);
           localStorage.removeItem("store_" + fullKey);
           return;
         }

@@ -1,6 +1,6 @@
 <script lang="ts">
   import Check from "lucide-svelte/icons/check";
-  import { Button } from "$lib/components/ui/button/index.js";
+  import { LoadingButton } from "$lib/components/ui/loadingbutton/index.js";
   import { cn } from "$lib/utils.js";
   import { EntitySelector } from "$lib/entityselector/index.js";
 
@@ -14,6 +14,7 @@
   export let value = null;
   let className = undefined;
   export { className as class };
+  export let isLoading = false;
   // let entity;
   function isBitSet(value, bit) {
     return (value & bit) === bit;
@@ -26,11 +27,11 @@
 </script>
 
 <div class={cn("flex flex-wrap", className)}>
-  <EntitySelector bind:value={value} />
+  <EntitySelector bind:value={value} class="w-[250px]" />
   {#each items as item}
     <div class="">
-      <Button
-        class="w-[120px]"
+      <LoadingButton
+        class="w-[120px]" {isLoading}
         on:click={() => {
           value.rights = toogleBit(value.rights, item.value);
         }}
@@ -42,7 +43,7 @@
           )}
         />
         {item.label}
-      </Button>
+      </LoadingButton>
     </div>
   {/each}
   <slot />

@@ -1,69 +1,129 @@
-<script>
+<script lang="ts">
   import { base } from "$app/paths";
   import { goto } from "$app/navigation";
-  import SuperDebug from "sveltekit-superforms";
-  import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
-  import * as Card from "$lib/components/ui/card";
-  import { ACL } from "$lib/acl/index.js";
-  import Button from "$lib/components/ui/button/button.svelte";
-
-  import { Entity } from "$lib/entity";
   import { client } from "$lib/stores";
+  import { Input } from "$lib/components/ui/input";
+  import { ACL } from "$lib/acl/index.js";
+  import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
+  import { LoadingButton } from "$lib/components/ui/loadingbutton/index.js";
+  import * as Form from "$lib/components/ui/form";
+  import Field from "$lib/entity/field.svelte";
+  import SelectEntityField from "$lib/entity/selectentityfield.svelte";
+  import SelectEntitiesField from "$lib/entity/selectentitiesfield.svelte";
+  import { EntitySelector } from "$lib/entityselector/index.js";
 
-  let data2 = {
-    name: "New user",
-    _type: "user",
-  };
-  /** @type {any} */
-  let data = { ...data2 };
-  let errormessage = writable(null);
+  import { array, object, z } from "zod";
+  import SuperDebug, { superForm, setMessage, setError } from "sveltekit-superforms";
+    import { zod } from "sveltekit-superforms/adapters";
 
-  import { writable } from "svelte/store";
+  const _userSchema:any = z.object({ name: z.string().min(2), 
+    rparole: z.boolean().optional(), hidemembers: z.boolean().optional(), 
+    members: z.array(z.object(
+    { _id: z.string().min(1), name: z.string().min(1) }
+  )) }).passthrough();
 
-  const collectionname = "users";
-  async function onSubmit(e) {
-    try {
-      data = { ...data2 };
-      await $client.InsertOne({
-        collectionname,
-        item: e.detail.data,
-      });
-      goto(base + `/entities/${collectionname}`);
-    } catch (error) {
-      $errormessage = error.message;
-    }
+
+  let data = { form: { name: "new role", owner: "6626633c15586df9e982e48c", _type: "role", rparole: false, hidemembers: false,
+  members: [] } };
+  let isLoading = false;
+  $: if($message != "") {
+    console.log("message", $message);
   }
+
+  const form = superForm(
+    data.form,
+    {
+      SPA: true,
+      dataType: "json",
+      validators: zod(_userSchema),
+      async onUpdate({ form }) {
+        setMessage(form, null)
+        console.log("data", form.data)
+        if (form.valid) {
+          try {
+            isLoading = true;
+            await $client.InsertOne({
+              collectionname: "users",
+              item: form.data,
+            });
+            goto(base + `/roles`);
+          } catch (error) {
+            setMessage(form, error.message)
+          }
+          isLoading = false;
+
+        } else {
+          setMessage(form, JSON.stringify(form.errors))
+          console.log("Form is invalid");
+        }
+      }
+    }
+  );
+  
+  const { form: formData, errors, message, constraints, enhance } = form;
+
+  let count = 0;
   let showacl = false;
   let showdebug = false;
+
 </script>
 
-{#if $errormessage != null && $errormessage != ""}
-  <Card.Root class="ml-2 mr-5 text-red-800">
-    <Card.Header>
-      <Card.Title>{$errormessage}</Card.Title>
-    </Card.Header>
-  </Card.Root>
+<h1>Add role</h1>
+
+{#if $message}<h3>{$message}</h3>{/if}
+
+{#if $formData != null}
+  <ACL bind:value={$formData["_acl"]} {isLoading} hidden={!showacl} class="gap-1.5 ml-2 mr-5" />
 {/if}
-{#if data != null}
-  <ACL bind:value={data._acl} hidden={!showacl} class="gap-1.5 ml-2 mr-5" />
-{/if}
-<Card.Root class="gap-1.5 ml-2 mr-5">
-  <!-- <Card.Header>
-    <Card.Title></Card.Title>
-  </Card.Header> -->
-  <Card.Content>
-    <br />
-    <Entity bind:value={data} on:submit={onSubmit} showtogglehidden={false} showtogglejson={false} >
-      <Button on:click={() => (showacl = !showacl)}>Access Control List</Button>
-    </Entity>
-  </Card.Content>
-</Card.Root>
-<hr />
+<form method="POST" use:enhance>
+  <Form.Field form={form} name="name">
+    <Form.Control let:attrs>
+      <Form.Label>Name</Form.Label>
+      <Input {...attrs} bind:value={$formData.name} />
+    </Form.Control>
+    <Form.Description>This is the roles display name.</Form.Description>
+    <Form.FieldErrors />
+  </Form.Field>
+
+  <Field
+  form={form}
+  name="hidemembers"
+  shape={z.boolean().describe("If enabled, members will not be able to see the role and it's members")}
+  {isLoading}
+  bind:value={$formData["rparole"]}></Field>
+
+  <Field
+  form={form}
+  name="rparole"
+  shape={z.boolean().describe("Enable to make openrpa members join a queue representing this role")}
+  {isLoading}
+  bind:value={$formData["rparole"]}></Field>
+
+  <!-- <SelectEntityField
+    valuetype="_id"
+    form={form}
+    name="owner"
+    {isLoading}
+    shape={z.boolean().describe("Owner of this role, can manage all aspects of the role")}
+    bind:value={$formData["owner"]}></SelectEntityField> -->
+
+  <SelectEntitiesField
+    form={form}
+    name="members"
+    {isLoading}
+    shape={z.array(z.any())}
+    bind:value={$formData["members"]} bind:count={count}></SelectEntitiesField>
+
+  <LoadingButton type="submit" {isLoading}>Create</LoadingButton>
+  <LoadingButton {isLoading} on:click={() => (showacl = !showacl)} >Access Control List</LoadingButton>
+</form>
 <HotkeyButton
   hidden
   data-shortcut={"Control+d,Meta+d"}
+  {isLoading}
   on:click={() => (showdebug = !showdebug)}>Toggle debug</HotkeyButton
 >
-{#if data != null && showdebug == true}
-  <SuperDebug {data} />
+
+{#if $formData != null && showdebug == true}
+<SuperDebug data={$formData} />
 {/if}

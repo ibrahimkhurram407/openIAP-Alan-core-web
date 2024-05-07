@@ -11,10 +11,10 @@
   import { buttonVariants } from "$lib/components/ui/button";
   import X from "lucide-svelte/icons/x";
   import Plus from "lucide-svelte/icons/plus";
-  import { cn } from "$lib/utils.js";
   import { DateFormatter, parseAbsolute } from "@internationalized/date";
   import { z } from "zod";
   import { LoadingButton } from "$lib/components/ui/loadingbutton/index.js";
+  import { cn } from "$lib/utils.js";
 	let className = undefined;
 	export { className as class };
   /** @type {any} */
@@ -93,6 +93,16 @@
     }
     return item;
   }
+  /** @type {any} */
+  let selectedvalue = null;
+  if(type == "select") {
+    selectedvalue = {"value": value,"label":value,"disabled":false}
+  }
+  $: if(selectedvalue != null && type == "select") {
+    value = selectedvalue.value;
+  } else if (type == "select") {
+    value = "";
+  } 
 </script>
 
 {#if type == "hidden"}
@@ -103,6 +113,7 @@
       <Form.Label>{name}</Form.Label>
       <Checkbox {...attrs} id={name} bind:checked={value} disabled={isLoading} />
     </Form.Control>
+    <Form.Description>{shape._def.description ?? ""}</Form.Description>
     <Form.FieldErrors />
   </Form.Field>
 {:else if type == "date"}
@@ -138,6 +149,7 @@
         </Popover.Content>
       </Popover.Root>
       <Form.FieldErrors />
+      <Form.Description>{shape._def.description ?? ""}</Form.Description>
       <input hidden {value} name={attrs.name} />
     </Form.Control>
   </Form.Field>
@@ -148,6 +160,7 @@
       <ObjectInput bind:value name={attrs.name} disabled={isLoading} />
     </Form.Control>
     <Form.FieldErrors />
+    <Form.Description>{shape._def.description ?? ""}</Form.Description>
   </Form.Field>
 {:else if type == "object" && value != null}
   {#if shape != null}
@@ -180,6 +193,7 @@
         <ObjectInput bind:value name={attrs.name} disabled={isLoading} />
       </Form.Control>
       <Form.FieldErrors />
+      <Form.Description>{shape._def.description ?? ""}</Form.Description>
     </Form.Field>
   {/if}
   <!-- {#each Object.keys(value) as subkey }
@@ -231,7 +245,7 @@
     <Form.Control let:attrs>
       <Form.Label>{name}</Form.Label>
       <!--  bind:value={value} -->
-      <Select.Root portal={null} disabled={isLoading}>
+      <Select.Root portal={null} disabled={isLoading} bind:selected={selectedvalue}>
         <Select.Trigger class="w-[180px]">
           <Select.Value placeholder="Select {name}" />
         </Select.Trigger>
@@ -251,19 +265,8 @@
       </Select.Root>
     </Form.Control>
     <Form.FieldErrors />
+    <Form.Description>{shape._def.description ?? ""}</Form.Description>
   </Form.Field>
-
-  <!-- <Form.Field {form} {name}>
-    <Form.Control let:attrs>
-      <Form.Label>{name}</Form.Label>
-      <select {...attrs} id={name} bind:value>
-        {#each shape.options as item}
-          <option value={item}>{item}</option>
-        {/each}
-      </select>
-    </Form.Control>
-    <Form.FieldErrors />
-  </Form.Field> -->
 {:else if name == "name"}
   <Form.Field {form} {name} class={cn("", className)}>
     <Form.Control let:attrs>
@@ -273,6 +276,7 @@
       </h3>
     </Form.Control>
     <Form.FieldErrors />
+    <Form.Description>{shape._def.description ?? ""}</Form.Description>
   </Form.Field>
 {:else}
   <Form.Field {form} {name} class={cn("", className)}>
@@ -281,5 +285,6 @@
       <Input {...attrs} id={name} bind:value {type} disabled={isLoading} />
     </Form.Control>
     <Form.FieldErrors />
+    <Form.Description>{shape._def.description ?? ""}</Form.Description>
   </Form.Field>
 {/if}

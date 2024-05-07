@@ -39,7 +39,7 @@
     e.preventDefault();
     vform = await superValidate(value, zod(_Schema));
     if (vform.valid) {
-      dispatch("submit", { data: value });
+      dispatch("submit", { data: vform.data });
     } else {
       message = JSON.stringify(vform.errors);
       // setError(vform, "name", "Suspicious email address.");

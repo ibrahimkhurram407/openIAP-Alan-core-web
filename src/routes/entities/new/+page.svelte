@@ -58,7 +58,11 @@
   }
   async function onSubmit(e) {
     try {
-      const data2 = {"collectionname": data.name, expireAfterSeconds: data.expireAfterSeconds, timeseries: data.options.timeseries}
+      const data = e.detail.data;
+      const data2 = {"collectionname": data.name, expireAfterSeconds: data.options.expireAfterSeconds, timeseries: data.options.timeseries}
+      if(data.options.timeseries.timeField == null || data.options.timeseries.timeField == ""){
+        delete data2.timeseries;
+      }
       isLoading = true;
       await $client.CreateCollection(data2)
       goto(base + `/entities/${data.name}`);

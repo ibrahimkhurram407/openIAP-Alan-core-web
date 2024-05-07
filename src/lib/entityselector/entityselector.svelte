@@ -10,8 +10,13 @@
   import * as Popover from "$lib/components/ui/popover/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import { cn } from "$lib/utils.js";
+	let className = undefined;
+	export { className as class };
+	let classNameExpanded = undefined;
+	export { classNameExpanded as expandclass };
   export let query = {};
   export let collectionname = "users";
+  export let isLoading = false;
   export let value = null;
   let items = [];
   let open = false;
@@ -28,6 +33,13 @@
       });
       if (result.length > 0) {
         results.push(result[0]);
+        if(value.name != result[0].name) {
+          // value.name = result[0].name;
+          value = {...value, _id: result[0]._id, name: result[0].name};
+        }
+        label = result[0].name;
+      } else {
+        label = "??" + value.name;
       }
     }
     let subquery = { ...query };
@@ -80,6 +92,12 @@
       document.getElementById(triggerId)?.focus();
     });
   }
+  // if(className == "" || className == null) {
+  //   className = "w-[200px]";
+  // }
+  if(classNameExpanded == "" || classNameExpanded == null) {
+    classNameExpanded = "w-[400px]";
+  }
 </script>
 
 <Popover.Root bind:open let:ids>
@@ -89,13 +107,14 @@
       variant="outline"
       role="combobox"
       aria-expanded={open}
-      class="w-[200px] justify-between"
+      disabled={isLoading}
+      class={cn("justify-between", className)}
     >
       {label}
       <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
     </Button>
   </Popover.Trigger>
-  <Popover.Content class="w-[400px] p-0">
+  <Popover.Content class={cn("p-0", className)}>
     <Command.Root shouldFilter={false}>
       <Command.Input placeholder="Search entity..." bind:value={q} />
       <Command.Empty>No items found.</Command.Empty>

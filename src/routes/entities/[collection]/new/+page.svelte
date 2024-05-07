@@ -5,7 +5,7 @@
   import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
   import * as Card from "$lib/components/ui/card";
   import { ACL } from "$lib/acl/index.js";
-  import Button from "$lib/components/ui/button/button.svelte";
+  import { LoadingButton } from "$lib/components/ui/loadingbutton/index.js";
 
   import { Entity } from "$lib/entity";
   import { client } from "$lib/stores";
@@ -27,6 +27,7 @@
   /** @type {any} */
   let data = { ...data2 };
   let errormessage = writable(null);
+  let isLoading = false;
 
   import { page } from "$app/stores";
   import { setting } from "$lib/pstore";
@@ -38,7 +39,7 @@
   }
   async function onSubmit(e) {
     try {
-      data = { ...data2 };
+      isLoading = true;
       await $client.InsertOne({
         collectionname: $collectionname,
         item: e.detail.data,
@@ -48,6 +49,7 @@
       $errormessage = error.message;
     }
   }
+  isLoading = false;
   let showacl = false;
   let showdebug = false;
 </script>
@@ -68,8 +70,8 @@
   </Card.Header> -->
   <Card.Content>
     <br />
-    <Entity bind:value={data} on:submit={onSubmit}>
-      <HotkeyButton
+    <Entity bind:value={data} on:submit={onSubmit} {isLoading}>
+      <HotkeyButton {isLoading}
         data-shortcut={"Insert"}
         on:click={() => {
           let key = prompt("Enter key");
@@ -77,7 +79,7 @@
         }}>Insert</HotkeyButton
       >
 
-      <Button on:click={() => (showacl = !showacl)}>Access Control List</Button>
+      <LoadingButton {isLoading} on:click={() => (showacl = !showacl)} >Access Control List</LoadingButton>
     </Entity>
   </Card.Content>
 </Card.Root>
@@ -85,6 +87,7 @@
 <HotkeyButton
   hidden
   data-shortcut={"Control+d,Meta+d"}
+  {isLoading}
   on:click={() => (showdebug = !showdebug)}>Toggle debug</HotkeyButton
 >
 {#if data != null && showdebug == true}
