@@ -150,10 +150,12 @@
   }
   let _showhidden = showhidden;
   $: if (_showhidden != showhidden) {
+    _showhidden = showhidden;
     generateSchema(value, schema);
   }
   let _showjson = showjson;
   $: if (_showjson != showjson) {
+    _showjson = showjson;
     generateSchema(value, schema);
   }
   let _key = key;
