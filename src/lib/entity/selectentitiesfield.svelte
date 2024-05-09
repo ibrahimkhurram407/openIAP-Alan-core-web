@@ -3,6 +3,7 @@
   import * as Card from "$lib/components/ui/card";
   import { LoadingButton } from "$lib/components/ui/loadingbutton/index.js";
   import { EntitySelector } from "$lib/entityselector/index.js";
+  import X from "lucide-svelte/icons/x";
   import { z } from "zod";
   import { cn } from "$lib/utils.js";
 	let className = undefined;
@@ -51,13 +52,17 @@
       <Card.Content>
     {#if value != null && Array.isArray(value) && count > -1}
         {#each value as item}
-        <EntitySelector bind:value={item} {isLoading} class="ml-1 m-1.5" />
           <LoadingButton
-            class="w-[120px]" {isLoading}
+          variant="ghost"
+            {isLoading}
             on:click={() => {
-              value = value.filter((x) => x._id !== item._id);
-            }}>Remove</LoadingButton
+              // value = value.filter((x) => x._id !== item._id);
+              value = value.filter((x) => x !== item);
+            }}>
+              <X class="h-4 w-4" />
+            </LoadingButton
           >
+        <EntitySelector bind:value={item} {isLoading} class="" />
       {/each}
     {/if}
       <div class="flex flex-wrap ml-1 m-1.5">

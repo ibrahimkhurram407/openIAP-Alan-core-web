@@ -14,6 +14,7 @@
     addSelectedRows,
   } from "svelte-headless-table/plugins";
   import { ScrollArea } from "$lib/components/ui/scroll-area/index.js";
+  import { swipe } from 'svelte-gestures';
   import ArrowUp from "lucide-svelte/icons/arrow-up";
   import ArrowDown from "lucide-svelte/icons/arrow-down";
   import ChevronDown from "lucide-svelte/icons/chevron-down";
@@ -564,9 +565,23 @@
     }
     GetData();
   }
+  function handlerswipe(event) {
+    if(event.detail.direction == "left") {
+      $pageIndex = $pageIndex + 1;
+      if($pageIndex > Math.ceil($serverItemCount / $pagesize)) {
+        $pageIndex = Math.ceil($serverItemCount / $pagesize) - 1;
+      }
+    }
+    if(event.detail.direction == "right") {
+      $pageIndex = $pageIndex - 1;
+      if($pageIndex < 0) {
+        $pageIndex = 0;
+      }
+    }
+  }
 </script>
 
-<div class={cn("", className)}>
+<div class={cn("", className)} use:swipe={{ timeframe: 300, minSwipeDistance: 100}} on:swipe={handlerswipe}>
   {#if $error != null && $error != ""}
     <SuperDebug data={$error} />
   {/if}
@@ -802,7 +817,7 @@
       size="sm"
       data-shortcut={"ArrowLeft"}
       on:click={() => ($pageIndex = $pageIndex - 1)}
-      disabled={$pageIndex == 0}>Previous</HotkeyButton
+      disabled={$pageIndex <= 0}>Previous</HotkeyButton
     >
     <HotkeyButton
       variant="outline"

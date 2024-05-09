@@ -74,6 +74,7 @@
 	}
 	async function init() {
 		const tu = await loadLocalJWTUser();
+		console.log("tu", tu);
 		if(tu != null && tu.jwt != null && tu.jwt != "") {
 			$showLocalForm = false;
 			$showOr = false;
@@ -96,6 +97,12 @@
 						breadcrumbSettings: { clickable: true },
 						buttonSettings: { showCancel: false }
 					});
+					if(tu.user != null) {
+						if(tu.user.email == null || tu.user.email == "") {
+							tu.user.email = tu.user.username
+						}
+					}
+					$formioRender.submission = { data: tu.user };
 					$formioRender.on("submit", async submission => {
 						isLoading = true
 						$errormessage = "";

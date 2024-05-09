@@ -15,6 +15,9 @@
   import { z } from "zod";
   import { LoadingButton } from "$lib/components/ui/loadingbutton/index.js";
   import { cn } from "$lib/utils.js";
+
+
+  
 	let className = undefined;
 	export { className as class };
   /** @type {any} */
@@ -25,6 +28,10 @@
   // export let type;
   export let shape;
   let dtvalue = null;
+  let dvalue = null;
+  let tvalue = null;
+  let _dvalue = null;
+  let _tvalue = null;
   function getType(zodObject) {
     // Handling ZodOptional which might wrap other types
     if (zodObject instanceof z.ZodOptional) {
@@ -60,7 +67,23 @@
   let type = getType(shape);
   $: if (type == "date") {
     try {
-      dtvalue = value ? parseAbsolute(value, "UTC") : undefined;
+      // dtvalue = value ? parseAbsolute(value, "UTC") : undefined;
+      dtvalue = new Date(value);
+      if(_dvalue == null) {
+        dvalue = dtvalue ? dtvalue.toISOString().split("T")[0] : null;  
+        _dvalue = dvalue;
+      }
+      if(_tvalue == null) {
+        tvalue = dtvalue ? dtvalue.toISOString().split("T")[1].split(".")[0] : null;
+        _tvalue = tvalue;
+      }
+      if(dvalue != _dvalue || tvalue != _tvalue) {
+        console.log("dvalue",dvalue,"tvalue",tvalue, "value", value)
+        value = new Date(dvalue + "T" + tvalue);
+        _dvalue = dvalue;
+        _tvalue = tvalue;
+      }
+      // dtvalue = value ? parseAbsolute(value, "UTC") : undefined;
     } catch (error) {
       console.error("Error in parseAbsolute", value, error);
     }
@@ -105,7 +128,7 @@
   } 
 </script>
 
-{#if type == "hidden"}
+{#if type == "hidden" || shape == null}
   <input hidden {value} {name} />
 {:else if type == "checkbox"}
   <Form.Field {form} {name} class={cn("", className)}>
@@ -117,10 +140,14 @@
     <Form.FieldErrors />
   </Form.Field>
 {:else if type == "date"}
-  <Form.Field {form} name="dob" class={cn("flex flex-col", className)}>
+  <Form.Field {form} name="dob" class={cn("flex flex-col", className)} >
     <Form.Control let:attrs>
       <Form.Label>{name}</Form.Label>
-      <Popover.Root>
+      <div class="flex">
+        <Input type="date" {...attrs} id={name} bind:value={dvalue} disabled={isLoading} class="w-[180px] rounded-md border" />
+        <Input type="time" {...attrs} id={name} bind:value={tvalue} disabled={isLoading} class="w-[150px] rounded-md border" />
+      </div>
+      <!-- <Popover.Root>
         <Popover.Trigger
           {...attrs}
           class={cn(
@@ -147,7 +174,7 @@
             }}
           />
         </Popover.Content>
-      </Popover.Root>
+      </Popover.Root> -->
       <Form.FieldErrors />
       <Form.Description>{shape._def.description ?? ""}</Form.Description>
       <input hidden {value} name={attrs.name} />
@@ -163,39 +190,28 @@
     <Form.Description>{shape._def.description ?? ""}</Form.Description>
   </Form.Field>
 {:else if type == "object" && value != null}
-  {#if shape != null}
-    <div class={cn("rounded-md border", className)}>
-      <h3 class="text-lg font-semibold leading-none tracking-tight ml-1 mt-3">
-        {name}
-      </h3>
-      <div class="ml-2">
-        {#each Object.keys(value) as subkey}
-        <!-- object
-        <pre>{JSON.stringify(getShape(shape)._cached.shape[subkey], null, 2)}</pre>       -->
-          <!-- <Input id={name} bind:value={value[subkey]} type="text" /> -->
-          <!-- {subkey}
-    <pre>{JSON.stringify(shape._cached.shape[subkey], null, 2)}</pre> -->
+  <div class={cn("rounded-md border", className)}>
+    <h3 class="text-lg font-semibold leading-none tracking-tight ml-1 mt-3">
+      {name}
+    </h3>
+    <div class="ml-2">
+      {#each Object.keys(value) as subkey}
+      <!-- object
+      <pre>{JSON.stringify(getShape(shape)._cached.shape[subkey], null, 2)}</pre>       -->
+        <!-- <Input id={name} bind:value={value[subkey]} type="text" /> -->
+        <!-- {subkey}
+  <pre>{JSON.stringify(shape._cached.shape[subkey], null, 2)}</pre> -->
 
-          <Field
-            shape={getShape(getShape(shape)._cached.shape[subkey])}
-            {form}
-            name={subkey}
-            {isLoading}
-            bind:value={value[subkey]}
-          ></Field>
-        {/each}
-      </div>
+        <Field
+          shape={getShape(getShape(shape)?._cached?.shape[subkey])}
+          {form}
+          name={subkey}
+          {isLoading}
+          bind:value={value[subkey]}
+        ></Field>
+      {/each}
     </div>
-  {:else}
-    <Form.Field {form} {name} class={cn("", className)}>
-      <Form.Control let:attrs>
-        <Form.Label>{name}</Form.Label>
-        <ObjectInput bind:value name={attrs.name} disabled={isLoading} />
-      </Form.Control>
-      <Form.FieldErrors />
-      <Form.Description>{shape._def.description ?? ""}</Form.Description>
-    </Form.Field>
-  {/if}
+  </div>
   <!-- {#each Object.keys(value) as subkey }
   <Input id={name} bind:value={value[subkey]} type="text" />
   {subkey}
@@ -209,7 +225,18 @@
       <ObjectInput bind:value name={attrs.name} />
     </Form.Control>
     <Form.FieldErrors />
-  </Form.Field> -->
+  </Form.Field> 
+
+    <Form.Field {form} {name} class={cn("", className)}>
+      <Form.Control let:attrs>
+        <Form.Label>{name}</Form.Label>
+        <ObjectInput bind:value name={attrs.name} disabled={isLoading} />
+      </Form.Control>
+      <Form.FieldErrors />
+      <Form.Description>{shape._def.description ?? ""}</Form.Description>
+    </Form.Field>
+  {/if}
+-->
 {:else if type == "array" && value != null}
   <div class={cn("rounded-md border", className)}>
     <h3 class="text-lg font-semibold leading-none tracking-tight ml-1 mt-3">
@@ -240,7 +267,7 @@
       {/each}
     </div>
   </div>
-{:else if type == "select" && shape != null}
+{:else if type == "select"}
   <Form.Field {form} {name} class={cn("", className)}>
     <Form.Control let:attrs>
       <Form.Label>{name}</Form.Label>
@@ -271,8 +298,7 @@
   <Form.Field {form} {name} class={cn("", className)}>
     <Form.Control let:attrs>
       <h3 class="text-lg font-semibold leading-none tracking-tight">
-        <!-- svelte-ignore a11y-autofocus -->
-        <input autofocus {...attrs} id={name} bind:value type="text" disabled={isLoading} />
+        <input {...attrs} id={name} bind:value type="text" disabled={isLoading} />
       </h3>
     </Form.Control>
     <Form.FieldErrors />
