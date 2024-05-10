@@ -2,6 +2,7 @@
   import { onMount, createEventDispatcher, tick } from "svelte";
   import SuperDebug from "sveltekit-superforms";
   import { client, isSignedin } from "$lib/stores";
+  import { repositionableColumn} from "./repositionableColumn.js";
   import {
     createTable,
     Render,
@@ -88,7 +89,7 @@
 
   let sortKeys;
   updateSortKeys();
-  let ShowColumns = setting(key, "ShowColumns", {});
+  let ShowColumns = setting(key, "ShowColumns", []);
   let _pageindex = setting(key, "pageindex", 0);
   let pagesize = setting(key, "pagesize", 10);
 
@@ -115,37 +116,72 @@
     let sortDefault = [];
     sortKeys = setting(key, "sortKeys", sortDefault);
   }
-
+  function hasShownColumn(id) {
+    if(Array.isArray($ShowColumns) == false) $ShowColumns = [];
+    const exists = $ShowColumns.find((x) => x.id == id);
+    if(exists == null) return false;
+    return true;
+  }
+  function shownColumn(id) {
+    if(Array.isArray($ShowColumns) == false) $ShowColumns = [];
+    const exists = $ShowColumns.find((x) => x.id == id);
+    if(exists == null) return false;
+    return exists.show;
+  }
+  function setShownColumn(id, value) {
+    if(Array.isArray($ShowColumns) == false) $ShowColumns = [];
+    if($ShowColumns.find((x) => x.id == id) == null) {
+      $ShowColumns.push({id, show: value});
+    } else {
+      $ShowColumns.find((x) => x.id == id).show = value;
+    }
+  }
+  function toggleShownColumn(id) {
+    setShownColumn(id, !shownColumn(id));
+  }
+  function moveShownColumn(from, to) {
+    if(Array.isArray($ShowColumns) == false) $ShowColumns = [];
+    const fromIndex = $ShowColumns.findIndex((x) => x.id == from);
+    const toIndex = $ShowColumns.findIndex((x) => x.id == to);
+    console.log(fromIndex, toIndex, $ShowColumns);
+    if (fromIndex == -1 || toIndex == -1) return;
+    const fromItem = $ShowColumns[fromIndex];
+    $ShowColumns.splice(fromIndex, 1);
+    $ShowColumns.splice(toIndex, 0, fromItem);
+    $ShowColumns = $ShowColumns;
+  }
   function updateShowColumns(viewModel) {
     for (let y = 0; y < $sortKeys.length; y++) {
       const key = $sortKeys[y].id;
-      $ShowColumns[key] = true;
+      // $ShowColumns[key] = true;
+      setShownColumn(key, true);
     }
     const ids = viewModel.flatColumns.map((col) => col.id);
     for (let i = 0; i < ids.length; i++) {
       const id = ids[i];
       if (id == "_id") {
-        $ShowColumns[id] = multiselect;
+        setShownColumn(id, multiselect);
         continue;
       }
       if (id == "_created" || id == "_modified") {
       } else if (id.startsWith("_") || id == "name" || id == "") {
-        $ShowColumns[id] = true;
+        setShownColumn(id, true);
         continue;
       }
-      if ($ShowColumns[id] != null) {
+      if (hasShownColumn(id)) {
         continue;
       }
       if (defaultcolumns.indexOf(id) == -1) {
-        $ShowColumns[id] = false;
+        setShownColumn(id, false);
       } else {
-        $ShowColumns[id] = true;
+        setShownColumn(id, true);
       }
     }
     viewModel.pluginStates.hide.hiddenColumnIds.set(
-      Object.entries($ShowColumns)
-        .filter(([, hide]) => !hide)
-        .map(([id]) => id),
+      $ShowColumns.filter((x) => x.show == false).map((x) => x.id),
+      // Object.entries($ShowColumns)
+      //   .filter(([, hide]) => !hide)
+      //   .map(([id]) => id),
     );
   }
 
@@ -224,6 +260,7 @@
   // const items = writable([{_id: "12", name: "test"}]);
   const items = writable([]);
   function addColumn(table, columns, id, sample) {
+    console.log("addColumn", id, columns.length);
     if (id == "_id") {
       return columns.push(
         table.column({
@@ -312,10 +349,10 @@
     if ($items.length > 0) {
       addColumn(table, columns, "name", "");
       var keys = Object.keys($items[0]);
-      var keys2 = Object.keys($ShowColumns);
+      // var keys2 = Object.keys($ShowColumns);
       // keep the columns in the same order as the keys
-      for (let i = 0; i < keys2.length; i++) {
-        const key = keys2[i];
+      for (let i = 0; i < $ShowColumns.length; i++) {
+        const key = $ShowColumns[i].id;
         if (key == "") continue;
         if (key == "_created" || key == "_modified") {
         } else if (key.startsWith("_") || key == "name") {
@@ -330,7 +367,8 @@
       // add any new columns
       for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
-        if (keys2.indexOf(key) != -1) continue;
+        // if (keys2.indexOf(key) != -1) continue;
+        if(hasShownColumn(key) == true) continue;
         if (key == "_created" || key == "_modified") {
         } else if (key.startsWith("_") || key == "name") {
           continue;
@@ -350,23 +388,23 @@
       }
     }
 
-    columns = columns.sort((a, b) => {
-      return a.id.localeCompare(b.id);
-    });
-    columns = [
-      ...columns.filter((x) => x.id == "_id"),
-      ...columns.filter((x) => x.id == "name"),
-      ...columns.filter((x) => x.id == "_type"),
-      ...columns.filter(
-        (x) =>
-          x.id != "_id" &&
-          x.id != "name" &&
-          x.id != "_type" &&
-          x.id != "_created" &&
-          x.id != "_modified",
-      ),
-      ...columns.filter((x) => x.id == "_created" || x.id == "_modified"),
-    ];
+    // columns = columns.sort((a, b) => {
+    //   return a.id.localeCompare(b.id);
+    // });
+    // columns = [
+    //   ...columns.filter((x) => x.id == "_id"),
+    //   ...columns.filter((x) => x.id == "name"),
+    //   ...columns.filter((x) => x.id == "_type"),
+    //   ...columns.filter(
+    //     (x) =>
+    //       x.id != "_id" &&
+    //       x.id != "name" &&
+    //       x.id != "_type" &&
+    //       x.id != "_created" &&
+    //       x.id != "_modified",
+    //   ),
+    //   ...columns.filter((x) => x.id == "_created" || x.id == "_modified"),
+    // ];
     let viewModel = table.createViewModel(table.createColumns(columns), {
       rowDataId: ({ _id }) => _id,
     });
@@ -403,7 +441,16 @@
   let rows = viewModel.rows;
 
   $: tableAttrs = viewModel.tableAttrs;
-  $: headerRows = viewModel.headerRows;
+  let unsub;
+  $: {
+    headerRows = viewModel.headerRows;
+    if(unsub != null) unsub();
+    unsub = headerRows.subscribe((value:any) => {
+      // console.log("cells", value, value[0].cells.map(x=> x.id));
+      // console.log("headerRows", value.cells.map(x=> x.id));
+    });
+    // console.log("headerRows", $headerRows.cells.map(x=> x.id));
+  }
   $: tableBodyAttrs = viewModel.tableBodyAttrs;
   $: pageRows = viewModel.pageRows;
   $: rows = viewModel.rows;
@@ -412,7 +459,7 @@
     searchstring = $psearchstring;
 
     currentcollectionname = collectionname;
-    ShowColumns = setting(key, "ShowColumns", {});
+    ShowColumns = setting(key, "ShowColumns", []);
     _pageindex = setting(key, "pageindex", 0);
     pagesize = setting(key, "pagesize", 10);
     updateSortKeys();
@@ -438,9 +485,10 @@
   updateShowColumns(viewModel);
 
   $: viewModel.pluginStates.hide.hiddenColumnIds.set(
-    Object.entries($ShowColumns)
-      .filter(([, hide]) => !hide)
-      .map(([id]) => id),
+    $ShowColumns.filter((x) => x.show == false).map((x) => x.id),
+    // Object.entries($ShowColumns)
+    //   .filter(([, hide]) => !hide)
+    //   .map(([id]) => id),
   );
   let _magickey = magickey;
   $: if(magickey != _magickey) {
@@ -618,6 +666,14 @@
                       {...attrs}
                       style="width: {fixedColumnsSizes[cell.id]}px;"
                     >
+                    <div
+                    draggable="true"
+                    use:repositionableColumn={cell}
+                    on:move={(e) => {
+                      moveShownColumn(e.detail.from, e.detail.to);
+                      GetData();                      
+                    }}
+                    >
                       <Button
                         tabindex="-1"
                         variant="ghost"
@@ -630,6 +686,7 @@
                           <ArrowDown class="ml-2 h-4 w-4" />
                         {/if}
                       </Button>
+                    </div>
                     </Table.Head>
                   {:else if cell.id === "id" || cell.id === "_id"}
                     <Table.Head
@@ -643,6 +700,14 @@
                       {...attrs}
                       style="width: {50 / visibleColumnsCount()}%;"
                     >
+                    <div
+                    draggable="true"
+                    use:repositionableColumn={cell}
+                    on:move={(e) => {
+                      moveShownColumn(e.detail.from, e.detail.to);
+                      GetData();                      
+                    }}
+                    >
                       <Button
                         tabindex="-1"
                         variant="ghost"
@@ -655,6 +720,7 @@
                           <ArrowDown class="ml-2 h-4 w-4" />
                         {/if}
                       </Button>
+                      </div>  
                     </Table.Head>
                   {/if}
                 </Subscribe>
@@ -784,7 +850,15 @@
         <ScrollArea class="max-h-[36rem] min-w-[12rem] rounded-md border">
           {#each viewModel.flatColumns as col}
             {#if !nonhidableCols.includes(col.id)}
-              <DropdownMenu.CheckboxItem bind:checked={$ShowColumns[col.id]}>
+              <DropdownMenu.CheckboxItem 
+              checked={shownColumn(col.id)}
+              on:click={(e) => {
+                // @ts-ignore
+                // setShownColumn(col.id, e.target.checked)
+                toggleShownColumn(col.id);
+                GetData();
+              }}
+              >
                 {col.header}
               </DropdownMenu.CheckboxItem>
             {/if}
@@ -836,7 +910,7 @@
       on:click={() => {
         selectedDataIds.clear();
         multiselect = false;
-        $ShowColumns["_id"] = false;
+        setShownColumn("_id", false);
       }}>Unselect all</HotkeyButton
     >
   </div>
@@ -847,3 +921,4 @@
     <SuperDebug data={$explainquery} />
   {/if}
 </div>
+<SuperDebug data={$ShowColumns.filter(x=>x.show)} />
