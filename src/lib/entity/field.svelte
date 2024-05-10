@@ -65,56 +65,50 @@
     return zodObject
   }
   let type = getType(shape);
-  $: if (type == "date") {
+  function parseDate() {
+    if (type != "date") return;
     try {
-      // dtvalue = value ? parseAbsolute(value, "UTC") : undefined;
-      dtvalue = new Date(value);
+      dtvalue = new Date(value); // Always UTC
       if(_dvalue == null) {
-        dvalue = dtvalue ? dtvalue.toISOString().split("T")[0] : null;  
+        // dvalue = dtvalue ? dtvalue.toISOString().split("T")[0] : null; // show UTC
+        // dvalue = dtvalue ? dtvalue.toLocaleDateString() : null; // Show as local time
+        dvalue = dtvalue ? new Date(dtvalue.getTime() - (dtvalue.getTimezoneOffset() * 60000))
+          .toISOString()
+          .split("T")[0] : null;
         _dvalue = dvalue;
-      }
+        console.log(dvalue);
+        _dvalue = dvalue;
+      } // Show as local time
       if(_tvalue == null) {
-        tvalue = dtvalue ? dtvalue.toISOString().split("T")[1].split(".")[0] : null;
+        // tvalue = dtvalue ? dtvalue.toISOString().split("T")[1].split(".")[0] : null; // show UTC
+        // tvalue = dtvalue ? dtvalue.toLocaleTimeString() : null; // Show as local time
+        tvalue = dtvalue ? new Date(dtvalue.getTime() - (dtvalue.getTimezoneOffset() * 60000))
+          .toISOString()
+          .split("T")[1].substring(0, 8) : null;
         _tvalue = tvalue;
-      }
+      } // Show as local time
+      console.log(_dvalue, _tvalue, dtvalue)
       if(dvalue != _dvalue || tvalue != _tvalue) {
-        console.log("dvalue",dvalue,"tvalue",tvalue, "value", value)
-        value = new Date(dvalue + "T" + tvalue);
+        // dtvalue = new Date(`${dvalue}T${tvalue}Z`); // When showing UTC
+        dtvalue = new Date(`${dvalue}T${tvalue}`); // When showing local time
+        value = dtvalue.toISOString();
+        console.log(value);
         _dvalue = dvalue;
         _tvalue = tvalue;
       }
-      // dtvalue = value ? parseAbsolute(value, "UTC") : undefined;
     } catch (error) {
       console.error("Error in parseAbsolute", value, error);
     }
-    // if (
-    //     value.indexOf("\n") > -1 ||
-    //     value.length > 50 ||
-    //     value.indexOf("{") > -1 ||
-    //     value.indexOf("[") > -1
-    //   ) {
-    //     _type = "textarea";
-    //   } else {
-    //     _type = "text";
-    //   }
+  }
+  if (type == "date") {
+    parseDate()
+  }
+  $: if (type == "date" || value != null || dtvalue != null || dvalue != null || tvalue != null) {
+    parseDate()
   }
   let locale = "en-US";
   if (navigator.languages) {
     locale = navigator.languages[navigator.languages.length - 1];
-  }
-  const df = new DateFormatter(locale, {
-    dateStyle: "long",
-    timeStyle: "short",
-  });
-  function formatDateObject(item) {
-    try {
-      const dateObject = item.toDate();
-      // @ts-ignore
-      return df.format(dateObject); // Formats date without altering isoString
-    } catch (error) {
-      console.error("Error in formatDisplayDate", error);
-    }
-    return item;
   }
   /** @type {any} */
   let selectedvalue = null;
