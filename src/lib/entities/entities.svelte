@@ -63,8 +63,6 @@
   let currentcollectionname = collectionname;
   export let query = {};
   export let key: string;
-  // export let searchstring: Writable<string> = writable("");
-  // export let searchstring = setting(key, "searchstring", "");
   export let searchstring = "";
   let currentsearchstring = searchstring;
 
@@ -87,9 +85,7 @@
 
   const currentquery = writable({});
 
-  let sortKeys;
-  updateSortKeys();
-  let ShowColumns = setting(key, "ShowColumns", []);
+  let Columns = setting(key, "columns", []);
   let _pageindex = setting(key, "pageindex", 0);
   let pagesize = setting(key, "pagesize", 10);
 
@@ -107,79 +103,104 @@
   let selectedDataIds;
 
   function hasShownColumn(id) {
-    if (Array.isArray($ShowColumns) == false) $ShowColumns = [];
-    const exists = $ShowColumns.find((x) => x.id == id);
+    if (Array.isArray($Columns) == false) $Columns = [];
+    const exists = $Columns.find((x) => x.id == id);
     if (exists == null) return false;
+    if(exists.show == null) return false; // ? yes/no ?
     return true;
   }
   function shownColumn(id) {
-    if (Array.isArray($ShowColumns) == false) $ShowColumns = [];
-    const exists = $ShowColumns.find((x) => x.id == id);
-    if (exists == null) return false;
+    if (Array.isArray($Columns) == false) $Columns = [];
+    const exists = $Columns.find((x) => x.id == id);
+    if (exists == null || exists.show == null) return false;
     return exists.show;
   }
   function setShownColumn(id, value) {
-    if (Array.isArray($ShowColumns) == false) $ShowColumns = [];
-    if ($ShowColumns.find((x) => x.id == id) == null) {
-      $ShowColumns.push({ id, show: value });
+    if (Array.isArray($Columns) == false) $Columns = [];
+    if ($Columns.find((x) => x.id == id) == null) {
+      $Columns.push({ id, show: value });
+      $Columns = $Columns;
     } else {
-      $ShowColumns.find((x) => x.id == id).show = value;
+      $Columns.find((x) => x.id == id).show = value;
+    }
+    $Columns = $Columns;
+    try {
+      viewModel.pluginStates.hide.hiddenColumnIds.set(
+      $Columns.filter((x) => (x.show == false || x.show == null)).map((x) => x.id));
+    } catch (e) {
+      // console.error(e);
     }
   }
   function toggleShownColumn(id) {
     setShownColumn(id, !shownColumn(id));
   }
   function moveShownColumn(from, to) {
-    if (Array.isArray($ShowColumns) == false) $ShowColumns = [];
-    const fromIndex = $ShowColumns.findIndex((x) => x.id == from);
-    const toIndex = $ShowColumns.findIndex((x) => x.id == to);
-    console.log(fromIndex, toIndex, $ShowColumns);
+    if (Array.isArray($Columns) == false) $Columns = [];
+    const fromIndex = $Columns.findIndex((x) => x.id == from);
+    const toIndex = $Columns.findIndex((x) => x.id == to);
+    console.log(fromIndex, toIndex, $Columns);
     if (fromIndex == -1 || toIndex == -1) return;
-    const fromItem = $ShowColumns[fromIndex];
-    $ShowColumns.splice(fromIndex, 1);
-    $ShowColumns.splice(toIndex, 0, fromItem);
-    $ShowColumns = $ShowColumns;
+    const fromItem = $Columns[fromIndex];
+    $Columns.splice(fromIndex, 1);
+    $Columns.splice(toIndex, 0, fromItem);
+    $Columns = $Columns; // trigger reactivity
   }
-  function updateSortKeys() {
-    let sortDefault = [];
-    sortKeys = setting(key, "sortKeys", sortDefault);
+  function updateColumns() {
+    let columnsDefault = [];
+    Columns = setting(key, "columns", columnsDefault);
   }
   function sortby(key) {
-    var exists = $sortKeys.find((x) => x.id == key);
+    var exists = $Columns.find((x) => x.id == key);
     if (exists == null) return null;
     return exists.order;
   }
+  function setSort(id, value) {
+    if (Array.isArray($Columns) == false) $Columns = [];
+    if ($Columns.find((x) => x.id == id) == null) {
+      $Columns.push({ id, order: value, show: false});
+      $Columns = $Columns;
+    } else {
+      $Columns.find((x) => x.id == id).order = value;
+    }
+  }
+
   function toggleSort(e, id) {
     e.preventDefault();
     e.stopPropagation();
-    const sortKey = $sortKeys.find((x) => x.id == id);
-    if (sortKey == null) {
-      if (!multiSort) $sortKeys = [{ id, order: "asc" }];
-      if (multiSort) $sortKeys = $sortKeys.concat([{ id, order: "asc" }]);
-    } else {
-      if (sortKey.order == "asc") {
-        sortKey.order = "desc";
-        $sortKeys = $sortKeys; // update store
-      } else {
-        if (!multiSort) $sortKeys = [];
-        if (multiSort) $sortKeys = $sortKeys.filter((x) => x.id != id);
+    const current = sortby(id);
+
+    if (!multiSort && current == null) {
+      for (let i = 0; i < $Columns.length; i++) {
+        const key = $Columns[i].id;
+        if (key != id) {
+          setSort(key, null);
+        }
       }
+    }
+    if (current == null) {
+      setSort(id, "asc");
+    } else if (current == "asc") {
+      setSort(id, "desc");
+    } else {
+      setSort(id, null);
     }
     GetData();
   }
   function getOrderBy() {
     const orderby = {};
-    for (let i = 0; i < $sortKeys.length; i++) {
-      const sortKey = $sortKeys[i];
-      orderby[sortKey.id] = sortKey.order == "desc" ? -1 : 1;
+    for (let i = 0; i < $Columns.length; i++) {
+      const sortKey = $Columns[i];
+      if (sortKey.order != null) {
+        orderby[sortKey.id] = sortKey.order == "desc" ? -1 : 1;
+      }
     }
     return orderby;
   }
   function updateShowColumns(viewModel) {
-    for (let y = 0; y < $sortKeys.length; y++) {
-      const key = $sortKeys[y].id;
+    for (let y = 0; y < $Columns.length; y++) {
+      const key = $Columns[y].id;
       // $ShowColumns[key] = true;
-      setShownColumn(key, true);
+      // setShownColumn(key, true);
     }
     const ids = viewModel.flatColumns.map((col) => col.id);
     for (let i = 0; i < ids.length; i++) {
@@ -203,7 +224,7 @@
       }
     }
     viewModel.pluginStates.hide.hiddenColumnIds.set(
-      $ShowColumns.filter((x) => x.show == false).map((x) => x.id),
+      $Columns.filter((x) => x.show == false || x.show == null).map((x) => x.id),
       // Object.entries($ShowColumns)
       //   .filter(([, hide]) => !hide)
       //   .map(([id]) => id),
@@ -374,8 +395,8 @@
 
     if ($items.length > 0) {
       addColumn(table, columns, "name", "");
-      for (let i = 0; i < $ShowColumns.length; i++) {
-        const key = $ShowColumns[i].id;
+      for (let i = 0; i < $Columns.length; i++) {
+        const key = $Columns[i].id;
         if (key == "") continue;
         if (key == "_created" || key == "_modified") {
         } else if (key.startsWith("_") || key == "name") {
@@ -409,8 +430,8 @@
       // keep the columns in the same order as the keys
       // add any new columns
       // force adding columns that we are sorting by
-      for (let y = 0; y < $sortKeys.length; y++) {
-        const key = $sortKeys[y].id;
+      for (let y = 0; y < $Columns.length; y++) {
+        const key = $Columns[y].id;
         if (keys.indexOf(key.id) == -1) {
           if (columns.find((x) => x.id == key) != null) continue;
           var value = $items[0][key];
@@ -482,6 +503,7 @@
     });
     // console.log("headerRows", $headerRows.cells.map(x=> x.id));
   }
+  // updateColumns();
   $: tableBodyAttrs = viewModel.tableBodyAttrs;
   $: pageRows = viewModel.pageRows;
   $: rows = viewModel.rows;
@@ -490,10 +512,10 @@
     searchstring = $psearchstring;
 
     currentcollectionname = collectionname;
-    ShowColumns = setting(key, "ShowColumns", []);
     _pageindex = setting(key, "pageindex", 0);
     pagesize = setting(key, "pagesize", 10);
-    updateSortKeys();
+    Columns = setting(key, "ShowColumns", []);
+    // updateColumns();
 
     $pageIndex = $_pageindex;
     $serverItemCount = -1;
@@ -516,7 +538,7 @@
   updateShowColumns(viewModel);
 
   $: viewModel.pluginStates.hide.hiddenColumnIds.set(
-    $ShowColumns.filter((x) => x.show == false).map((x) => x.id),
+    $Columns.filter((x) => (x.show == false || x.show == null)).map((x) => x.id),
     // Object.entries($ShowColumns)
     //   .filter(([, hide]) => !hide)
     //   .map(([id]) => id),
@@ -531,6 +553,7 @@
   let loading = false;
   const GetData = async () => {
     try {
+      updateColumns();
       $error = "";
       if (loading) return;
       if ($isSignedin == false) return;
@@ -615,7 +638,7 @@
   GetData();
 
   function visibleColumnsCount() {
-    return Object.values($ShowColumns).filter((x) => x).length;
+    return Object.values($Columns).filter((x) => x).length;
   }
   function handlerswipe(event) {
     if (event.detail.direction == "left") {
@@ -796,7 +819,7 @@
       on:click={() => {
         if (multiselect == false) {
           multiselect = true;
-          $ShowColumns["_id"] = multiselect;
+          setShownColumn("_id", true);
         }
         const selectcount = Object.keys($selectedDataIds).length;
         if (selectcount <= $serverItemCount) {
@@ -894,7 +917,6 @@
         });
       }}>Delete</HotkeyButton
     >
-    {$pageIndex}
     <HotkeyButton
       variant="outline"
       size="sm"
