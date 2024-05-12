@@ -22,9 +22,12 @@
   import * as Table from "$lib/components/ui/table";
   import DataTableActions from "./data-table-actions.svelte";
   import DataTableTimesince from "./data-table-timesince.svelte";
+  import { Checkbox } from "$lib/components/ui/checkbox/index.js";
+  import { Label } from "$lib/components/ui/label/index.js";
 
   import { Button } from "$lib/components/ui/button";
   import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
+  import * as Sheet from "$lib/components/ui/sheet";
   import { cn } from "$lib/utils.js";
   let className = undefined;
   export { className as class };
@@ -106,7 +109,7 @@
     if (Array.isArray($Columns) == false) $Columns = [];
     const exists = $Columns.find((x) => x.id == id);
     if (exists == null) return false;
-    if(exists.show == null) return false; // ? yes/no ?
+    if (exists.show == null) return false; // ? yes/no ?
     return true;
   }
   function shownColumn(id) {
@@ -126,7 +129,10 @@
     $Columns = $Columns;
     try {
       viewModel.pluginStates.hide.hiddenColumnIds.set(
-      $Columns.filter((x) => (x.show == false || x.show == null)).map((x) => x.id));
+        $Columns
+          .filter((x) => x.show == false || x.show == null)
+          .map((x) => x.id),
+      );
     } catch (e) {
       // console.error(e);
     }
@@ -157,7 +163,7 @@
   function setSort(id, value) {
     if (Array.isArray($Columns) == false) $Columns = [];
     if ($Columns.find((x) => x.id == id) == null) {
-      $Columns.push({ id, order: value, show: false});
+      $Columns.push({ id, order: value, show: false });
       $Columns = $Columns;
     } else {
       $Columns.find((x) => x.id == id).order = value;
@@ -224,7 +230,9 @@
       }
     }
     viewModel.pluginStates.hide.hiddenColumnIds.set(
-      $Columns.filter((x) => x.show == false || x.show == null).map((x) => x.id),
+      $Columns
+        .filter((x) => x.show == false || x.show == null)
+        .map((x) => x.id),
       // Object.entries($ShowColumns)
       //   .filter(([, hide]) => !hide)
       //   .map(([id]) => id),
@@ -538,7 +546,7 @@
   updateShowColumns(viewModel);
 
   $: viewModel.pluginStates.hide.hiddenColumnIds.set(
-    $Columns.filter((x) => (x.show == false || x.show == null)).map((x) => x.id),
+    $Columns.filter((x) => x.show == false || x.show == null).map((x) => x.id),
     // Object.entries($ShowColumns)
     //   .filter(([, hide]) => !hide)
     //   .map(([id]) => id),
@@ -871,6 +879,63 @@
       </DropdownMenu.Content>
     </DropdownMenu.Root>
 
+    {#if $Columns.length > 15}
+      <Sheet.Root>
+        <Sheet.Trigger asChild let:builder>
+          <Button variant="outline" class="ml-auto" builders={[builder]}>
+            Columns <ChevronDown class="ml-2 h-4 w-4" />
+          </Button>
+        </Sheet.Trigger>
+        <Sheet.Content>
+          <Sheet.Header>
+            <Sheet.Title>Select column</Sheet.Title>
+            <Sheet.Description>
+              <ScrollArea
+                class="h-[calc(100vh-20rem)] min-w-[12rem] rounded-md border"
+              >
+                <div class="space-y-2">
+                  {#each $Columns.sort((a, b) => {
+                    return a.id.localeCompare(b.id);
+                  }) as col}
+                    {#if !nonhidableCols.includes(col.id)}
+                      <!-- svelte-ignore a11y-click-events-have-key-events -->
+                      <div
+                        class="flex flex-row items-start space-x-3"
+                        role="button"
+                        tabindex="0"
+                        on:click={(e) => {
+                          // @ts-ignore
+                          // setShownColumn(col.id, e.target.checked)
+                          toggleShownColumn(col.id);
+                          GetData();
+                        }}
+                      >
+                        <Checkbox
+                          checked={shownColumn(col.id)}
+                          on:click={(e) => {
+                            // @ts-ignore
+                            // setShownColumn(col.id, e.target.checked)
+                            toggleShownColumn(col.id);
+                            GetData();
+                          }}
+                        ></Checkbox>
+                        <Label
+                          for="terms2"
+                          class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 peer-data-[disabled=true]:cursor-not-allowed peer-data-[disabled=true]:opacity-70"
+                        >
+                          {col.id}
+                        </Label>
+                      </div>
+                    {/if}
+                  {/each}
+                </div>
+              </ScrollArea>
+            </Sheet.Description>
+          </Sheet.Header>
+        </Sheet.Content>
+      </Sheet.Root>
+    {/if}
+    {#if $Columns.length <= 15}
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild let:builder>
         <Button variant="outline" class="ml-auto" builders={[builder]}>
@@ -878,8 +943,12 @@
         </Button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Content>
-        <ScrollArea class="max-h-[36rem] min-w-[12rem] rounded-md border">
-          {#each viewModel.flatColumns as col}
+        <ScrollArea
+          class="max-h-[36rem] min-w-[12rem] rounded-md border"
+        >
+          {#each $Columns.sort((a, b) => {
+            return a.id.localeCompare(b.id);
+          }) as col}
             {#if !nonhidableCols.includes(col.id)}
               <DropdownMenu.CheckboxItem
                 checked={shownColumn(col.id)}
@@ -890,13 +959,14 @@
                   GetData();
                 }}
               >
-                {col.header}
+                {col.id}
               </DropdownMenu.CheckboxItem>
             {/if}
           {/each}
         </ScrollArea>
       </DropdownMenu.Content>
     </DropdownMenu.Root>
+    {/if}
     <HotkeyButton
       variant="outline"
       size="sm"
