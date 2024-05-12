@@ -3,6 +3,7 @@
 	import { LoadingButton } from "$lib/components/ui/loadingbutton/index.js";
 	export let hidden = false;
 	export let isLoading = false;
+	export let disabled = false;
 	let Ref;
 	import { onMount } from "svelte";
 	import { install, uninstall } from "@github/hotkey";
@@ -21,7 +22,7 @@
 	});
 </script>
 <div bind:this={Ref} style:display={!hidden == true ? "block" : "none"}>
-<LoadingButton on:click on:keydown {...$$restProps} {isLoading}>
+<LoadingButton on:click on:keydown {...$$restProps} {isLoading} {disabled}>
 	<slot />
 </LoadingButton>
 </div>

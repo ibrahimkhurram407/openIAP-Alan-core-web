@@ -2,7 +2,7 @@
   import { onMount, createEventDispatcher, tick } from "svelte";
   import SuperDebug from "sveltekit-superforms";
   import { client, isSignedin } from "$lib/stores";
-  import { repositionableColumn} from "./repositionableColumn.js";
+  import { repositionableColumn } from "./repositionableColumn.js";
   import {
     createTable,
     Render,
@@ -15,7 +15,7 @@
     addSelectedRows,
   } from "svelte-headless-table/plugins";
   import { ScrollArea } from "$lib/components/ui/scroll-area/index.js";
-  import { swipe } from 'svelte-gestures';
+  import { swipe } from "svelte-gestures";
   import ArrowUp from "lucide-svelte/icons/arrow-up";
   import ArrowDown from "lucide-svelte/icons/arrow-down";
   import ChevronDown from "lucide-svelte/icons/chevron-down";
@@ -106,32 +106,22 @@
 
   let selectedDataIds;
 
-  function updateSortKeys() {
-    // let sortDefault = [{ id: "_created", order: "desc" }];
-    // if (collectionname == "dbusage") {
-    //   sortDefault = [];
-    // } else if (collectionname == "cvr") {
-    //   sortDefault = [{ id: "sidstOpdateret", order: "desc" }];
-    // }
-    let sortDefault = [];
-    sortKeys = setting(key, "sortKeys", sortDefault);
-  }
   function hasShownColumn(id) {
-    if(Array.isArray($ShowColumns) == false) $ShowColumns = [];
+    if (Array.isArray($ShowColumns) == false) $ShowColumns = [];
     const exists = $ShowColumns.find((x) => x.id == id);
-    if(exists == null) return false;
+    if (exists == null) return false;
     return true;
   }
   function shownColumn(id) {
-    if(Array.isArray($ShowColumns) == false) $ShowColumns = [];
+    if (Array.isArray($ShowColumns) == false) $ShowColumns = [];
     const exists = $ShowColumns.find((x) => x.id == id);
-    if(exists == null) return false;
+    if (exists == null) return false;
     return exists.show;
   }
   function setShownColumn(id, value) {
-    if(Array.isArray($ShowColumns) == false) $ShowColumns = [];
-    if($ShowColumns.find((x) => x.id == id) == null) {
-      $ShowColumns.push({id, show: value});
+    if (Array.isArray($ShowColumns) == false) $ShowColumns = [];
+    if ($ShowColumns.find((x) => x.id == id) == null) {
+      $ShowColumns.push({ id, show: value });
     } else {
       $ShowColumns.find((x) => x.id == id).show = value;
     }
@@ -140,7 +130,7 @@
     setShownColumn(id, !shownColumn(id));
   }
   function moveShownColumn(from, to) {
-    if(Array.isArray($ShowColumns) == false) $ShowColumns = [];
+    if (Array.isArray($ShowColumns) == false) $ShowColumns = [];
     const fromIndex = $ShowColumns.findIndex((x) => x.id == from);
     const toIndex = $ShowColumns.findIndex((x) => x.id == to);
     console.log(fromIndex, toIndex, $ShowColumns);
@@ -149,6 +139,41 @@
     $ShowColumns.splice(fromIndex, 1);
     $ShowColumns.splice(toIndex, 0, fromItem);
     $ShowColumns = $ShowColumns;
+  }
+  function updateSortKeys() {
+    let sortDefault = [];
+    sortKeys = setting(key, "sortKeys", sortDefault);
+  }
+  function sortby(key) {
+    var exists = $sortKeys.find((x) => x.id == key);
+    if (exists == null) return null;
+    return exists.order;
+  }
+  function toggleSort(e, id) {
+    e.preventDefault();
+    e.stopPropagation();
+    const sortKey = $sortKeys.find((x) => x.id == id);
+    if (sortKey == null) {
+      if (!multiSort) $sortKeys = [{ id, order: "asc" }];
+      if (multiSort) $sortKeys = $sortKeys.concat([{ id, order: "asc" }]);
+    } else {
+      if (sortKey.order == "asc") {
+        sortKey.order = "desc";
+        $sortKeys = $sortKeys; // update store
+      } else {
+        if (!multiSort) $sortKeys = [];
+        if (multiSort) $sortKeys = $sortKeys.filter((x) => x.id != id);
+      }
+    }
+    GetData();
+  }
+  function getOrderBy() {
+    const orderby = {};
+    for (let i = 0; i < $sortKeys.length; i++) {
+      const sortKey = $sortKeys[i];
+      orderby[sortKey.id] = sortKey.order == "desc" ? -1 : 1;
+    }
+    return orderby;
   }
   function updateShowColumns(viewModel) {
     for (let y = 0; y < $sortKeys.length; y++) {
@@ -260,6 +285,7 @@
   // const items = writable([{_id: "12", name: "test"}]);
   const items = writable([]);
   function addColumn(table, columns, id, sample) {
+    if (columns.find((x) => x.id == id) != null) return;
     console.log("addColumn", id, columns.length);
     if (id == "_id") {
       return columns.push(
@@ -348,9 +374,6 @@
 
     if ($items.length > 0) {
       addColumn(table, columns, "name", "");
-      var keys = Object.keys($items[0]);
-      // var keys2 = Object.keys($ShowColumns);
-      // keep the columns in the same order as the keys
       for (let i = 0; i < $ShowColumns.length; i++) {
         const key = $ShowColumns[i].id;
         if (key == "") continue;
@@ -364,19 +387,27 @@
           addColumn(table, columns, key, value);
         } catch (error3) {}
       }
-      // add any new columns
-      for (let i = 0; i < keys.length; i++) {
-        const key = keys[i];
-        // if (keys2.indexOf(key) != -1) continue;
-        if(hasShownColumn(key) == true) continue;
-        if (key == "_created" || key == "_modified") {
-        } else if (key.startsWith("_") || key == "name") {
-          continue;
+
+      for (var i = 0; i < $items.length; i++) {
+        var item = $items[i];
+        if (item == null) continue;
+        var keys = Object.keys(item);
+        for (let i = 0; i < keys.length; i++) {
+          const key = keys[i];
+          // if (keys2.indexOf(key) != -1) continue;
+          if (hasShownColumn(key) == true) continue;
+          if (key == "_created" || key == "_modified") {
+          } else if (key.startsWith("_") || key == "name") {
+            continue;
+          }
+          if (columns.find((x) => x.id == key) != null) continue;
+          var value = item[key];
+          addColumn(table, columns, key, value);
         }
-        if (columns.find((x) => x.id == key) != null) continue;
-        var value = $items[0][key];
-        addColumn(table, columns, key, value);
       }
+      // var keys2 = Object.keys($ShowColumns);
+      // keep the columns in the same order as the keys
+      // add any new columns
       // force adding columns that we are sorting by
       for (let y = 0; y < $sortKeys.length; y++) {
         const key = $sortKeys[y].id;
@@ -444,8 +475,8 @@
   let unsub;
   $: {
     headerRows = viewModel.headerRows;
-    if(unsub != null) unsub();
-    unsub = headerRows.subscribe((value:any) => {
+    if (unsub != null) unsub();
+    unsub = headerRows.subscribe((value: any) => {
       // console.log("cells", value, value[0].cells.map(x=> x.id));
       // console.log("headerRows", value.cells.map(x=> x.id));
     });
@@ -491,7 +522,7 @@
     //   .map(([id]) => id),
   );
   let _magickey = magickey;
-  $: if(magickey != _magickey) {
+  $: if (magickey != _magickey) {
     GetData();
   }
 
@@ -505,11 +536,7 @@
       if ($isSignedin == false) return;
       loading = true;
       try {
-        let orderby = {};
-        for (let i = 0; i < $sortKeys.length; i++) {
-          const sortKey = $sortKeys[i];
-          orderby[sortKey.id] = sortKey.order == "desc" ? -1 : 1;
-        }
+        let orderby = getOrderBy();
         $currentquery = createQuery();
         if ($currentquery == null) {
           loading = false;
@@ -590,46 +617,27 @@
   function visibleColumnsCount() {
     return Object.values($ShowColumns).filter((x) => x).length;
   }
-  function sortby(key) {
-    var exists = $sortKeys.find((x) => x.id == key);
-    if (exists == null) return null;
-    return exists.order;
-  }
-  function toggleSort(e, id) {
-    e.preventDefault();
-    e.stopPropagation();
-    const sortKey = $sortKeys.find((x) => x.id == id);
-    if (sortKey == null) {
-      if (!multiSort) $sortKeys = [{ id, order: "asc" }];
-      if (multiSort) $sortKeys = $sortKeys.concat([{ id, order: "asc" }]);
-    } else {
-      if (sortKey.order == "asc") {
-        sortKey.order = "desc";
-        $sortKeys = $sortKeys; // update store
-      } else {
-        if (!multiSort) $sortKeys = [];
-        if (multiSort) $sortKeys = $sortKeys.filter((x) => x.id != id);
-      }
-    }
-    GetData();
-  }
   function handlerswipe(event) {
-    if(event.detail.direction == "left") {
+    if (event.detail.direction == "left") {
       $pageIndex = $pageIndex + 1;
-      if($pageIndex > Math.ceil($serverItemCount / $pagesize)) {
+      if ($pageIndex > Math.ceil($serverItemCount / $pagesize)) {
         $pageIndex = Math.ceil($serverItemCount / $pagesize) - 1;
       }
     }
-    if(event.detail.direction == "right") {
+    if (event.detail.direction == "right") {
       $pageIndex = $pageIndex - 1;
-      if($pageIndex < 0) {
+      if ($pageIndex < 0) {
         $pageIndex = 0;
       }
     }
   }
 </script>
 
-<div class={cn("", className)} use:swipe={{ timeframe: 300, minSwipeDistance: 100}} on:swipe={handlerswipe}>
+<div
+  class={cn("", className)}
+  use:swipe={{ timeframe: 300, minSwipeDistance: 100 }}
+  on:swipe={handlerswipe}
+>
   {#if $error != null && $error != ""}
     <SuperDebug data={$error} />
   {/if}
@@ -666,27 +674,27 @@
                       {...attrs}
                       style="width: {fixedColumnsSizes[cell.id]}px;"
                     >
-                    <div
-                    draggable="true"
-                    use:repositionableColumn={cell}
-                    on:move={(e) => {
-                      moveShownColumn(e.detail.from, e.detail.to);
-                      GetData();                      
-                    }}
-                    >
-                      <Button
-                        tabindex="-1"
-                        variant="ghost"
-                        on:click={(e) => toggleSort(e, cell.id)}
+                      <div
+                        draggable="true"
+                        use:repositionableColumn={cell}
+                        on:move={(e) => {
+                          moveShownColumn(e.detail.from, e.detail.to);
+                          GetData();
+                        }}
                       >
-                        <Render of={cell.render()} />
-                        {#if sortby(cell.id) == "asc"}
-                          <ArrowUp class="ml-2 h-4 w-4" />
-                        {:else if sortby(cell.id) == "desc"}
-                          <ArrowDown class="ml-2 h-4 w-4" />
-                        {/if}
-                      </Button>
-                    </div>
+                        <Button
+                          tabindex="-1"
+                          variant="ghost"
+                          on:click={(e) => toggleSort(e, cell.id)}
+                        >
+                          <Render of={cell.render()} />
+                          {#if sortby(cell.id) == "asc"}
+                            <ArrowUp class="ml-2 h-4 w-4" />
+                          {:else if sortby(cell.id) == "desc"}
+                            <ArrowDown class="ml-2 h-4 w-4" />
+                          {/if}
+                        </Button>
+                      </div>
                     </Table.Head>
                   {:else if cell.id === "id" || cell.id === "_id"}
                     <Table.Head
@@ -700,27 +708,27 @@
                       {...attrs}
                       style="width: {50 / visibleColumnsCount()}%;"
                     >
-                    <div
-                    draggable="true"
-                    use:repositionableColumn={cell}
-                    on:move={(e) => {
-                      moveShownColumn(e.detail.from, e.detail.to);
-                      GetData();                      
-                    }}
-                    >
-                      <Button
-                        tabindex="-1"
-                        variant="ghost"
-                        on:click={(e) => toggleSort(e, cell.id)}
+                      <div
+                        draggable="true"
+                        use:repositionableColumn={cell}
+                        on:move={(e) => {
+                          moveShownColumn(e.detail.from, e.detail.to);
+                          GetData();
+                        }}
                       >
-                        <Render of={cell.render()} />
-                        {#if sortby(cell.id) == "asc"}
-                          <ArrowUp class="ml-2 h-4 w-4" />
-                        {:else if sortby(cell.id) == "desc"}
-                          <ArrowDown class="ml-2 h-4 w-4" />
-                        {/if}
-                      </Button>
-                      </div>  
+                        <Button
+                          tabindex="-1"
+                          variant="ghost"
+                          on:click={(e) => toggleSort(e, cell.id)}
+                        >
+                          <Render of={cell.render()} />
+                          {#if sortby(cell.id) == "asc"}
+                            <ArrowUp class="ml-2 h-4 w-4" />
+                          {:else if sortby(cell.id) == "desc"}
+                            <ArrowDown class="ml-2 h-4 w-4" />
+                          {/if}
+                        </Button>
+                      </div>
                     </Table.Head>
                   {/if}
                 </Subscribe>
@@ -850,14 +858,14 @@
         <ScrollArea class="max-h-[36rem] min-w-[12rem] rounded-md border">
           {#each viewModel.flatColumns as col}
             {#if !nonhidableCols.includes(col.id)}
-              <DropdownMenu.CheckboxItem 
-              checked={shownColumn(col.id)}
-              on:click={(e) => {
-                // @ts-ignore
-                // setShownColumn(col.id, e.target.checked)
-                toggleShownColumn(col.id);
-                GetData();
-              }}
+              <DropdownMenu.CheckboxItem
+                checked={shownColumn(col.id)}
+                on:click={(e) => {
+                  // @ts-ignore
+                  // setShownColumn(col.id, e.target.checked)
+                  toggleShownColumn(col.id);
+                  GetData();
+                }}
               >
                 {col.header}
               </DropdownMenu.CheckboxItem>
@@ -886,6 +894,7 @@
         });
       }}>Delete</HotkeyButton
     >
+    {$pageIndex}
     <HotkeyButton
       variant="outline"
       size="sm"
@@ -921,4 +930,3 @@
     <SuperDebug data={$explainquery} />
   {/if}
 </div>
-<SuperDebug data={$ShowColumns.filter(x=>x.show)} />
