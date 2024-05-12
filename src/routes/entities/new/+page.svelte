@@ -7,7 +7,7 @@
   import { ACL } from "$lib/acl/index.js";
 
   import { Entity } from "$lib/entity";
-  import { client } from "$lib/stores";
+  import { client, collections } from "$lib/stores";
   import { z } from "zod";
 
   let data2 = {
@@ -65,6 +65,7 @@
       }
       isLoading = true;
       await $client.CreateCollection(data2)
+      $collections = [];
       goto(base + `/entities/${data.name}`);
     } catch (error) {
       $errormessage = error.message;

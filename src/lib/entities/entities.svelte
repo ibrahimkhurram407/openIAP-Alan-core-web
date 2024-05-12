@@ -144,7 +144,6 @@
     if (Array.isArray($Columns) == false) $Columns = [];
     const fromIndex = $Columns.findIndex((x) => x.id == from);
     const toIndex = $Columns.findIndex((x) => x.id == to);
-    console.log(fromIndex, toIndex, $Columns);
     if (fromIndex == -1 || toIndex == -1) return;
     const fromItem = $Columns[fromIndex];
     $Columns.splice(fromIndex, 1);
@@ -315,7 +314,6 @@
   const items = writable([]);
   function addColumn(table, columns, id, sample) {
     if (columns.find((x) => x.id == id) != null) return;
-    console.log("addColumn", id, columns.length);
     if (id == "_id") {
       return columns.push(
         table.column({
@@ -501,17 +499,9 @@
   let rows = viewModel.rows;
 
   $: tableAttrs = viewModel.tableAttrs;
-  let unsub;
   $: {
     headerRows = viewModel.headerRows;
-    if (unsub != null) unsub();
-    unsub = headerRows.subscribe((value: any) => {
-      // console.log("cells", value, value[0].cells.map(x=> x.id));
-      // console.log("headerRows", value.cells.map(x=> x.id));
-    });
-    // console.log("headerRows", $headerRows.cells.map(x=> x.id));
   }
-  // updateColumns();
   $: tableBodyAttrs = viewModel.tableBodyAttrs;
   $: pageRows = viewModel.pageRows;
   $: rows = viewModel.rows;
@@ -523,7 +513,6 @@
     _pageindex = setting(key, "pageindex", 0);
     pagesize = setting(key, "pagesize", 10);
     Columns = setting(key, "ShowColumns", []);
-    // updateColumns();
 
     $pageIndex = $_pageindex;
     $serverItemCount = -1;

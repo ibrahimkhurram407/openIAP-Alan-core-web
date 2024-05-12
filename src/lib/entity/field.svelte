@@ -76,7 +76,6 @@
           .toISOString()
           .split("T")[0] : null;
         _dvalue = dvalue;
-        console.log(dvalue);
         _dvalue = dvalue;
       } // Show as local time
       if(_tvalue == null) {
@@ -87,12 +86,10 @@
           .split("T")[1].substring(0, 8) : null;
         _tvalue = tvalue;
       } // Show as local time
-      console.log(_dvalue, _tvalue, dtvalue)
       if(dvalue != _dvalue || tvalue != _tvalue) {
         // dtvalue = new Date(`${dvalue}T${tvalue}Z`); // When showing UTC
         dtvalue = new Date(`${dvalue}T${tvalue}`); // When showing local time
         value = dtvalue.toISOString();
-        console.log(value);
         _dvalue = dvalue;
         _tvalue = tvalue;
       }

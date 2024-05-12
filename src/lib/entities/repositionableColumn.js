@@ -18,7 +18,6 @@ export function repositionableColumn(node, column) {
       const data = JSON.parse(json)
       if(data.column == null || data.column == "") return
       if(data.column === column.id) return
-      console.log('movecolumn', data.column, "on", column.id);
       node.dispatchEvent(
         new CustomEvent('move', {
           detail: { from: data.column, to: column.id },

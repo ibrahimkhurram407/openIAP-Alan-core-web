@@ -74,7 +74,6 @@
 	}
 	async function init() {
 		const tu = await loadLocalJWTUser();
-		console.log("tu", tu);
 		if(tu != null && tu.jwt != null && tu.jwt != "") {
 			$showLocalForm = false;
 			$showOr = false;

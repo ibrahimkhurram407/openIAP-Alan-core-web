@@ -9,6 +9,8 @@
   import { SearchInput } from "$lib/components/ui/searchinput";
   import { ScrollArea } from "$lib/components/ui/scroll-area/index.js";
   import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
+  import * as AlertDialog from "$lib/components/ui/alert-dialog";
+
   import { Button } from "$lib/components/ui/button";
   import { page } from "$app/stores";
   import { Entities } from "$lib/entities";
@@ -43,6 +45,23 @@
     "selectedDataIds",
     {},
   );
+  let deletecollectionname = "";
+  let deletecollectionprompt = false;
+  $: if(deletecollectionprompt == false) {
+    deletecollectionname = ""
+  }
+  function ondeletecollection() {
+    try {
+      $client.DropCollection({ collectionname: deletecollectionname });
+      $collections = $collections.filter((x) => x.name != deletecollectionname);
+      magickey++;
+      $collectionname = "entities";
+    } catch (error) {
+      console.error("Error deleting collection", error);
+    }
+    deletecollectionname = "";
+    deletecollectionprompt = false;
+  }
 
   function onCollectionindex(value) {
     if ($collections.length > 0 && value >= 0 && value < $collections.length) {
@@ -59,18 +78,38 @@
   }
 
   let loading = false;
+  let reloading = false;
   const GetData = async () => {
+    console.log("Getting data");
     try {
       if ($collections.length > 0) {
         $collectionindex = $collections.findIndex(
           (x) => x.name == $collectionname,
         );
         await tick();
-        scrollToItem($collectionindex);
+        if($collectionindex > -1) scrollToItem($collectionindex);
+        if($collectionindex == -1) {
+          console.log("Collection not found, reloading in 500ms", $collectionname, $collections);
+          if(reloading == true) {
+            reloading = false
+            return;
+          }
+          reloading = true
+          await new Promise((r) => setTimeout(r, 500));
+          $collections = [];
+          GetData();
+        }
+        console.log("Collection found", $collectionname, $collections);
         return;
       }
-      if (loading) return;
-      if ($isSignedin == false) return;
+      if (loading) {
+        console.log("Already loading");
+        return;
+      }
+      if ($isSignedin == false) {
+        console.log("Not signed in");
+        return;
+      }
       loading = true;
       try {
         $collections = await $client.ListCollections({});
@@ -78,7 +117,10 @@
           (x) => x.name == $collectionname,
         );
         await tick();
-        scrollToItem($collectionindex);
+        if($collectionindex > -1) scrollToItem($collectionindex);
+        if($collectionindex == -1) {
+          
+        }
       } catch (error) {
         console.error("Error getting data", error);
       }
@@ -239,17 +281,18 @@
             </ContextMenu.Item>
             <ContextMenu.Item inset on:click={
               () => {
-                try {
-                  const response = prompt("Are you sure you want to delete the collection " + rightclickcollectionname + "? Type 'delete' to confirm.");
-                  if (response != "delete") return;
-                  $client.DropCollection({ collectionname: rightclickcollectionname });
-                  $collections = $collections.filter((x) => x.name != rightclickcollectionname);
-                  magickey++;
-                  $collectionname = "entities";
-                } catch (error) {
-                  console.error("Error deleting collection", error);
-                }
-
+                deletecollectionname = rightclickcollectionname;
+                deletecollectionprompt = true;
+                // try {
+                //   const response = prompt("Are you sure you want to delete the collection " + rightclickcollectionname + "? Type 'delete' to confirm.");
+                //   if (response != "delete") return;
+                //   $client.DropCollection({ collectionname: rightclickcollectionname });
+                //   $collections = $collections.filter((x) => x.name != rightclickcollectionname);
+                //   magickey++;
+                //   $collectionname = "entities";
+                // } catch (error) {
+                //   console.error("Error deleting collection", error);
+                // }
               }                          
             }>
               Delete
@@ -301,6 +344,26 @@
   on:click={() => ($collectionindex = $collectionindex + 1)}
   disabled={$collectionindex >= $collections.length - 1}>Next</HotkeyButton
 >
+<AlertDialog.Root bind:open={deletecollectionprompt}>
+  <AlertDialog.Content>
+    <AlertDialog.Header>
+      <AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
+      <AlertDialog.Description>
+        This action cannot be undone. This will permanently delete {deletecollectionname}
+        and all data associated with it.
+      </AlertDialog.Description>
+    </AlertDialog.Header>
+    <AlertDialog.Footer>
+      <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+      <AlertDialog.Action on:click={ondeletecollection}>Continue</AlertDialog.Action>
+      <HotkeyButton
+      hidden
+      data-shortcut={"Control+c,Meta+c,Alt+c"}
+      on:click={ondeletecollection}>doit</HotkeyButton>
+
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>
 
 <!-- <SuperDebug data={$selectedDataIds} /> -->
 
