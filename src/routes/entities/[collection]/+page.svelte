@@ -54,7 +54,7 @@
     try {
       $client.DropCollection({ collectionname: deletecollectionname });
       $collections = $collections.filter((x) => x.name != deletecollectionname);
-      magickey++;
+      updateData();
       $collectionname = "entities";
     } catch (error) {
       console.error("Error deleting collection", error);
@@ -80,7 +80,6 @@
   let loading = false;
   let reloading = false;
   const GetData = async () => {
-    console.log("Getting data");
     try {
       if ($collections.length > 0) {
         $collectionindex = $collections.findIndex(
@@ -89,7 +88,6 @@
         await tick();
         if($collectionindex > -1) scrollToItem($collectionindex);
         if($collectionindex == -1) {
-          console.log("Collection not found, reloading in 500ms", $collectionname, $collections);
           if(reloading == true) {
             reloading = false
             return;
@@ -99,15 +97,12 @@
           $collections = [];
           GetData();
         }
-        console.log("Collection found", $collectionname, $collections);
         return;
       }
       if (loading) {
-        console.log("Already loading");
         return;
       }
       if ($isSignedin == false) {
-        console.log("Not signed in");
         return;
       }
       loading = true;
@@ -185,7 +180,7 @@
   let rightclickcollectionname = "";
   let explain = false;
   let showquery = false;
-  let magickey = 0;
+  let updateData;
 </script>
 
 <div class="grid grid-cols-[1fr,min-content,min-content,0px] gap-2 mb-1">
@@ -283,16 +278,6 @@
               () => {
                 deletecollectionname = rightclickcollectionname;
                 deletecollectionprompt = true;
-                // try {
-                //   const response = prompt("Are you sure you want to delete the collection " + rightclickcollectionname + "? Type 'delete' to confirm.");
-                //   if (response != "delete") return;
-                //   $client.DropCollection({ collectionname: rightclickcollectionname });
-                //   $collections = $collections.filter((x) => x.name != rightclickcollectionname);
-                //   magickey++;
-                //   $collectionname = "entities";
-                // } catch (error) {
-                //   console.error("Error deleting collection", error);
-                // }
               }                          
             }>
               Delete
@@ -306,10 +291,10 @@
           key={"entities_" + $collectionname}
           bind:searchstring={$searchstring}
           collectionname={$collectionname}
+          bind:update={updateData}
           {query}
           {explain}
           {showquery}
-          {magickey}
           on:click={(e) => {
             const id = e.detail.row.dataId;
             goto(base + `/entities/${e.detail.collectionname}/${id}`);
@@ -324,14 +309,13 @@
               query,
             });
             setSetting("entities_" + $collectionname, "selectedDataIds", {});
-            magickey++;
+            updateData();
           }}
         />
       </div>
     </div>
   </div>
 </div>
-
 <HotkeyButton
   hidden
   data-shortcut={"ArrowUp"}

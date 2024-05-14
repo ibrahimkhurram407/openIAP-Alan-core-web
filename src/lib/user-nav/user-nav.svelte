@@ -5,7 +5,7 @@
   import { goto } from "$app/navigation";
   import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
   import { Button } from "$lib/components/ui/button";
-  import User from "lucide-svelte/icons/user";
+  import User from "lucide-svelte/icons/user-round";
 
   import { signOut, signIn } from "$lib/auth";
   import { isAuthenticated, user } from "$lib/stores";

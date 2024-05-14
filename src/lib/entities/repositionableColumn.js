@@ -24,7 +24,6 @@ export function repositionableColumn(node, column) {
         })
       )
     } catch (e) {
-      console.error(e)
     }
   }
 

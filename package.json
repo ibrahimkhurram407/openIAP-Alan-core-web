@@ -44,6 +44,7 @@
   },
   "dependencies": {
     "@internationalized/date": "^3.5.2",
+    "@tsparticles/confetti": "^3.4.0",
     "cmdk-sv": "^0.0.17",
     "svelte-autosize": "^1.1.0",
     "svelte-gestures": "^4.0.0"

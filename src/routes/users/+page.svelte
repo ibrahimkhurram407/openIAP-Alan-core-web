@@ -17,6 +17,7 @@
     "dbusage",
     "validated",
   ];
+  let updateData;
 </script>
 
 <SearchInput
@@ -25,6 +26,7 @@
   data-shortcut={"Control+f,Meta+f"}
 ></SearchInput>
 <Entities
+  bind:update={updateData}
   {key}
   bind:searchstring={$searchstring}
   {collectionname}
@@ -41,5 +43,6 @@
     const query = { _id: { $in: e.detail.items } };
     await $client.DeleteMany({ collectionname, query });
     setSetting(key, "selectedDataIds", {});
+    updateData();
   }}
 />

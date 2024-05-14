@@ -75,12 +75,10 @@
   export let showInsert = true;
   export let showDelete = true;
   export let multiSort = false;
-  export let magickey = 0;
+  export const update = () => GetData();
 
   let explainquery = writable(null);
 
-  // deleteAllSettings
-  // deleteSettings(key)
   let unsubscribe4;
   let unsubscribe5;
 
@@ -133,9 +131,7 @@
           .filter((x) => x.show == false || x.show == null)
           .map((x) => x.id),
       );
-    } catch (e) {
-      // console.error(e);
-    }
+    } catch (e) {}
   }
   function toggleShownColumn(id) {
     setShownColumn(id, !shownColumn(id));
@@ -248,7 +244,6 @@
         const errorMessage =
           "Cannot parse " + (isEmptyArray ? "an empty array" : String(txt));
         $error = errorMessage;
-        console.error(errorMessage);
         throw new TypeError(errorMessage);
       }
       const syntaxErr = e.message.match(/^Unexpected token.*position\s+(\d+)/i);
@@ -274,7 +269,6 @@
     try {
       return Function(`"use strict";return (` + jsStr + `)`)();
     } catch (e) {
-      console.error(e);
       $error = e.message;
       return null;
     }
@@ -295,7 +289,6 @@
           try {
             q = safeEval(searchstring);
           } catch (error2) {
-            console.error(error2);
             $error = e.message;
             return null;
           }
@@ -410,7 +403,7 @@
         }
         try {
           if (columns.find((x) => x.id == key) != null) continue;
-          var value = $items[0][key];
+          var value = $items.find((x) => x[key] != null)[key];
           addColumn(table, columns, key, value);
         } catch (error3) {}
       }
@@ -540,11 +533,6 @@
     //   .filter(([, hide]) => !hide)
     //   .map(([id]) => id),
   );
-  let _magickey = magickey;
-  $: if (magickey != _magickey) {
-    GetData();
-  }
-
   const nonhidableCols = ["_id", ""];
 
   let loading = false;
@@ -591,7 +579,6 @@
           if (filteredresults.length == 3) break;
         }
       } catch (e) {
-        console.error(e);
         $error = e.message;
       }
       loading = false;
@@ -608,7 +595,6 @@
         }
       }
     } catch (e) {
-      console.error(e);
       $error = e.message;
     }
   };
@@ -800,15 +786,15 @@
   </div>
   <div class="flex items-center space-x-4 py-4">
     <div class="flex-1 text-sm text-muted-foreground">
-      Page {$pageIndex + 1} of {Math.ceil($serverItemCount / $pagesize)}
+      Page {$pageIndex + 1} of {Math.ceil($serverItemCount / $pagesize)} / 
       {#if Object.keys($selectedDataIds).length > 0}
-        (
         {Object.keys($selectedDataIds).length} of{" "}
-        {$serverItemCount} row(s) selected. )
+        {$serverItemCount} row(s) selected.
       {:else}
-        ( {$serverItemCount} row(s) )
+        {$serverItemCount} row(s) in {collectionname}
       {/if}
       in {collectionname}
+      
     </div>
     <HotkeyButton
       hidden
@@ -893,20 +879,15 @@
                         role="button"
                         tabindex="0"
                         on:click={(e) => {
-                          // @ts-ignore
-                          // setShownColumn(col.id, e.target.checked)
+                          e.stopPropagation();
+                          e.preventDefault();
+                          console.log("div click");
                           toggleShownColumn(col.id);
                           GetData();
                         }}
                       >
                         <Checkbox
                           checked={shownColumn(col.id)}
-                          on:click={(e) => {
-                            // @ts-ignore
-                            // setShownColumn(col.id, e.target.checked)
-                            toggleShownColumn(col.id);
-                            GetData();
-                          }}
                         ></Checkbox>
                         <Label
                           for="terms2"
@@ -925,36 +906,32 @@
       </Sheet.Root>
     {/if}
     {#if $Columns.length <= 15}
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild let:builder>
-        <Button variant="outline" class="ml-auto" builders={[builder]}>
-          Columns <ChevronDown class="ml-2 h-4 w-4" />
-        </Button>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Content>
-        <ScrollArea
-          class="max-h-[36rem] min-w-[12rem] rounded-md border"
-        >
-          {#each $Columns.sort((a, b) => {
-            return a.id.localeCompare(b.id);
-          }) as col}
-            {#if !nonhidableCols.includes(col.id)}
-              <DropdownMenu.CheckboxItem
-                checked={shownColumn(col.id)}
-                on:click={(e) => {
-                  // @ts-ignore
-                  // setShownColumn(col.id, e.target.checked)
-                  toggleShownColumn(col.id);
-                  GetData();
-                }}
-              >
-                {col.id}
-              </DropdownMenu.CheckboxItem>
-            {/if}
-          {/each}
-        </ScrollArea>
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild let:builder>
+          <Button variant="outline" class="ml-auto" builders={[builder]}>
+            Columns <ChevronDown class="ml-2 h-4 w-4" />
+          </Button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content>
+          <ScrollArea class="max-h-[36rem] min-w-[12rem] rounded-md border">
+            {#each $Columns.sort((a, b) => {
+              return a.id.localeCompare(b.id);
+            }) as col}
+              {#if !nonhidableCols.includes(col.id)}
+                <DropdownMenu.CheckboxItem
+                  checked={shownColumn(col.id)}
+                  on:click={(e) => {
+                    toggleShownColumn(col.id);
+                    GetData();
+                  }}
+                >
+                  {col.id}
+                </DropdownMenu.CheckboxItem>
+              {/if}
+            {/each}
+          </ScrollArea>
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
     {/if}
     <HotkeyButton
       variant="outline"

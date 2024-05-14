@@ -33,9 +33,6 @@
 
   let data: Writable<any> = writable({});
   let errormessage = writable(null);
-  $: if ($errormessage != "") {
-    console.log("errormessage", $errormessage);
-  }
   const _id = $page.params.id;
   let isLoading = false;
   let sform = null;
@@ -65,11 +62,9 @@
   async function onsubmit(e) {
     $errormessage = "";
     e.preventDefault();
-    console.log("data", $data);
     const vform = await superValidate($data, zod(_Schema));
     if (vform.valid) {
       // dispatch("submit", { data: vform.data });
-      console.log("data", vform.data);
       try {
         isLoading = true;
         await $client.UpdateOne({
@@ -103,7 +98,7 @@
   }
 </script>
 
-<h1>Add role</h1>
+<h1>Edit role</h1>
 
 {#if $errormessage}<h3>{$errormessage}</h3>{/if}
 
