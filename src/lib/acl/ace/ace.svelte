@@ -26,6 +26,31 @@
   }
 </script>
 
+<div class={cn("flex flex-wrap space-x-4", className)}>
+  <EntitySelector bind:value={value} class="w-[250px]" />
+  {#each items as item}
+    <label for="toggle{item.value}" class="flex items-center cursor-pointer">
+      <!-- toggle -->
+      <div class="relative">
+        <!-- input -->
+        <input type="checkbox" id="toggle{item.value}" class="sr-only" checked={isBitSet(value.rights, item.value)}>
+        <!-- line -->
+        <div class="block bg-gray-600 w-14 h-8 rounded-full"></div>
+        <!-- dot -->
+        <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition" 
+             class:selected="{ isBitSet(value.rights, item.value) }"></div>
+      </div>
+      <!-- label -->
+      <div class="ml-3 font-medium">
+        {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
+      </div>
+    </label>
+  {/each}
+  <slot />
+</div>
+
+
+<!-- 
 <div class={cn("flex flex-wrap", className)}>
   <EntitySelector bind:value={value} class="w-[250px]" />
   {#each items as item}
@@ -47,4 +72,12 @@
     </div>
   {/each}
   <slot />
-</div>
+</div> -->
+
+
+<style>
+input:checked ~ .dot {
+  transform: translateX(100%);
+  background-color: #48bb78;
+}
+</style>
