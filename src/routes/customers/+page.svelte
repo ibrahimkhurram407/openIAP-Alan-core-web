@@ -3,8 +3,9 @@
   import { goto } from "$app/navigation";
   import { Entities } from "$lib/entities";
   import { setting, setSetting } from "$lib/pstore";
-  import { client } from "$lib/stores";
+  import { client, title } from "$lib/stores";
   import { SearchInput } from "$lib/components/ui/searchinput";
+  $title = "Customers";
   const collectionname = "users";
   let query = { _type: "customer" };
   const key = `${query._type}s`;

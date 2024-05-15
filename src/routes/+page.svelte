@@ -1,11 +1,12 @@
 <script>
   import { base } from "$app/paths";
   import { signIn } from "$lib/auth";
-  import { client, isAuthenticated, isSignedin, user } from "$lib/stores";
+  import { client, isAuthenticated, isSignedin, user, title } from "$lib/stores";
   import { onMount } from "svelte";
   import { setting } from "$lib/pstore";
   import { Button } from "$lib/components/ui/button";
   import { confetti } from "@tsparticles/confetti";
+  $title = "OpenIAP";
 
   const count = 200,
     defaults = {

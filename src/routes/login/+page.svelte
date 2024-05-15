@@ -2,6 +2,7 @@
 	import { base } from "$app/paths";
 	import UserAuthForm from "./(components)/user-auth-form.svelte";
 	import { Button } from "$lib/components/ui/button";
+	import { title } from "$lib/stores";
 	import Hairball from "$lib/images/hairball.webp";
 	import Frozonforest from "$lib/images/frozonforest.webp";
 	// import Storemis from "$lib/images/storemis.webp";
@@ -28,10 +29,16 @@
 	let text1 = "Login";
 	let text2 = "Create an account";
 	let text3 = "Enter your email below to create your account";
+	$title = "Login";
 	function flipText() {
 		text1 = text1 === "Login" ? "Create an account" : "Login";
 		text2 = text2 === "Create an account" ? "Login" : "Create an account";
 		text3 = text3 === "Enter your email below to create your account" ? "Enter your email below to login" : "Enter your email below to create your account";
+		if(text1 == "Login") {
+			$title = "Login";
+		} else {
+			$title = "Create an account";
+		}
 	}
 </script>
 

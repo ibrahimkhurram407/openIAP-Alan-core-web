@@ -1,7 +1,7 @@
 <script lang="ts">
   import { base } from "$app/paths";
   import { goto } from "$app/navigation";
-  import { client, user } from "$lib/stores";
+  import { client, user, title } from "$lib/stores";
   import { Input } from "$lib/components/ui/input";
   import { ACL } from "$lib/acl/index.js";
   import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
@@ -11,6 +11,7 @@
   import { z } from "zod";
   import { zod } from "sveltekit-superforms/adapters";
   import SuperDebug, { superForm } from "sveltekit-superforms";
+  $title = "New User";
 
   const _userSchema: any = z
     .object({

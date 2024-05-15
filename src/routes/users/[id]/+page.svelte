@@ -1,7 +1,7 @@
 <script lang="ts">
   import { base } from "$app/paths";
   import { goto } from "$app/navigation";
-  import { client } from "$lib/stores";
+  import { client, title } from "$lib/stores";
   import { Input } from "$lib/components/ui/input";
   import { ACL } from "$lib/acl/index.js";
   import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
@@ -15,6 +15,7 @@
   import { array, custom, object, z } from "zod";
   import SuperDebug, { superForm, setMessage, setError } from "sveltekit-superforms";
     import { zod } from "sveltekit-superforms/adapters";
+  $title = "Edit User";
 
   const _userSchema:any = z.object({ name: z.string().min(2), 
     email: z.string().min(2), dblocked: z.boolean().optional(), 

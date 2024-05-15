@@ -3,7 +3,7 @@
   import { goto } from "$app/navigation";
   import SuperDebug from "sveltekit-superforms";
   import * as ContextMenu from "$lib/components/ui/context-menu";
-  import { client, isSignedin, collections } from "$lib/stores";
+  import { client, title, isSignedin, collections } from "$lib/stores";
   import { setting, setSetting } from "$lib/pstore";
   import { writable } from "svelte/store";
   import { SearchInput } from "$lib/components/ui/searchinput";
@@ -36,6 +36,7 @@
   if ($page.params.collection != null && $page.params.collection != "") {
     $collectionname = $page.params.collection;
   }
+  $title = $collectionname;
   let searchstring = setting("entities_" + $collectionname, "searchstring", "");
 
   const collectionindex = writable(0);
@@ -56,6 +57,7 @@
       $collections = $collections.filter((x) => x.name != deletecollectionname);
       updateData();
       $collectionname = "entities";
+      $title = $collectionname;
     } catch (error) {
       console.error("Error deleting collection", error);
     }
@@ -66,6 +68,7 @@
   function onCollectionindex(value) {
     if ($collections.length > 0 && value >= 0 && value < $collections.length) {
       $collectionname = $collections[value].name;
+      $title = $collectionname;
       searchstring = setting("entities_" + $collectionname, "searchstring", "");
       selectedDataIds = setting(
         "entities_" + $collectionname,
@@ -140,6 +143,7 @@
     if (data.item == null) return;
     if (data.source != "entities") return;
     $collectionname = data.item.name;
+    $title = $collectionname;
     $collectionindex = $collections.findIndex((x) => x.name == $collectionname);
     scrollToItem($collectionindex);
   }

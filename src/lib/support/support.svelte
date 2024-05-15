@@ -10,9 +10,9 @@
 	}
 </script>
 
-<Button variant="ghost" class="relative rounded-full" on:click={openSupportPage} tabindex="-1">
+<Button variant="ghost" class="relative rounded-full" on:click={openSupportPage} tabindex="-1" aria-label="Support" >
 	<Heart color="darkred" />
 </Button>
-<Button variant="ghost" class="relative rounded-full" on:click={openGithubPage} tabindex="-1">
+<Button variant="ghost" class="relative rounded-full" on:click={openGithubPage} tabindex="-1" aria-label="Github" >
 	<Github />
 </Button>

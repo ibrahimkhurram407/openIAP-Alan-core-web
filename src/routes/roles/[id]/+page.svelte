@@ -4,7 +4,7 @@
   import { base } from "$app/paths";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import { client, isSignedin } from "$lib/stores";
+  import { client, title, isSignedin } from "$lib/stores";
   import { Input } from "$lib/components/ui/input";
   import { ACL } from "$lib/acl/index.js";
   import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
@@ -18,6 +18,8 @@
   import { z } from "zod";
   import SuperDebug, { superForm, superValidate } from "sveltekit-superforms";
   import { zod } from "sveltekit-superforms/adapters";
+
+  $title = "Edit Role";
 
   const _Schema: any = z
     .object({
@@ -46,6 +48,7 @@
       });
       if (results.length > 0) {
         $data = results[0];
+        $title = "Edit " + $data.name;
       }
     } catch (error) {
       $errormessage = error.message;

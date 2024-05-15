@@ -7,17 +7,20 @@ jsconfig.settings.doDumpMesssages = false;
 export const baseurl = writable("");
 baseurl.set(window.location.origin);
 if(window.location.origin.includes(":517")) {
-    baseurl.set("https://home.openiap.io");
+    baseurl.set("https://demo.openiap.io");
 }
 export const wsurl = writable("");
 wsurl.set(window.location.origin.replace("https://", "wss://").replace("http://", "ws://") + "/ws/v2");
 if(window.location.origin.includes(":517")) {
-    wsurl.set("wss://home.openiap.io/ws/v2")
+    wsurl.set("wss://demo.openiap.io/ws/v2")
 }
 
 
 /** @type {import("svelte/store").Writable<any>} */
 export const config = writable({});
+export const title = writable("OpenIAP");
+export const metadescription = writable("OpenIAP - Opensource Intelligent Automation Platform");
+
 export const isAuthenticated = writable(false);
 export const isSignedin = writable(false);
 /** @type {import("svelte/store").Writable<any>} */

@@ -165,6 +165,7 @@
       <HotkeyButton
         variant="ghost"
         class="text-muted-foreground"
+        aria-label="Search"
         data-shortcut={"Control+k,Meta+k,Shift+?"}
       >
         <Search />

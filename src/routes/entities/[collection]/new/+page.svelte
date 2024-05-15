@@ -8,7 +8,7 @@
   import { LoadingButton } from "$lib/components/ui/loadingbutton/index.js";
 
   import { Entity } from "$lib/entity";
-  import { client } from "$lib/stores";
+  import { client, title } from "$lib/stores";
 
   // new Date(1978, 3, 5 )
   let data2 = {
@@ -37,6 +37,7 @@
   if ($page.params.collection != null && $page.params.collection != "") {
     $collectionname = $page.params.collection;
   }
+  $title = "Add to " + $collectionname;
   async function onSubmit(e) {
     try {
       isLoading = true;
