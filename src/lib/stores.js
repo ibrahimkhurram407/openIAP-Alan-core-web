@@ -1,20 +1,24 @@
 import { writable } from "svelte/store";
 import { openiap, config as jsconfig } from "@openiap/jsapi";
+import { browser } from '$app/environment';
 jsconfig.settings.DoPing = false;
 jsconfig.settings.DoDumpToConsole = false;
 jsconfig.settings.doDumpMesssages = false;
 
 export const baseurl = writable("");
-baseurl.set(window.location.origin);
-if(window.location.origin.includes(":517")) {
-    baseurl.set("https://demo.openiap.io");
-}
 export const wsurl = writable("");
-wsurl.set(window.location.origin.replace("https://", "wss://").replace("http://", "ws://") + "/ws/v2");
-if(window.location.origin.includes(":517")) {
-    wsurl.set("wss://demo.openiap.io/ws/v2")
+if(browser) {
+  baseurl.set(window.location.origin);
+  if(window.location.origin.includes(":517")) {
+      baseurl.set("https://demo.openiap.io");
+  }
+  wsurl.set(window.location.origin.replace("https://", "wss://").replace("http://", "ws://") + "/ws/v2");
+  if(window.location.origin.includes(":517")) {
+      wsurl.set("wss://demo.openiap.io/ws/v2")
+  }
+} else {
+  baseurl.set("");
 }
-
 
 /** @type {import("svelte/store").Writable<any>} */
 export const config = writable({});

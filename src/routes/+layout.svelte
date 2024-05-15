@@ -12,13 +12,12 @@
 
 	import { isAuthenticated, isSignedin, user, client, title, metadescription } from "$lib/stores";
 	import { onMount } from "svelte";
-    import { signIn, userManager, signOut, getUser } from "$lib/auth";
+    import { signIn, userManager, signOut, getUser } from "$lib/auth.svelte";
 	import { pushState } from "$app/navigation";
-	import { goto } from "$app/navigation";
 	
 	let isSignedinTimer = true;
     onMount(async () => {
-		if (window.location.search.includes("code=")) {
+		if ($page.url.search.includes("code=")) {
             await userManager.signinRedirectCallback();
             pushState(base + "/", {});
         }

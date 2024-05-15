@@ -5,12 +5,13 @@
 	import { title } from "$lib/stores";
 	import Hairball from "$lib/images/hairball.webp";
 	import Frozonforest from "$lib/images/frozonforest.webp";
+	import { page } from "$app/stores";
 	// import Storemis from "$lib/images/storemis.webp";
 	import Haybale from "$lib/images/haybale.webp";
 	let showTerms = false;
-	if(window.location.origin.indexOf("openiap.io") > -1 && window.location.origin.indexOf("localhost.openiap.io") == -1) {
+	if($page.url.hostname.indexOf("openiap.io") > -1 && $page.url.hostname.indexOf("localhost.openiap.io") == -1) {
 		showTerms = true;
-	} else if(window.location.origin.indexOf("localhost") > -1) {
+	} else if($page.url.hostname.indexOf("localhost") > -1) {
 		showTerms = true;
 	}
 	function getRandomImage() {

@@ -35,7 +35,7 @@
       if (result.length > 0) {
         top--;
         results.push(result[0]);
-        if(value.name != result[0].name) {
+        if(value == null || value.name != result[0].name) {
           // value.name = result[0].name;
           value = {...value, _id: result[0]._id, name: result[0].name};
         }
