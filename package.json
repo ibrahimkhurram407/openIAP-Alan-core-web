@@ -6,7 +6,7 @@
     "serve": "vite dev --host",
     "build": "vite build",
     "watch": "vite build --watch",
-    "preview": "vite preview",
+    "preview": "vite build && vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
     "updatejsapi": "npm uninstall @openiap/jsapi && npm -D i openiap/jsapi",
