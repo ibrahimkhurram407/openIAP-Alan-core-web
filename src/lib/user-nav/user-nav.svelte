@@ -7,7 +7,7 @@
   import { Button } from "$lib/components/ui/button";
   import User from "lucide-svelte/icons/user-round";
 
-  import { signOut, signIn } from "$lib/auth.svelte";
+  import { signOut, signIn } from "$lib/auth";
   import { isAuthenticated, user } from "$lib/stores";
   import { deleteAllSettings } from "$lib/pstore";
   let random = Math.floor(Math.random() * 4) + 1;

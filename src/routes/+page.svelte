@@ -1,6 +1,6 @@
 <script>
   import { base } from "$app/paths";
-  import { signIn } from "$lib/auth.svelte";
+  import { signIn } from "$lib/auth";
   import { client, isAuthenticated, isSignedin, user, title } from "$lib/stores";
   import { onMount } from "svelte";
   import { setting } from "$lib/pstore";
