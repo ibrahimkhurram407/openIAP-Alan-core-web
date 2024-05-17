@@ -12,6 +12,9 @@
   export let value;
   /** @type {"object" | "_id"}*/
   export let valuetype;
+  export let query = {};
+  export let collectionname = "users";
+
   function getShape(zodObject) {
     if (zodObject instanceof z.ZodOptional) {
       return zodObject.unwrap();
@@ -35,7 +38,7 @@
 <Form.Field {form} {name} class={cn("", className)}>
   <Form.Control>
     <Form.Label>{name}</Form.Label>
-    <EntitySelector bind:value={entity} {isLoading} />
+    <EntitySelector bind:value={entity} {isLoading} {query} {collectionname} />
   </Form.Control>
   <Form.FieldErrors />
   <Form.Description>{shape._def.description ?? ""}</Form.Description>

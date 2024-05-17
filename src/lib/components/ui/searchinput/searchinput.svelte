@@ -10,6 +10,7 @@
 	import { onDestroy } from "svelte";
 	import { install, uninstall } from "@github/hotkey";
 	onMount(() => {
+		if(Ref == null) return;
 		if(Ref.dataset && Ref.dataset.shortcut) {
 			install(Ref, Ref.dataset.shortcut)
 		}
@@ -18,6 +19,7 @@
 
 	});
 	onDestroy(() => {
+		if(Ref == null) return;
 		if(Ref.dataset && Ref.dataset.shortcut) {
 			uninstall(Ref)
 		}

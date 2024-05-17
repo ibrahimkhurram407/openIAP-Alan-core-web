@@ -3,9 +3,10 @@
   import { goto } from "$app/navigation";
   import { Entities } from "$lib/entities";
   import { setting, setSetting } from "$lib/pstore";
-  import { client } from "$lib/stores";
+  import { client, title } from "$lib/stores";
   import { SearchInput } from "$lib/components/ui/searchinput";
   const collectionname = "users";
+  $title = "Users";
   let query = { _type: "user" };
   const key = `${query._type}s`;
   let searchstring = setting(key, "searchstring", "");
@@ -17,6 +18,7 @@
     "dbusage",
     "validated",
   ];
+  let updateData;
 </script>
 
 <SearchInput
@@ -25,6 +27,7 @@
   data-shortcut={"Control+f,Meta+f"}
 ></SearchInput>
 <Entities
+  bind:update={updateData}
   {key}
   bind:searchstring={$searchstring}
   {collectionname}
@@ -41,5 +44,6 @@
     const query = { _id: { $in: e.detail.items } };
     await $client.DeleteMany({ collectionname, query });
     setSetting(key, "selectedDataIds", {});
+    updateData();
   }}
 />

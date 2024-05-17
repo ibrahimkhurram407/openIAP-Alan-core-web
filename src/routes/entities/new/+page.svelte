@@ -7,9 +7,10 @@
   import { ACL } from "$lib/acl/index.js";
 
   import { Entity } from "$lib/entity";
-  import { client, collections } from "$lib/stores";
+  import { client, title, collections } from "$lib/stores";
   import { z } from "zod";
 
+  $title = "Create Collection";
   let data2 = {
     name: "collectionname",
     options: { 

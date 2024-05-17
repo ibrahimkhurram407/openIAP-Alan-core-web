@@ -82,7 +82,6 @@
             source: "customers",
           });
         } catch (error) {
-          console.error("Error in search:results", error);
         }
       } else {
         $items = $items.filter((item) => item.source != "customers");
@@ -101,7 +100,6 @@
               source: "entities",
             });
           } catch (error) {
-            console.error("Error in search:results", error);
           }
         }
       }
@@ -167,6 +165,7 @@
       <HotkeyButton
         variant="ghost"
         class="text-muted-foreground"
+        aria-label="Search"
         data-shortcut={"Control+k,Meta+k,Shift+?"}
       >
         <Search />

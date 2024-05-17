@@ -3,7 +3,7 @@
   import { goto } from "$app/navigation";
   import SuperDebug from "sveltekit-superforms";
   import * as ContextMenu from "$lib/components/ui/context-menu";
-  import { client, isSignedin, collections } from "$lib/stores";
+  import { client, title, isSignedin, collections } from "$lib/stores";
   import { setting, setSetting } from "$lib/pstore";
   import { writable } from "svelte/store";
   import { SearchInput } from "$lib/components/ui/searchinput";
@@ -36,6 +36,7 @@
   if ($page.params.collection != null && $page.params.collection != "") {
     $collectionname = $page.params.collection;
   }
+  $title = $collectionname;
   let searchstring = setting("entities_" + $collectionname, "searchstring", "");
 
   const collectionindex = writable(0);
@@ -54,8 +55,9 @@
     try {
       $client.DropCollection({ collectionname: deletecollectionname });
       $collections = $collections.filter((x) => x.name != deletecollectionname);
-      magickey++;
+      updateData();
       $collectionname = "entities";
+      $title = $collectionname;
     } catch (error) {
       console.error("Error deleting collection", error);
     }
@@ -66,6 +68,7 @@
   function onCollectionindex(value) {
     if ($collections.length > 0 && value >= 0 && value < $collections.length) {
       $collectionname = $collections[value].name;
+      $title = $collectionname;
       searchstring = setting("entities_" + $collectionname, "searchstring", "");
       selectedDataIds = setting(
         "entities_" + $collectionname,
@@ -80,7 +83,6 @@
   let loading = false;
   let reloading = false;
   const GetData = async () => {
-    console.log("Getting data");
     try {
       if ($collections.length > 0) {
         $collectionindex = $collections.findIndex(
@@ -89,7 +91,6 @@
         await tick();
         if($collectionindex > -1) scrollToItem($collectionindex);
         if($collectionindex == -1) {
-          console.log("Collection not found, reloading in 500ms", $collectionname, $collections);
           if(reloading == true) {
             reloading = false
             return;
@@ -99,15 +100,12 @@
           $collections = [];
           GetData();
         }
-        console.log("Collection found", $collectionname, $collections);
         return;
       }
       if (loading) {
-        console.log("Already loading");
         return;
       }
       if ($isSignedin == false) {
-        console.log("Not signed in");
         return;
       }
       loading = true;
@@ -145,6 +143,7 @@
     if (data.item == null) return;
     if (data.source != "entities") return;
     $collectionname = data.item.name;
+    $title = $collectionname;
     $collectionindex = $collections.findIndex((x) => x.name == $collectionname);
     scrollToItem($collectionindex);
   }
@@ -185,7 +184,7 @@
   let rightclickcollectionname = "";
   let explain = false;
   let showquery = false;
-  let magickey = 0;
+  let updateData;
 </script>
 
 <div class="grid grid-cols-[1fr,min-content,min-content,0px] gap-2 mb-1">
@@ -283,16 +282,6 @@
               () => {
                 deletecollectionname = rightclickcollectionname;
                 deletecollectionprompt = true;
-                // try {
-                //   const response = prompt("Are you sure you want to delete the collection " + rightclickcollectionname + "? Type 'delete' to confirm.");
-                //   if (response != "delete") return;
-                //   $client.DropCollection({ collectionname: rightclickcollectionname });
-                //   $collections = $collections.filter((x) => x.name != rightclickcollectionname);
-                //   magickey++;
-                //   $collectionname = "entities";
-                // } catch (error) {
-                //   console.error("Error deleting collection", error);
-                // }
               }                          
             }>
               Delete
@@ -306,10 +295,10 @@
           key={"entities_" + $collectionname}
           bind:searchstring={$searchstring}
           collectionname={$collectionname}
+          bind:update={updateData}
           {query}
           {explain}
           {showquery}
-          {magickey}
           on:click={(e) => {
             const id = e.detail.row.dataId;
             goto(base + `/entities/${e.detail.collectionname}/${id}`);
@@ -324,14 +313,13 @@
               query,
             });
             setSetting("entities_" + $collectionname, "selectedDataIds", {});
-            magickey++;
+            updateData();
           }}
         />
       </div>
     </div>
   </div>
 </div>
-
 <HotkeyButton
   hidden
   data-shortcut={"ArrowUp"}

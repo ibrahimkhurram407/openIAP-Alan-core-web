@@ -4,7 +4,7 @@
   import { base } from "$app/paths";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import { client, isSignedin } from "$lib/stores";
+  import { client, title, isSignedin } from "$lib/stores";
   import { Input } from "$lib/components/ui/input";
   import { ACL } from "$lib/acl/index.js";
   import { HotkeyButton } from "$lib/components/ui/hotkeybutton";
@@ -18,6 +18,8 @@
   import { z } from "zod";
   import SuperDebug, { superForm, superValidate } from "sveltekit-superforms";
   import { zod } from "sveltekit-superforms/adapters";
+
+  $title = "Edit Role";
 
   const _Schema: any = z
     .object({
@@ -33,9 +35,6 @@
 
   let data: Writable<any> = writable({});
   let errormessage = writable(null);
-  $: if ($errormessage != "") {
-    console.log("errormessage", $errormessage);
-  }
   const _id = $page.params.id;
   let isLoading = false;
   let sform = null;
@@ -49,6 +48,7 @@
       });
       if (results.length > 0) {
         $data = results[0];
+        $title = "Edit " + $data.name;
       }
     } catch (error) {
       $errormessage = error.message;
@@ -65,11 +65,9 @@
   async function onsubmit(e) {
     $errormessage = "";
     e.preventDefault();
-    console.log("data", $data);
     const vform = await superValidate($data, zod(_Schema));
     if (vform.valid) {
       // dispatch("submit", { data: vform.data });
-      console.log("data", vform.data);
       try {
         isLoading = true;
         await $client.UpdateOne({
@@ -103,7 +101,7 @@
   }
 </script>
 
-<h1>Add role</h1>
+<h1>Edit role</h1>
 
 {#if $errormessage}<h3>{$errormessage}</h3>{/if}
 

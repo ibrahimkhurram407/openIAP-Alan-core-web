@@ -1,17 +1,29 @@
-import { UserManager, WebStorageStateStore } from "oidc-client";
+// import { UserManager, WebStorageStateStore } from "oidc-client";
+import pkg from 'oidc-client';
+const {UserManager, WebStorageStateStore} = pkg;
 import { getStoreValue, isAuthenticated, user, config, baseurl, wsurl } from "$lib/stores";
 import { base } from "$app/paths";
 
-const settings = {
-    authority: getStoreValue(baseurl) + "/oidc",
-    client_id: "webapp",
-    redirect_uri: window.location.origin + base + "/",
-    response_type: "code",
-    scope: "openid profile email",
-    post_logout_redirect_uri: window.location.origin + base + "/",
-    userStore: new WebStorageStateStore({ store: window.localStorage })
-};
-export const userManager = new UserManager(settings);
+import { env } from '$env/dynamic/public'
+import { browser } from "$app/environment";
+
+export const load = async ({ url }) => {
+    console.log("url", url)
+}
+export let userManager = null;
+if(browser) {
+    console.log("origin", window.location.origin)
+    const settings = {
+        authority: getStoreValue(baseurl) + "/oidc",
+        client_id: "webapp",
+        redirect_uri: window.location.origin + base + "/",
+        response_type: "code",
+        scope: "openid profile email",
+        post_logout_redirect_uri: window.location.origin + base + "/",
+        userStore: new WebStorageStateStore({ store: window.localStorage })
+    };
+    userManager = new UserManager(settings)
+}
 export const signIn = () => {
     isAuthenticated.set(false);
     return userManager.signinRedirect();

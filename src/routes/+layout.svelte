@@ -10,15 +10,14 @@
 	import Sun from "lucide-svelte/icons/sun";
 	import Moon from "lucide-svelte/icons/moon";
 
-	import { isAuthenticated, isSignedin, user, client } from "$lib/stores";
+	import { isAuthenticated, isSignedin, user, client, title, metadescription } from "$lib/stores";
 	import { onMount } from "svelte";
     import { signIn, userManager, signOut, getUser } from "$lib/auth";
 	import { pushState } from "$app/navigation";
-	import { goto } from "$app/navigation";
 	
 	let isSignedinTimer = true;
     onMount(async () => {
-		if (window.location.search.includes("code=")) {
+		if ($page.url.search.includes("code=")) {
             await userManager.signinRedirectCallback();
             pushState(base + "/", {});
         }
@@ -53,8 +52,12 @@
 </script>
 
 <ModeWatcher />
+<svelte:head>
+	<title>{$title}</title>
+	<meta name="description" content="{$metadescription}">
+</svelte:head>
 <HotkeyButton hidden on:click={($isAuthenticated ? signOut : signIn)} data-shortcut={"Control+q,Meta+q" }>Sign In/Out</HotkeyButton>
-{#if $page.url.pathname != base + "/login"}
+{#if $page.url.pathname != base + "/login" && $page.url.pathname != base + "/loginscreen"}
 <div class="app">
 	<div class="border-b">
 		<div class="flex h-14 items-center px-4">

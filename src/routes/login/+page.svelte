@@ -2,14 +2,16 @@
 	import { base } from "$app/paths";
 	import UserAuthForm from "./(components)/user-auth-form.svelte";
 	import { Button } from "$lib/components/ui/button";
+	import { title } from "$lib/stores";
 	import Hairball from "$lib/images/hairball.webp";
 	import Frozonforest from "$lib/images/frozonforest.webp";
+	import { page } from "$app/stores";
 	// import Storemis from "$lib/images/storemis.webp";
 	import Haybale from "$lib/images/haybale.webp";
 	let showTerms = false;
-	if(window.location.origin.indexOf("openiap.io") > -1 && window.location.origin.indexOf("localhost.openiap.io") == -1) {
+	if($page.url.hostname.indexOf("openiap.io") > -1 && $page.url.hostname.indexOf("localhost.openiap.io") == -1) {
 		showTerms = true;
-	} else if(window.location.origin.indexOf("localhost") > -1) {
+	} else if($page.url.hostname.indexOf("localhost") > -1) {
 		showTerms = true;
 	}
 	function getRandomImage() {
@@ -28,10 +30,16 @@
 	let text1 = "Login";
 	let text2 = "Create an account";
 	let text3 = "Enter your email below to create your account";
+	$title = "Login";
 	function flipText() {
 		text1 = text1 === "Login" ? "Create an account" : "Login";
 		text2 = text2 === "Create an account" ? "Login" : "Create an account";
 		text3 = text3 === "Enter your email below to create your account" ? "Enter your email below to login" : "Enter your email below to create your account";
+		if(text1 == "Login") {
+			$title = "Login";
+		} else {
+			$title = "Create an account";
+		}
 	}
 </script>
 

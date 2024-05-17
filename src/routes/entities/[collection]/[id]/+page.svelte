@@ -9,7 +9,7 @@
   import Button from "$lib/components/ui/button/button.svelte";
 
   import { Entity } from "$lib/entity";
-  import { client, isSignedin } from "$lib/stores";
+  import { client, title, isSignedin } from "$lib/stores";
 
   let data = writable();
   let errormessage = writable(null);
@@ -18,6 +18,7 @@
   import { setting } from "$lib/pstore";
   import { writable } from "svelte/store";
   const _id = $page.params.id;
+  $title = "Edit item";
 
   async function loadData() {
     if ($isSignedin == false) return;
@@ -28,6 +29,7 @@
       });
       if (results.length > 0) {
         $data = results[0];
+        $title = "Edit " + $data.name;
       }
     } catch (error) {
       $errormessage = error.message;

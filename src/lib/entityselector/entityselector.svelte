@@ -4,7 +4,7 @@
   import Check from "lucide-svelte/icons/check";
   import ChevronsUpDown from "lucide-svelte/icons/chevrons-up-down";
   import Usersround from "lucide-svelte/icons/users-round";
-  import User from "lucide-svelte/icons/user";
+  import User from "lucide-svelte/icons/user-round";
   import { tick } from "svelte";
   import * as Command from "$lib/components/ui/command/index.js";
   import * as Popover from "$lib/components/ui/popover/index.js";
@@ -24,7 +24,8 @@
   async function loadData() {
     if ($isSignedin == false) return;
     let results = [];
-    if (value != null && value._id != "") {
+    let top = 9;
+    if (value != null && value._id != "" && value._id != null) {
       const result = await $client.Query<any>({
         collectionname,
         query: { _id: value._id },
@@ -32,8 +33,9 @@
         top: 1,
       });
       if (result.length > 0) {
+        top--;
         results.push(result[0]);
-        if(value.name != result[0].name) {
+        if(value == null || value.name != result[0].name) {
           // value.name = result[0].name;
           value = {...value, _id: result[0]._id, name: result[0].name};
         }
@@ -57,7 +59,7 @@
       collectionname,
       query: subquery,
       projection: { name: 1, email: 1, _type: 1 },
-      top: 10,
+      top,
     });
     if (result.length > 0) {
       if (results.length > 0) {
@@ -141,7 +143,7 @@
             {:else}
               <Usersround class={cn("mr-2 h-4 w-4", "text-transparent")} />
             {/if}
-            {`(${item._type}) ${item.name} ${item.email}`}
+            {`(${item._type}) ${item.name} ${item.email ?? ""}`}
           </Command.Item>
         {/each}
       </Command.Group>
