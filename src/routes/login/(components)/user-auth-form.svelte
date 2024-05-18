@@ -10,7 +10,7 @@
 	import { goto } from "$app/navigation";
     import { writable, type Writable } from "svelte/store";
     import { baseurl, client, config } from "$lib/stores";
-    import { loadConfig, loadLocalJWTUser } from "$lib/auth";
+    import { loadConfig, loadLocalJWTUser } from "$lib/auth.svelte";
     
 	import Oidc from "$lib/images/openid-svgrepo-com.svg";
 	import Gmail from "$lib/images/gmail-svgrepo-com.svg";

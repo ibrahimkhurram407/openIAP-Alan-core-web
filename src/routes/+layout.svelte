@@ -12,7 +12,7 @@
 
 	import { isAuthenticated, isSignedin, user, client, title, metadescription } from "$lib/stores";
 	import { onMount } from "svelte";
-    import { signIn, userManager, signOut, getUser } from "$lib/auth";
+    import { signIn, userManager, signOut, getUser } from "$lib/auth.svelte";
 	import { pushState } from "$app/navigation";
 	
 	let isSignedinTimer = true;

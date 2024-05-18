@@ -1,4 +1,3 @@
-export const ssr = false;
 import { writable } from "svelte/store";
 import { openiap, config as jsconfig } from "@openiap/jsapi";
 import { browser } from '$app/environment';

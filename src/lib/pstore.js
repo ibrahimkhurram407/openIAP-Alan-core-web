@@ -1,4 +1,3 @@
-export const ssr = false;
 import { writable } from "svelte/store";
 
 // Cache object to hold the instances of the stores
