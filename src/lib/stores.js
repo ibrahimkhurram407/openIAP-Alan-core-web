@@ -10,11 +10,11 @@ export const baseurl = writable("");
 export const wsurl = writable("");
 if(browser) {
   baseurl.set(window.location.origin);
-  if(window.location.origin.includes(":517") || window.location.origin.includes(":417")) {
+  if(window.location.origin.includes(":517")) {
       baseurl.set("https://demo.openiap.io");
   }
   wsurl.set(window.location.origin.replace("https://", "wss://").replace("http://", "ws://") + "/ws/v2");
-  if(window.location.origin.includes(":517") || window.location.origin.includes(":417")) {
+  if(window.location.origin.includes(":517")) {
       wsurl.set("wss://demo.openiap.io/ws/v2")
   }
 } else {

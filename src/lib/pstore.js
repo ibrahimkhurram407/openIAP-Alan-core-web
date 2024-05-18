@@ -1,6 +1,5 @@
 export const ssr = false;
 import { writable } from "svelte/store";
-import { browser } from "$app/environment";
 
 // Cache object to hold the instances of the stores
 const storeCache = {};
@@ -10,10 +9,9 @@ export function deleteSetting(page, key) {
   if (storeCache[fullKey]) {
     storeCache[fullKey].set(null);
   }
-  if(browser) localStorage.removeItem("store_" + fullKey);
+  localStorage.removeItem("store_" + fullKey);
 }
 export function deleteSettings(page) {
-  if(!browser) return;
   for (let i = localStorage.length - 1; i >= 0; i--) {
     const key = localStorage.key(i);
     if (key.startsWith("store_" + page)) {
@@ -25,7 +23,6 @@ export function deleteSettings(page) {
   }
 }
 export function deleteAllSettings() {
-  if(!browser) return;
   for (let i = localStorage.length - 1; i >= 0; i--) {
     const key = localStorage.key(i);
     if (key.startsWith("store_")) {
@@ -76,11 +73,8 @@ export function setting(page, key, defaultValue) {
 
   const unique = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
-  let initialData = defaultValue;
-  if(browser) {
-    const storedValue = localStorage.getItem("store_" + fullKey);
-    initialData = storedValue ? JSON.parse(storedValue) : defaultValue;
-  }
+  const storedValue = localStorage.getItem("store_" + fullKey);
+  const initialData = storedValue ? JSON.parse(storedValue) : defaultValue;
 
   // Create a new writable store
   const store = writable(initialData);
@@ -96,18 +90,18 @@ export function setting(page, key, defaultValue) {
       jsonsuccess = false;
     }
     if (value == null || value == "") {
-      if(browser) localStorage.removeItem("store_" + fullKey);
+      localStorage.removeItem("store_" + fullKey);
     } else if (jsonsuccess && json1 == json2) {
-      if(browser) localStorage.removeItem("store_" + fullKey);
+      localStorage.removeItem("store_" + fullKey);
     } else {
       if (value instanceof Object) {
         var keys = Object.keys(value);
         if (keys.length == 0) {
-          if(browser) localStorage.removeItem("store_" + fullKey);
+          localStorage.removeItem("store_" + fullKey);
           return;
         }
       }
-      if(browser) localStorage.setItem("store_" + fullKey, JSON.stringify(value));
+      localStorage.setItem("store_" + fullKey, JSON.stringify(value));
     }
   });
 
